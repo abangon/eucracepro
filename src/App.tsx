@@ -15,7 +15,7 @@ import Box from '@mui/material/Box';
 
 const App: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true); // Флаг открытого сайдбара
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);

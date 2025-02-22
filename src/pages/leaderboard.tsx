@@ -1,32 +1,88 @@
-import React from 'react';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { Box, Typography, Paper } from '@mui/material';
-
-const columns: GridColDef[] = [
-  { field: 'id', headerName: 'ID', width: 90 },
-  { field: 'name', headerName: 'Racer', width: 200 },
-  { field: 'team', headerName: 'Team', width: 200 },
-  { field: 'laps', headerName: 'Laps', type: 'number', width: 130 },
-  { field: 'time', headerName: 'Best Time', width: 130 },
-];
-
-const rows = [
-  { id: 1, name: 'John Doe', team: 'Red Bull', laps: 52, time: '1:12.345' },
-  { id: 2, name: 'Jane Smith', team: 'Mercedes', laps: 49, time: '1:13.567' },
-  { id: 3, name: 'Alex Johnson', team: 'Ferrari', laps: 50, time: '1:11.890' },
-  { id: 4, name: 'Emily Davis', team: 'McLaren', laps: 47, time: '1:14.221' },
-  { id: 5, name: 'Michael Brown', team: 'AlphaTauri', laps: 45, time: '1:15.789' },
-];
+import React, { useEffect, useState } from "react";
+import { Box, Typography, Button, Paper, Grid, TextField } from "@mui/material";
+import { listenForLeaderboard, addParticipant, updateParticipant, deleteParticipant } from "../services/leaderboardService";
 
 const Leaderboard: React.FC = () => {
+  const [participants, setParticipants] = useState<{ id: string; name: string; race: string; time: number }[]>([]);
+  const [editParticipantId, setEditParticipantId] = useState<string | null>(null);
+  const [editData, setEditData] = useState<{ name: string; race: string; time: number }>({ name: "", race: "", time: 0 });
+
+  useEffect(() => {
+    // Слушаем изменения в Firestore
+    const unsubscribe = listenForLeaderboard(setParticipants);
+    return () => unsubscribe();
+  }, []);
+
+  const handleEditParticipant = (participant: { id: string; name: string; race: string; time: number }) => {
+    setEditParticipantId(participant.id);
+    setEditData({ name: participant.name, race: participant.race, time: participant.time });
+  };
+
+  const handleSaveParticipant = async () => {
+    if (editParticipantId) {
+      await updateParticipant(editParticipantId, editData);
+      setEditParticipantId(null);
+    }
+  };
+
+  const handleDeleteParticipant = async (id: string) => {
+    await deleteParticipant(id);
+  };
+
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Leaderboard
+        Race Leaderboard
       </Typography>
-      <Paper sx={{ height: 400, width: '100%', p: 2 }}>
-        <DataGrid rows={rows} columns={columns} pageSizeOptions={[5, 10]} />
-      </Paper>
+      <Grid container spacing={3}>
+        {participants.map((participant) => (
+          <Grid item xs={12} sm={6} md={4} key={participant.id}>
+            <Paper sx={{ p: 2 }}>
+              {editParticipantId === participant.id ? (
+                <>
+                  <TextField
+                    fullWidth
+                    label="Name"
+                    value={editData.name}
+                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                    sx={{ mb: 1 }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Race"
+                    value={editData.race}
+                    onChange={(e) => setEditData({ ...editData, race: e.target.value })}
+                    sx={{ mb: 1 }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Time (s)"
+                    type="number"
+                    value={editData.time}
+                    onChange={(e) => setEditData({ ...editData, time: Number(e.target.value) })}
+                    sx={{ mb: 1 }}
+                  />
+                  <Button variant="contained" color="success" onClick={handleSaveParticipant} sx={{ mt: 1 }}>
+                    Save
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Typography variant="h6">{participant.name}</Typography>
+                  <Typography variant="body2">Race: {participant.race}</Typography>
+                  <Typography variant="body2">Time: {participant.time} sec</Typography>
+                  <Button variant="outlined" color="primary" onClick={() => handleEditParticipant(participant)} sx={{ mt: 1, mr: 1 }}>
+                    Edit
+                  </Button>
+                  <Button variant="outlined" color="error" onClick={() => handleDeleteParticipant(participant.id)} sx={{ mt: 1 }}>
+                    Delete
+                  </Button>
+                </>
+              )}
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
     </Box>
   );
 };

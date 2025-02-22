@@ -58,8 +58,8 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, isSidebarOpen }) => {
       color="inherit"
       sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
-        width: isMobile ? "100%" : `calc(100% - ${isSidebarOpen ? 240 : 0}px)`, // Динамическая ширина
-        marginLeft: isMobile ? 0 : `${isSidebarOpen ? 240 : 0}px`, // Отступ, чтобы не залезать на Sidebar
+        width: isMobile ? "100%" : `calc(100% - ${isSidebarOpen ? 240 : 0}px)`,
+        marginLeft: isMobile ? 0 : `${isSidebarOpen ? 240 : 0}px`,
         transition: "width 0.3s, margin-left 0.3s",
       }}
     >
@@ -71,14 +71,14 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, isSidebarOpen }) => {
           </IconButton>
         )}
 
-        {/* Имя пользователя (Nickname) теперь корректно центрируется */}
+        {/* Имя пользователя (Nickname) теперь правильно центрируется и совпадает по размеру с "Sign Out" */}
         {user && (
           <Box sx={{ flexGrow: 1, textAlign: isMobile ? "center" : "left" }}>
             <Typography
-              variant="h6"
+              variant="body1"
               color="primary"
               sx={{
-                fontSize: isMobile ? "1rem" : "1.25rem",
+                fontSize: "1rem", // Одинаковый размер с кнопкой "Sign Out"
                 overflow: "hidden",
                 whiteSpace: "nowrap",
                 textOverflow: "ellipsis",

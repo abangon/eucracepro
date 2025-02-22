@@ -15,29 +15,21 @@ import Box from '@mui/material/Box';
 
 const App: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true); // Флаг открытого сайдбара
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
-
-  const drawerWidth = 240;
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
         <Box sx={{ display: 'flex' }}>
-          <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
-          <Box
-            component="main"
-            sx={{
-              flexGrow: 1,
-              p: 3,
-              width: { sm: `calc(100% - ${drawerWidth}px)` },
-            }}
-          >
-            <Navbar onMenuClick={handleDrawerToggle} />
-            <Box sx={{ mt: 2 }}>
+          <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
+          <Box component="main" sx={{ flexGrow: 1 }}>
+            <Navbar onMenuClick={handleDrawerToggle} isSidebarOpen={sidebarOpen} />
+            <Box sx={{ mt: 10, p: 3 }}>
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/races" element={<Races />} />

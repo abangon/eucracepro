@@ -3,10 +3,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme/theme';
-import Home from './pages/Home';
-import Races from './pages/Races';
-import Leaderboard from './pages/Leaderboard';
-import SignIn from './pages/SignIn';
+import Home from './pages/home';
+import Races from './pages/races';
+import Leaderboard from './pages/leaderboard';
+import SignIn from './pages/signIn';
 
 const App: React.FC = () => {
   return (

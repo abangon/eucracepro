@@ -13,7 +13,6 @@ import {
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
-import LoginIcon from '@mui/icons-material/Login';
 import { useNavigate } from 'react-router-dom';
 import logo from '../images/logo/eucrace-logo.jpg';
 
@@ -22,11 +21,11 @@ const drawerWidth = 240;
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
 
+  // Удалён пункт "Sign In"
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Races', icon: <SportsEsportsIcon />, path: '/races' },
     { text: 'Leaderboard', icon: <LeaderboardIcon />, path: '/leaderboard' },
-    { text: 'Sign In', icon: <LoginIcon />, path: '/sign-in' },
   ];
 
   return (

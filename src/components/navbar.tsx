@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
     >
       <Toolbar sx={{ padding: 0 }}>
         <Typography variant="h6" color="primary">
-          EuCracePro
+          EUC Race Pro
         </Typography>
       </Toolbar>
     </AppBar>

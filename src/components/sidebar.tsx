@@ -108,8 +108,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
 
   return (
     <>
-      {/* Кнопка-меню (гамбургер) БОЛЬШЕ НЕ ДУБЛИРУЕТСЯ */}
-      {isMobile && !mobileOpen && (
+      {/* ✅ Теперь кнопка "гамбургер" больше не дублируется */}
+      {isMobile && (
         <IconButton
           onClick={handleDrawerToggle}
           color="inherit"
@@ -118,6 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
             top: 10,
             left: 10,
             zIndex: (theme) => theme.zIndex.drawer + 3,
+            display: mobileOpen ? "none" : "block", // Скрываем кнопку при открытом Sidebar
           }}
         >
           <MenuIcon />

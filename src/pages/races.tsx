@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Button, Paper, Grid, TextField } from '@mui/material';
-import { getRaces, addRace, updateRace, deleteRace } from '../services/racesService';
+import { listenForRaces, updateRace, deleteRace } from '../services/racesService';
 
 const Races: React.FC = () => {
   const [races, setRaces] = useState<{ id: string; name: string; location: string; date: string }[]>([]);
@@ -8,19 +8,10 @@ const Races: React.FC = () => {
   const [editData, setEditData] = useState<{ name: string; location: string; date: string }>({ name: '', location: '', date: '' });
 
   useEffect(() => {
-    const fetchRaces = async () => {
-      const data = await getRaces();
-      setRaces(data);
-    };
-
-    fetchRaces();
+    // Подписываемся на изменения в Firestore
+    const unsubscribe = listenForRaces(setRaces);
+    return () => unsubscribe(); // Отписываемся при уходе со страницы
   }, []);
-
-  const handleAddRace = async () => {
-    const newRace = { name: "New Race", location: "Berlin", date: "2024-06-30" };
-    await addRace(newRace);
-    setRaces(await getRaces());
-  };
 
   const handleEditRace = (race: { id: string; name: string; location: string; date: string }) => {
     setEditRaceId(race.id);
@@ -31,13 +22,11 @@ const Races: React.FC = () => {
     if (editRaceId) {
       await updateRace(editRaceId, editData);
       setEditRaceId(null);
-      setRaces(await getRaces());
     }
   };
 
   const handleDeleteRace = async (id: string) => {
     await deleteRace(id);
-    setRaces(await getRaces());
   };
 
   return (
@@ -45,9 +34,6 @@ const Races: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         Upcoming Races
       </Typography>
-      <Button variant="contained" color="primary" onClick={handleAddRace} sx={{ mb: 2 }}>
-        Add New Race (Test)
-      </Button>
       <Grid container spacing={3}>
         {races.map((race) => (
           <Grid item xs={12} sm={6} md={4} key={race.id}>

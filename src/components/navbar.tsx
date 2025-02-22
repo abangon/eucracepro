@@ -19,9 +19,10 @@ import { auth, db, logOut } from "../utils/firebase";
 
 interface NavbarProps {
   onMenuClick: () => void;
+  isSidebarOpen: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
+const Navbar: React.FC<NavbarProps> = ({ onMenuClick, isSidebarOpen }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -52,7 +53,16 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <AppBar position="fixed" color="inherit" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+    <AppBar
+      position="fixed"
+      color="inherit"
+      sx={{
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+        width: isMobile ? "100%" : `calc(100% - ${isSidebarOpen ? 240 : 0}px)`, // Динамическая ширина
+        marginLeft: isMobile ? 0 : `${isSidebarOpen ? 240 : 0}px`, // Отступ, чтобы не залезать на Sidebar
+        transition: "width 0.3s, margin-left 0.3s",
+      }}
+    >
       <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         {/* Кнопка меню (гамбургер) для мобильных устройств */}
         {isMobile && (
@@ -61,7 +71,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
           </IconButton>
         )}
 
-        {/* Имя пользователя (Nickname) теперь выравнивается правильно */}
+        {/* Имя пользователя (Nickname) теперь корректно центрируется */}
         {user && (
           <Box sx={{ flexGrow: 1, textAlign: isMobile ? "center" : "left" }}>
             <Typography

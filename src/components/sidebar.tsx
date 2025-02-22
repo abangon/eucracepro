@@ -110,11 +110,11 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: "block", md: "none" },
+          zIndex: (theme) => theme.zIndex.appBar + 2, // Теперь Sidebar выше Navbar
           "& .MuiDrawer-paper": {
             width: drawerWidth,
             height: "100vh",
             position: "fixed",
-            zIndex: theme.zIndex.appBar + 1, // Устанавливаем Sidebar выше Navbar
           },
         }}
       >

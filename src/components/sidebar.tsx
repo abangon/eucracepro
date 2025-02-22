@@ -11,13 +11,10 @@ import {
   Box,
   useMediaQuery,
   useTheme,
-  IconButton,
-  Typography,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
-import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../images/logo/eucrace-logo.jpg";
 
@@ -41,13 +38,12 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
   ];
 
   const drawerContent = (
-    <Box sx={{ width: drawerWidth, height: "100vh", display: "flex", flexDirection: "column" }}>
-      <Toolbar sx={{ display: "flex", justifyContent: "center", p: 2, minHeight: 80 }}>
+    <Box sx={{ width: drawerWidth, overflowX: "hidden", height: "100vh", display: "flex", flexDirection: "column" }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "center", p: 2 }}>
         <Box
           sx={{
             width: "100%",
             display: "flex",
-            flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
             cursor: "pointer",
@@ -61,12 +57,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
               width: "80%",
               maxWidth: "180px",
               objectFit: "contain",
-              marginBottom: "8px",
             }}
           />
-          <Typography variant="body2" color="text.secondary">
-            EUC Race Pro
-          </Typography>
         </Box>
       </Toolbar>
       <Divider />
@@ -89,7 +81,17 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
             <ListItemIcon sx={{ minWidth: 32, color: location.pathname === item.path ? "#1976d2" : "inherit" }}>
               {item.icon}
             </ListItemIcon>
-            <ListItemText primary={item.text} />
+            <ListItemText
+              primary={item.text}
+              primaryTypographyProps={{
+                fontSize: 14,
+                fontWeight: location.pathname === item.path ? "bold" : "normal",
+                color: location.pathname === item.path ? "#1976d2" : "inherit",
+                whiteSpace: "nowrap", // Текст больше не переносится
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            />
           </ListItemButton>
         ))}
       </List>
@@ -98,6 +100,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
 
   return (
     <>
+      {/* Выдвижное меню для мобильных устройств */}
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -105,27 +108,30 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: "block", md: "none" },
-          zIndex: 1301, // Исправлен z-index, теперь выше Navbar
           "& .MuiDrawer-paper": {
             width: drawerWidth,
+            overflowX: "hidden", // Убираем горизонтальную прокрутку
             height: "100vh",
             position: "fixed",
-            top: 0,
           },
         }}
       >
         {drawerContent}
       </Drawer>
 
+      {/* Статичный Sidebar для больших экранов */}
       <Drawer
         variant="permanent"
         sx={{
           display: { xs: "none", md: "block" },
           "& .MuiDrawer-paper": {
             width: drawerWidth,
+            overflowX: "hidden", // Убираем горизонтальную прокрутку
             height: "100vh",
-            position: "fixed",
-            zIndex: 1300,
+            position: "fixed", // Фиксируем Sidebar, чтобы текст не вылазил
+            boxSizing: "border-box",
+            backgroundColor: "#FFFFFF",
+            borderRight: "1px solid #e0e0e0",
           },
         }}
         open

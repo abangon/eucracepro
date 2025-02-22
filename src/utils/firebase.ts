@@ -1,6 +1,12 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signOut, 
+  listUsers 
+} from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -11,11 +17,13 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// ✅ Инициализация Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+// ✅ Авторизация через Google
 const signInWithGoogle = async () => {
   try {
     await signInWithPopup(auth, provider);
@@ -24,6 +32,7 @@ const signInWithGoogle = async () => {
   }
 };
 
+// ✅ Выход из системы
 const logOut = async () => {
   try {
     await signOut(auth);
@@ -32,4 +41,20 @@ const logOut = async () => {
   }
 };
 
-export { db, auth, signInWithGoogle, logOut };
+// ✅ Получение списка пользователей из Authentication (для админов)
+const fetchAllUsers = async () => {
+  try {
+    const users = await listUsers(auth, 1000);
+    return users.users.map(user => ({
+      uid: user.uid,
+      email: user.email,
+      createdAt: new Date(user.metadata.creationTime)
+    }));
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return [];
+  }
+};
+
+// ✅ Экспортируем все нужные функции и объекты
+export { app, db, auth, signInWithGoogle, logOut, fetchAllUsers };

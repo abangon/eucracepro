@@ -1,10 +1,10 @@
-// src/pages/home.tsx
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Grid, Card, CardContent, Avatar } from "@mui/material";
 import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
+import MapChart from "../components/Map"; // 🔹 Подключаем карту
 
 const Home: React.FC = () => {
   const [totalRacers, setTotalRacers] = useState(0);
@@ -30,7 +30,7 @@ const Home: React.FC = () => {
         // 3️⃣ Корректный расчет прироста (%)
         let growth = 0;
         if (pastUsers === 0) {
-          growth = totalUsers > 0 ? (totalUsers * 100) : 0; // Если раньше было 0, считаем 100% на каждого нового
+          growth = totalUsers > 0 ? totalUsers * 100 : 0; // Если раньше было 0, считаем 100% на каждого нового
         } else {
           growth = ((totalUsers - pastUsers) / pastUsers) * 100;
         }
@@ -71,6 +71,18 @@ const Home: React.FC = () => {
               <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
                 <SportsMotorsportsIcon fontSize="large" />
               </Avatar>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* 🌍 Карта на отдельной плитке */}
+        <Grid item xs={12}>
+          <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2 }}>
+            <CardContent>
+              <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+                🌍 Registered Racers by Country
+              </Typography>
+              <MapChart /> {/* 🔹 Вставляем карту */}
             </CardContent>
           </Card>
         </Grid>

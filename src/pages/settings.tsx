@@ -28,7 +28,7 @@ const Settings: React.FC = () => {
   const [debugMessage, setDebugMessage] = useState("");
 
   useEffect(() => {
-    // Получаем список стран с публичного API
+    // Загружаем список стран
     fetch("https://restcountries.com/v3.1/all")
       .then((response) => response.json())
       .then((data) => {
@@ -64,8 +64,12 @@ const Settings: React.FC = () => {
     fetchUserData();
   }, []);
 
-  const validateSocialMedia = (value: string) => {
-    return value === "" || value.startsWith("@");
+  // Функция валидации для социальных сетей
+  const validateSocialMedia = (platform: string, value: string) => {
+    if (platform === "youtube" || platform === "tiktok") {
+      return value === "" || value.startsWith("@"); // Требуется @
+    }
+    return true; // Instagram и Facebook могут быть без @
   };
 
   const handleSave = async () => {
@@ -77,19 +81,11 @@ const Settings: React.FC = () => {
       return;
     }
 
-    if (!validateSocialMedia(youtube)) {
+    if (!validateSocialMedia("youtube", youtube)) {
       setError("YouTube channel should start with '@'.");
       return;
     }
-    if (!validateSocialMedia(instagram)) {
-      setError("Instagram handle should start with '@'.");
-      return;
-    }
-    if (!validateSocialMedia(facebook)) {
-      setError("Facebook username should start with '@'.");
-      return;
-    }
-    if (!validateSocialMedia(tiktok)) {
+    if (!validateSocialMedia("tiktok", tiktok)) {
       setError("TikTok handle should start with '@'.");
       return;
     }
@@ -102,6 +98,7 @@ const Settings: React.FC = () => {
           { nickname, country, team, youtube, instagram, facebook, tiktok },
           { merge: true }
         );
+
         setDebugMessage("Settings saved successfully.");
       } catch (err: any) {
         setError("Error saving settings: " + err.message);
@@ -116,16 +113,8 @@ const Settings: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         User Settings
       </Typography>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      {debugMessage && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {debugMessage}
-        </Alert>
-      )}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {debugMessage && <Alert severity="success" sx={{ mb: 2 }}>{debugMessage}</Alert>}
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField
@@ -183,7 +172,7 @@ const Settings: React.FC = () => {
             label="Instagram"
             variant="outlined"
             fullWidth
-            placeholder="@YourInstagramHandle"
+            placeholder="YourInstagramHandle"
             value={instagram}
             onChange={(e) => setInstagram(e.target.value)}
           />
@@ -193,7 +182,7 @@ const Settings: React.FC = () => {
             label="Facebook"
             variant="outlined"
             fullWidth
-            placeholder="@YourFacebookUsername"
+            placeholder="YourFacebookUsername"
             value={facebook}
             onChange={(e) => setFacebook(e.target.value)}
           />

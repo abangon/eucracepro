@@ -5,7 +5,7 @@ import {
   GoogleAuthProvider, 
   signInWithPopup, 
   signOut, 
-  listUsers 
+  fetchSignInMethodsForEmail 
 } from "firebase/auth";
 
 const firebaseConfig = {
@@ -41,20 +41,16 @@ const logOut = async () => {
   }
 };
 
-// ✅ Получение списка пользователей из Authentication (для админов)
-const fetchAllUsers = async () => {
+// ✅ Проверка существования пользователей по email (Вместо listUsers)
+const checkIfUserExists = async (email: string) => {
   try {
-    const users = await listUsers(auth, 1000);
-    return users.users.map(user => ({
-      uid: user.uid,
-      email: user.email,
-      createdAt: new Date(user.metadata.creationTime)
-    }));
+    const methods = await fetchSignInMethodsForEmail(auth, email);
+    return methods.length > 0; // Если есть методы входа, значит пользователь существует
   } catch (error) {
-    console.error("Error fetching users:", error);
-    return [];
+    console.error("Error checking user:", error);
+    return false;
   }
 };
 
 // ✅ Экспортируем все нужные функции и объекты
-export { app, db, auth, signInWithGoogle, logOut, fetchAllUsers };
+export { app, db, auth, signInWithGoogle, logOut, checkIfUserExists };

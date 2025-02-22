@@ -1,18 +1,23 @@
 // src/components/navbar.tsx
 import React from 'react';
-import { AppBar, Toolbar, Typography, IconButton } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
+import { AppBar, Toolbar, Box } from '@mui/material';
+import logo from '../images/logo/eucrace-logo.jpg';
 
 const Navbar: React.FC = () => {
   return (
-    <AppBar position="static" color="inherit" sx={{ borderBottom: '1px solid #e0e0e0' }}>
-      <Toolbar>
-        <IconButton color="primary" edge="start" sx={{ mr: 2, display: { md: 'none' } }}>
-          <MenuIcon />
-        </IconButton>
-        <Typography variant="h6" color="primary" noWrap>
-          EuCracePro
-        </Typography>
+    <AppBar
+      position="static"
+      color="inherit"
+      sx={{ borderBottom: '1px solid #e0e0e0', p: 1 }}
+    >
+      <Toolbar sx={{ padding: 0 }}>
+        <Box sx={{ width: { xs: '120px', md: '200px' } }}>
+          <img
+            src={logo}
+            alt="EuCrace Logo"
+            style={{ width: '100%', objectFit: 'contain' }}
+          />
+        </Box>
       </Toolbar>
     </AppBar>
   );

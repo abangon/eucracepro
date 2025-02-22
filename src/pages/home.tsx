@@ -1,44 +1,53 @@
-import React from 'react';
-import { Grid, Paper, Typography, Box } from '@mui/material';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import GroupsIcon from '@mui/icons-material/Groups';
-import FlagIcon from '@mui/icons-material/Flag';
+import React from "react";
+import { Box, Typography, Grid, Paper } from "@mui/material";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
-const stats = [
-  { title: 'Total Races', value: '52', icon: <EmojiEventsIcon />, color: '#FFF3E0' },
-  { title: 'Training Sessions', value: '120', icon: <DirectionsCarIcon />, color: '#E3F2FD' },
-  { title: 'Total Racers', value: '1,340', icon: <GroupsIcon />, color: '#F3E5F5' },
-  { title: 'Total Laps', value: '15,230', icon: <FlagIcon />, color: '#FFEBEE' }
+const data = [
+  { name: "Jan", races: 5 },
+  { name: "Feb", races: 8 },
+  { name: "Mar", races: 3 },
+  { name: "Apr", races: 10 },
+  { name: "May", races: 7 },
 ];
 
 const Home: React.FC = () => {
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Hi, Welcome back 👋
+        📊 Dashboard
       </Typography>
-
       <Grid container spacing={3}>
-        {stats.map((stat, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <Paper
-              sx={{
-                p: 3,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                backgroundColor: stat.color
-              }}
-            >
-              {stat.icon}
-              <Box>
-                <Typography variant="h6">{stat.title}</Typography>
-                <Typography variant="h4">{stat.value}</Typography>
-              </Box>
-            </Paper>
-          </Grid>
-        ))}
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h6">Total Races</Typography>
+            <Typography variant="h3" color="primary">52</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h6">Total Participants</Typography>
+            <Typography variant="h3" color="secondary">1,340</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h6">Total Laps</Typography>
+            <Typography variant="h3" color="success">15,230</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6">Races Over Time</Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={data}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="races" fill="#3f51b5" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Paper>
+        </Grid>
       </Grid>
     </Box>
   );

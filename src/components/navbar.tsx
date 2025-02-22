@@ -17,9 +17,14 @@ const Navbar: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleAuthClick = () => {
+  const handleAuthClick = async () => {
     if (user) {
-      logOut();
+      try {
+        await logOut();
+        navigate("/"); // перенаправляем на главную страницу после выхода
+      } catch (error) {
+        console.error("Error signing out:", error);
+      }
     } else {
       navigate("/sign-in");
     }

@@ -1,5 +1,5 @@
 // src/components/sidebar.tsx
-import React, { useState } from "react";
+import React from "react";
 import {
   Drawer,
   List,
@@ -9,11 +9,9 @@ import {
   Toolbar,
   Divider,
   Box,
-  IconButton,
   useMediaQuery,
-  useTheme
+  useTheme,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
@@ -22,22 +20,16 @@ import logo from "../images/logo/eucrace-logo.jpg";
 
 const drawerWidth = 240;
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  mobileOpen: boolean;
+  handleDrawerToggle: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true); // Для скрытия sidebar на больших экранах
-
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  const handleSidebarToggle = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
 
   const menuItems = [
     { text: "Dashboard", icon: <DashboardIcon fontSize="small" />, path: "/" },
@@ -46,7 +38,7 @@ const Sidebar: React.FC = () => {
   ];
 
   const drawerContent = (
-    <Box sx={{ width: sidebarOpen ? drawerWidth : 70, transition: "width 0.3s" }}>
+    <Box sx={{ width: drawerWidth, overflowX: "hidden" }}>
       <Toolbar sx={{ display: "flex", justifyContent: "center", p: 2 }}>
         <Box
           sx={{
@@ -62,10 +54,9 @@ const Sidebar: React.FC = () => {
             src={logo}
             alt="EuCrace Logo"
             style={{
-              width: sidebarOpen ? "80%" : "50%",
+              width: "80%",
               maxWidth: "180px",
               objectFit: "contain",
-              transition: "width 0.3s",
             }}
           />
         </Box>
@@ -90,16 +81,14 @@ const Sidebar: React.FC = () => {
             <ListItemIcon sx={{ minWidth: 32, color: location.pathname === item.path ? "#1976d2" : "inherit" }}>
               {item.icon}
             </ListItemIcon>
-            {sidebarOpen && (
-              <ListItemText
-                primary={item.text}
-                primaryTypographyProps={{
-                  fontSize: 14,
-                  fontWeight: location.pathname === item.path ? "bold" : "normal",
-                  color: location.pathname === item.path ? "#1976d2" : "inherit",
-                }}
-              />
-            )}
+            <ListItemText
+              primary={item.text}
+              primaryTypographyProps={{
+                fontSize: 14,
+                fontWeight: location.pathname === item.path ? "bold" : "normal",
+                color: location.pathname === item.path ? "#1976d2" : "inherit",
+              }}
+            />
           </ListItemButton>
         ))}
       </List>
@@ -108,18 +97,6 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-      {/* Кнопка-гамбургер для мобильного меню */}
-      {isMobile && (
-        <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          onClick={handleDrawerToggle}
-          sx={{ position: "absolute", top: 16, left: 16, zIndex: 1300 }}
-        >
-          <MenuIcon />
-        </IconButton>
-      )}
-
       {/* Выдвижное меню для мобильных устройств */}
       <Drawer
         variant="temporary"
@@ -128,7 +105,10 @@ const Sidebar: React.FC = () => {
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: "block", md: "none" },
-          "& .MuiDrawer-paper": { width: drawerWidth },
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            overflowX: "hidden", // Убираем горизонтальную прокрутку
+          },
         }}
       >
         {drawerContent}
@@ -137,17 +117,17 @@ const Sidebar: React.FC = () => {
       {/* Статичный Sidebar для больших экранов */}
       <Drawer
         variant="permanent"
-        open={sidebarOpen}
         sx={{
           display: { xs: "none", md: "block" },
-          [`& .MuiDrawer-paper`]: {
-            width: sidebarOpen ? drawerWidth : 70,
-            transition: "width 0.3s",
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            overflowX: "hidden", // Убираем горизонтальную прокрутку
             boxSizing: "border-box",
             backgroundColor: "#FFFFFF",
             borderRight: "1px solid #e0e0e0",
           },
         }}
+        open
       >
         {drawerContent}
       </Drawer>

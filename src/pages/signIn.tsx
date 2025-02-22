@@ -26,13 +26,18 @@ const SignIn: React.FC = () => {
     setShowPassword((prev) => !prev);
   };
 
+  const cleanErrorMessage = (message: string) => {
+    // Удаляем упоминание "Firebase:" из сообщения
+    return message.replace(/Firebase:\s*/gi, "");
+  };
+
   const handleEmailSignIn = async () => {
     setError("");
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate("/"); // Перенаправление на главную страницу после входа
     } catch (err: any) {
-      setError(err.message);
+      setError(cleanErrorMessage(err.message));
     }
   };
 
@@ -42,7 +47,7 @@ const SignIn: React.FC = () => {
       await sendPasswordResetEmail(auth, email);
       alert("Password reset email sent! Please check your inbox.");
     } catch (err: any) {
-      setError(err.message);
+      setError(cleanErrorMessage(err.message));
     }
   };
 
@@ -52,7 +57,7 @@ const SignIn: React.FC = () => {
       await signInWithGoogle();
       navigate("/");
     } catch (err: any) {
-      setError(err.message);
+      setError(cleanErrorMessage(err.message));
     }
   };
 

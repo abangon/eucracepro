@@ -102,17 +102,6 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
 
   return (
     <>
-      {/* Кнопка меню (гамбургер) должна быть видна ВСЕГДА */}
-      {isMobile && (
-        <IconButton
-          onClick={handleDrawerToggle}
-          color="inherit"
-          sx={{ position: "fixed", top: 10, left: 10, zIndex: (theme) => theme.zIndex.drawer + 2 }}
-        >
-          <MenuIcon />
-        </IconButton>
-      )}
-
       {/* Выдвижное меню для мобильных устройств */}
       <Drawer
         variant="temporary"
@@ -125,7 +114,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
             width: drawerWidth,
             height: "100vh",
             position: "fixed",
-            zIndex: (theme) => theme.zIndex.drawer + 1, // Теперь Sidebar выше Navbar
+            zIndex: theme.zIndex.appBar + 1, // Устанавливаем Sidebar выше Navbar
           },
         }}
       >
@@ -141,7 +130,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
             width: drawerWidth,
             height: "100vh",
             position: "fixed",
-            zIndex: (theme) => theme.zIndex.drawer,
+            zIndex: theme.zIndex.drawer,
           },
         }}
         open

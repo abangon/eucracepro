@@ -1,10 +1,10 @@
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 import { db } from "../utils/firebase";
 
 // Коллекция гонок
 const racesCollection = collection(db, "races");
 
-// Добавление новой гонки
+// Добавление гонки вручную (если нужно)
 export const addRace = async (race: { name: string; location: string; date: string }) => {
   try {
     await addDoc(racesCollection, race);
@@ -14,15 +14,12 @@ export const addRace = async (race: { name: string; location: string; date: stri
   }
 };
 
-// Получение списка гонок
-export const getRaces = async () => {
-  try {
-    const querySnapshot = await getDocs(racesCollection);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    console.error("Error fetching races:", error);
-    return [];
-  }
+// Функция для автоматического обновления списка гонок
+export const listenForRaces = (callback: (races: any[]) => void) => {
+  return onSnapshot(racesCollection, (snapshot) => {
+    const races = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(races);
+  });
 };
 
 // Обновление гонки

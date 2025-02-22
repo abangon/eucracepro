@@ -13,6 +13,7 @@ import {
   Alert,
 } from "@mui/material";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../utils/firebase";
 
 const Settings: React.FC = () => {
@@ -25,9 +26,10 @@ const Settings: React.FC = () => {
   const [tiktok, setTiktok] = useState("");
   const [countries, setCountries] = useState<string[]>([]);
   const [error, setError] = useState("");
-  const [debugMessage, setDebugMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
+    // Загружаем список стран
     fetch("https://restcountries.com/v3.1/all")
       .then((response) => response.json())
       .then((data) => {
@@ -37,8 +39,8 @@ const Settings: React.FC = () => {
       })
       .catch((error) => console.error("Error fetching countries:", error));
 
-    const fetchUserData = async () => {
-      const user = auth.currentUser;
+    // Загружаем данные пользователя после аутентификации
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
           const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -56,11 +58,40 @@ const Settings: React.FC = () => {
           console.error("Error fetching user data:", err);
           setError("Failed to load user data.");
         }
+      } else {
+        setError("You are not signed in.");
       }
-    };
+    });
 
-    fetchUserData();
+    return () => unsubscribe();
   }, []);
+
+  // Функция сохранения данных
+  const handleSave = async () => {
+    setError("");
+    setSuccessMessage("");
+
+    if (!nickname.trim()) {
+      setError("Nickname is required.");
+      return;
+    }
+
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await setDoc(
+          doc(db, "users", user.uid),
+          { nickname, country, team, youtube, instagram, facebook, tiktok },
+          { merge: true }
+        );
+        setSuccessMessage("Settings saved successfully!");
+      } catch (err: any) {
+        setError("Error saving settings: " + err.message);
+      }
+    } else {
+      setError("No user is logged in.");
+    }
+  };
 
   return (
     <Box sx={{ p: 3, maxWidth: 600, mx: "auto" }}>
@@ -68,7 +99,7 @@ const Settings: React.FC = () => {
         User Settings
       </Typography>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {debugMessage && <Alert severity="success" sx={{ mb: 2 }}>{debugMessage}</Alert>}
+      {successMessage && <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>}
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField
@@ -97,8 +128,62 @@ const Settings: React.FC = () => {
             </Select>
           </FormControl>
         </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Team"
+            variant="outlined"
+            fullWidth
+            value={team}
+            onChange={(e) => setTeam(e.target.value)}
+          />
+        </Grid>
         <Grid item xs={12}>
-          <Button variant="contained" color="primary" fullWidth sx={{ mt: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+            Social Media Links
+          </Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="YouTube"
+            variant="outlined"
+            fullWidth
+            placeholder="@YourYouTubeChannel"
+            value={youtube}
+            onChange={(e) => setYoutube(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Instagram"
+            variant="outlined"
+            fullWidth
+            placeholder="YourInstagramHandle"
+            value={instagram}
+            onChange={(e) => setInstagram(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Facebook"
+            variant="outlined"
+            fullWidth
+            placeholder="YourFacebookUsername"
+            value={facebook}
+            onChange={(e) => setFacebook(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="TikTok"
+            variant="outlined"
+            fullWidth
+            placeholder="@YourTikTokHandle"
+            value={tiktok}
+            onChange={(e) => setTiktok(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <Button variant="contained" color="primary" fullWidth sx={{ mt: 3 }} onClick={handleSave}>
             Save Changes
           </Button>
         </Grid>

@@ -8,7 +8,7 @@ const Races: React.FC = () => {
   const [editData, setEditData] = useState<{ name: string; location: string; date: string }>({ name: '', location: '', date: '' });
 
   useEffect(() => {
-    // Подписываемся на изменения в Firestore
+    // Подключаем слушатель изменений Firestore
     const unsubscribe = listenForRaces(setRaces);
     return () => unsubscribe(); // Отписываемся при уходе со страницы
   }, []);

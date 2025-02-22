@@ -66,4 +66,74 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
           />
           <Typography variant="body2" color="text.secondary">
             EUC Race Pro
-          </Typogr
+          </Typography>
+        </Box>
+      </Toolbar>
+      <Divider />
+      <List sx={{ px: 1, flexGrow: 1 }}>
+        {menuItems.map((item) => (
+          <ListItemButton
+            key={item.text}
+            onClick={() => navigate(item.path)}
+            selected={location.pathname === item.path}
+            sx={{
+              borderRadius: "8px",
+              mb: 1,
+              "&.Mui-selected": {
+                backgroundColor: "#F4F6F8",
+                "&:hover": { backgroundColor: "#E0E3E7" },
+              },
+              "&:hover": { backgroundColor: "#F4F6F8" },
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 32, color: location.pathname === item.path ? "#1976d2" : "inherit" }}>
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText primary={item.text} />
+          </ListItemButton>
+        ))}
+      </List>
+    </Box>
+  );
+
+  return (
+    <>
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: "block", md: "none" },
+          zIndex: 1301, // Исправлен z-index, теперь выше Navbar
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            height: "100vh",
+            position: "fixed",
+            top: 0,
+          },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: "none", md: "block" },
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            height: "100vh",
+            position: "fixed",
+            zIndex: 1300,
+          },
+        }}
+        open
+      >
+        {drawerContent}
+      </Drawer>
+    </>
+  );
+};
+
+export default Sidebar;

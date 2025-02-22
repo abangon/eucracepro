@@ -1,23 +1,36 @@
 import React from 'react';
+import { Drawer, List, ListItemButton, ListItemIcon, ListItemText, Toolbar } from '@mui/material';
+import { Home, DirectionsCar, Leaderboard, Login } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
-import { Drawer, List, ListItem, ListItemText } from '@mui/material';
 
 const Sidebar: React.FC = () => {
   return (
-    <Drawer variant="permanent" sx={{ width: 240, flexShrink: 0 }}>
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: 240,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': { width: 240, boxSizing: 'border-box' },
+      }}
+    >
+      <Toolbar />
       <List>
-        <ListItem button component={Link} to="/">
+        <ListItemButton component={Link} to="/">
+          <ListItemIcon><Home /></ListItemIcon>
           <ListItemText primary="Home" />
-        </ListItem>
-        <ListItem button component={Link} to="/races">
+        </ListItemButton>
+        <ListItemButton component={Link} to="/races">
+          <ListItemIcon><DirectionsCar /></ListItemIcon>
           <ListItemText primary="Races" />
-        </ListItem>
-        <ListItem button component={Link} to="/leaderboard">
+        </ListItemButton>
+        <ListItemButton component={Link} to="/leaderboard">
+          <ListItemIcon><Leaderboard /></ListItemIcon>
           <ListItemText primary="Leaderboard" />
-        </ListItem>
-        <ListItem button component={Link} to="/sign-in">
+        </ListItemButton>
+        <ListItemButton component={Link} to="/sign-in">
+          <ListItemIcon><Login /></ListItemIcon>
           <ListItemText primary="Sign In" />
-        </ListItem>
+        </ListItemButton>
       </List>
     </Drawer>
   );

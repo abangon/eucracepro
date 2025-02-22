@@ -4,12 +4,12 @@ import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import MapChart from "../components/MapChart"; // Подключаем круговой гео-график
+import MapChart from "../components/MapChart"; // Обновленный круговой график
 
 const Home: React.FC = () => {
   const [totalRacers, setTotalRacers] = useState(0);
   const [growthPercentage, setGrowthPercentage] = useState(0);
-  const [countryData, setCountryData] = useState<{ country: string; racers: number }[]>([]);
+  const [countryData, setCountryData] = useState<{ country: string; count: number }[]>([]);
 
   useEffect(() => {
     const fetchActiveRacers = async () => {
@@ -18,24 +18,25 @@ const Home: React.FC = () => {
         const usersSnapshot = await getDocs(usersCollection);
         const users = usersSnapshot.docs.map(doc => doc.data());
 
-        // Количество активных гонщиков (те, кто заполнил профиль)
+        // Количество активных гонщиков (заполнили профиль)
         const totalUsers = users.length;
         setTotalRacers(totalUsers);
 
-        // Группировка пользователей по странам
-        const countryMap: Record<string, number> = {};
+        // Группируем по странам
+        const countryCounts: { [key: string]: number } = {};
         users.forEach(user => {
           if (user.country) {
-            countryMap[user.country] = (countryMap[user.country] || 0) + 1;
+            countryCounts[user.country] = (countryCounts[user.country] || 0) + 1;
           }
         });
 
-        // Преобразуем объект в массив для передачи в `MapChart`
-        const formattedCountryData = Object.entries(countryMap).map(([country, racers]) => ({
+        // Формируем массив данных для графика
+        const formattedData = Object.keys(countryCounts).map(country => ({
           country,
-          racers,
+          count: countryCounts[country],
         }));
-        setCountryData(formattedCountryData);
+
+        setCountryData(formattedData);
 
         // Определяем количество пользователей месяц назад
         const oneMonthAgo = new Date();
@@ -85,17 +86,4 @@ const Home: React.FC = () => {
               <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
                 <SportsMotorsportsIcon fontSize="large" />
               </Avatar>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Круговая диаграмма с гонщиками по странам */}
-        <Grid item xs={12}>
-          <MapChart countryData={countryData} totalRacers={totalRacers} />
-        </Grid>
-      </Grid>
-    </Box>
-  );
-};
-
-export default Home;
+       

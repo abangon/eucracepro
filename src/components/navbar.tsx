@@ -1,18 +1,25 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Avatar } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
+import { AppBar, Toolbar, Typography, IconButton } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 
 const Navbar: React.FC = () => {
   return (
-    <AppBar position="fixed" sx={{ width: `calc(100% - 240px)`, ml: '240px' }}>
+    <AppBar
+      position="static"
+      color="primary"
+      sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+    >
       <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          EUC Race Pro
-        </Typography>
-        <IconButton color="inherit">
-          <SettingsIcon />
+        <IconButton
+          color="inherit"
+          edge="start"
+          sx={{ mr: 2, display: { md: 'none' } }}
+        >
+          <MenuIcon />
         </IconButton>
-        <Avatar sx={{ ml: 2 }} />
+        <Typography variant="h6" noWrap>
+          EuCracePro
+        </Typography>
       </Toolbar>
     </AppBar>
   );

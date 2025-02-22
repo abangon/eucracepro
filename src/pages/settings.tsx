@@ -25,11 +25,10 @@ const Settings: React.FC = () => {
   const [countries, setCountries] = useState<string[]>([]);
 
   useEffect(() => {
-    // Получаем список стран с API
+    // Получаем список стран с публичного API
     fetch("https://restcountries.com/v3.1/all")
       .then(response => response.json())
       .then(data => {
-        // Извлекаем названия стран и сортируем их
         const countryNames = data.map((item: any) => item.name.common);
         countryNames.sort();
         setCountries(countryNames);
@@ -38,7 +37,7 @@ const Settings: React.FC = () => {
   }, []);
 
   const handleSave = async () => {
-    // Сохраняем данные в Firestore, если пользователь авторизован
+    // Если пользователь авторизован, сохраняем данные в Firestore в коллекцию "users"
     const user = auth.currentUser;
     if (user) {
       try {
@@ -107,6 +106,7 @@ const Settings: React.FC = () => {
             label="YouTube"
             variant="outlined"
             fullWidth
+            placeholder="@YourYouTubeChannel"
             value={youtube}
             onChange={(e) => setYoutube(e.target.value)}
           />
@@ -116,6 +116,7 @@ const Settings: React.FC = () => {
             label="Instagram"
             variant="outlined"
             fullWidth
+            placeholder="@YourInstagramHandle"
             value={instagram}
             onChange={(e) => setInstagram(e.target.value)}
           />
@@ -125,6 +126,7 @@ const Settings: React.FC = () => {
             label="Facebook"
             variant="outlined"
             fullWidth
+            placeholder="@YourFacebookUsername"
             value={facebook}
             onChange={(e) => setFacebook(e.target.value)}
           />
@@ -134,6 +136,7 @@ const Settings: React.FC = () => {
             label="TikTok"
             variant="outlined"
             fullWidth
+            placeholder="@YourTikTokHandle"
             value={tiktok}
             onChange={(e) => setTiktok(e.target.value)}
           />

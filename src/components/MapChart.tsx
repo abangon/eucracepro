@@ -67,10 +67,10 @@ const MapChart: React.FC<Props> = ({ data, totalRacers }) => {
           </Pie>
 
           <Tooltip
-            formatter={(value, name, props) => [
-              `${((value as number / totalRacers) * 100).toFixed(1)}%`,
-              props.payload.country
-            ]}
+            formatter={(value, name, props) => {
+              const percent = totalRacers > 0 ? ((Number(value) / totalRacers) * 100).toFixed(1) : "0";
+              return [`${percent}%`, props.payload.country];
+            }}
           />
         </PieChart>
 

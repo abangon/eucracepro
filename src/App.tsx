@@ -32,14 +32,14 @@ const App: React.FC = () => {
             mobileOpen={mobileOpen} 
             handleDrawerToggle={handleDrawerToggle} 
           />
-          <Box component="main" sx={{ flexGrow: 1, width: "100%" }}>
+          <Box component="main" sx={{ 
+            flexGrow: 1, 
+            width: isMobile ? "100%" : `calc(100% - ${sidebarOpen ? 240 : 0}px)`, 
+            transition: "width 0.3s",
+            ml: isMobile ? 0 : `${sidebarOpen ? 240 : 0}px`, // Делаем отступ слева под Sidebar
+          }}>
             <Navbar onMenuClick={handleDrawerToggle} isSidebarOpen={sidebarOpen} />
-            <Box sx={{
-              mt: 10, 
-              p: 3, 
-              width: isMobile ? "100%" : `calc(100% - ${sidebarOpen ? 240 : 0}px)`,
-              transition: "width 0.3s"
-            }}>
+            <Box sx={{ mt: 10, p: 3 }}>
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/races" element={<Races />} />

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
-import { Box, Typography, Card, CardContent } from "@mui/material";
+import { Box, Typography, Card, CardContent, Stack } from "@mui/material";
 import PublicIcon from "@mui/icons-material/Public";
 
 // Функция для генерации цветов
@@ -75,6 +75,16 @@ const MapChart: React.FC<Props> = ({ data, totalRacers }) => {
             }}
           />
         </PieChart>
+
+        {/* Легенда со странами */}
+        <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center", mt: 2 }}>
+          {sortedData.map((entry, index) => (
+            <Stack key={entry.country} direction="row" alignItems="center" spacing={1} sx={{ m: 1 }}>
+              <Box sx={{ width: 12, height: 12, borderRadius: "50%", backgroundColor: getColor(index) }} />
+              <Typography variant="body2">{entry.country}</Typography>
+            </Stack>
+          ))}
+        </Box>
       </CardContent>
     </Card>
   );

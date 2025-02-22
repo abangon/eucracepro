@@ -1,7 +1,6 @@
 // src/components/navbar.tsx
 import React from 'react';
 import { AppBar, Toolbar, Box } from '@mui/material';
-import logo from '../images/logo/eucrace-logo.jpg';
 
 const Navbar: React.FC = () => {
   return (

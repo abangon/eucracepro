@@ -1,5 +1,5 @@
-import React from "react";
-import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import React, { useState } from "react";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { Box, Typography, Card, CardContent } from "@mui/material";
 import PublicIcon from "@mui/icons-material/Public";
 
@@ -20,6 +20,8 @@ interface Props {
 }
 
 const MapChart: React.FC<Props> = ({ data, totalRacers }) => {
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
   // Сортируем страны по количеству гонщиков
   const sortedData = [...data].sort((a, b) => b.count - a.count);
 
@@ -51,22 +53,26 @@ const MapChart: React.FC<Props> = ({ data, totalRacers }) => {
             outerRadius={100}
             cornerRadius={10} // Закругляем концы
             paddingAngle={5}
+            onMouseLeave={() => setHoverIndex(null)}
           >
             {sortedData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={getColor(index)} />
+              <Cell
+                key={`cell-${index}`}
+                fill={getColor(index)}
+                opacity={hoverIndex === index ? 0.7 : 1} // Затемнение при наведении
+                onMouseEnter={() => setHoverIndex(index)}
+                style={{ outline: "none" }} // Убираем рамку при клике
+              />
             ))}
           </Pie>
 
-          <Tooltip />
+          <Tooltip
+            formatter={(value, name, props) => [
+              `${((value as number / totalRacers) * 100).toFixed(1)}%`,
+              props.payload.country
+            ]}
+          />
         </PieChart>
-
-        {/* Общее число гонщиков */}
-        <Typography variant="h5" sx={{ fontWeight: "bold", mt: 1 }}>
-          {totalRacers}
-        </Typography>
-        <Typography variant="body2" color="textSecondary">
-          Total
-        </Typography>
 
         {/* Легенда */}
         <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>

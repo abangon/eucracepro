@@ -11,10 +11,12 @@ import {
   Box,
   useMediaQuery,
   useTheme,
+  IconButton,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../images/logo/eucrace-logo.jpg";
 
@@ -38,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
   ];
 
   const drawerContent = (
-    <Box sx={{ width: drawerWidth, overflowX: "hidden", height: "100vh", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ width: drawerWidth, height: "100vh", display: "flex", flexDirection: "column" }}>
       <Toolbar sx={{ display: "flex", justifyContent: "center", p: 2 }}>
         <Box
           sx={{
@@ -87,7 +89,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
                 fontSize: 14,
                 fontWeight: location.pathname === item.path ? "bold" : "normal",
                 color: location.pathname === item.path ? "#1976d2" : "inherit",
-                whiteSpace: "nowrap", // Текст больше не переносится
+                whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
               }}
@@ -100,6 +102,17 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
 
   return (
     <>
+      {/* Кнопка меню (гамбургер) должна быть видна ВСЕГДА */}
+      {isMobile && (
+        <IconButton
+          onClick={handleDrawerToggle}
+          color="inherit"
+          sx={{ position: "fixed", top: 10, left: 10, zIndex: (theme) => theme.zIndex.drawer + 2 }}
+        >
+          <MenuIcon />
+        </IconButton>
+      )}
+
       {/* Выдвижное меню для мобильных устройств */}
       <Drawer
         variant="temporary"
@@ -110,9 +123,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
           display: { xs: "block", md: "none" },
           "& .MuiDrawer-paper": {
             width: drawerWidth,
-            overflowX: "hidden", // Убираем горизонтальную прокрутку
             height: "100vh",
             position: "fixed",
+            zIndex: (theme) => theme.zIndex.drawer + 1, // Теперь Sidebar выше Navbar
           },
         }}
       >
@@ -126,12 +139,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
           display: { xs: "none", md: "block" },
           "& .MuiDrawer-paper": {
             width: drawerWidth,
-            overflowX: "hidden", // Убираем горизонтальную прокрутку
             height: "100vh",
-            position: "fixed", // Фиксируем Sidebar, чтобы текст не вылазил
-            boxSizing: "border-box",
-            backgroundColor: "#FFFFFF",
-            borderRight: "1px solid #e0e0e0",
+            position: "fixed",
+            zIndex: (theme) => theme.zIndex.drawer,
           },
         }}
         open

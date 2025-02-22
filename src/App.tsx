@@ -6,7 +6,7 @@ import theme from './theme/theme';
 import Home from './pages/home';
 import Races from './pages/races';
 import Leaderboard from './pages/leaderboard';
-import SignIn from './pages/signIn';
+import SignIn from './pages/signin';
 
 const App: React.FC = () => {
   return (

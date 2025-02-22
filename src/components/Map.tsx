@@ -1,58 +1,52 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Box, Typography, Card, CardContent } from "@mui/material";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../utils/firebase";
+import Tooltip from "@mui/material/Tooltip";
 
-const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+const geoUrl = "https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-110m.json";
 
-const Map: React.FC = () => {
-  const [activeCountries, setActiveCountries] = useState<string[]>([]);
+interface MapProps {
+  highlightedCountries: { [key: string]: number }; // Объект, где ключ - страна, значение - кол-во гонщиков
+}
 
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const usersCollection = collection(db, "users");
-        const usersSnapshot = await getDocs(usersCollection);
-        const users = usersSnapshot.docs.map((doc) => doc.data());
-
-        // Получаем список стран, выбранных пользователями
-        const countries = users
-          .map((user) => user.country)
-          .filter((country) => country);
-
-        setActiveCountries(countries);
-      } catch (error) {
-        console.error("Error fetching users' countries:", error);
-      }
-    };
-    fetchCountries();
-  }, []);
+const Map: React.FC<MapProps> = ({ highlightedCountries }) => {
+  const [tooltipContent, setTooltipContent] = useState<string | null>(null);
 
   return (
-    <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2, mt: 3 }}>
+    <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2 }}>
       <CardContent>
-        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+        <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: 16, fontWeight: 600, mb: 2 }}>
           🌍 Registered Racers by Country
         </Typography>
-        <Box sx={{ width: "100%", height: 600 }}>
+        <Box sx={{ width: "100%", height: 600, position: "relative" }}>
           <ComposableMap projectionConfig={{ scale: 220 }}>
             <Geographies geography={geoUrl}>
               {({ geographies }) =>
                 geographies.map((geo) => {
-                  const isActive = activeCountries.includes(geo.properties.name);
+                  const countryName = geo.properties.NAME;
+                  const racerCount = highlightedCountries[countryName] || 0;
+                  const isHighlighted = racerCount > 0;
+
                   return (
-                    <Geography
+                    <Tooltip
                       key={geo.rsmKey}
-                      geography={geo}
-                      fill={isActive ? "#4CAF50" : "#D6D6DA"}
-                      stroke="#FFFFFF"
-                      style={{
-                        default: { outline: "none" },
-                        hover: { fill: "#2E7D32", outline: "none" },
-                        pressed: { fill: "#1B5E20", outline: "none" },
-                      }}
-                    />
+                      title={isHighlighted ? `${countryName}: ${racerCount} racers` : ""}
+                      arrow
+                    >
+                      <Geography
+                        geography={geo}
+                        fill={isHighlighted ? "#7B1FA2" : "#E0E0E0"} // Фиолетовый для активных стран
+                        stroke="#FFF"
+                        strokeWidth={0.5}
+                        onMouseEnter={() => setTooltipContent(isHighlighted ? `${countryName}: ${racerCount} racers` : null)}
+                        onMouseLeave={() => setTooltipContent(null)}
+                        style={{
+                          default: { outline: "none" },
+                          hover: { fill: "#4A148C", outline: "none" }, // Более темный фиолетовый при наведении
+                          pressed: { fill: "#4A148C", outline: "none" },
+                        }}
+                      />
+                    </Tooltip>
                   );
                 })
               }

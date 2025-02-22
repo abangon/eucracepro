@@ -28,7 +28,7 @@ const Settings: React.FC = () => {
   const [debugMessage, setDebugMessage] = useState("");
 
   useEffect(() => {
-    // Загружаем список стран
+    // Получаем список стран
     fetch("https://restcountries.com/v3.1/all")
       .then((response) => response.json())
       .then((data) => {
@@ -69,7 +69,10 @@ const Settings: React.FC = () => {
     if (platform === "youtube" || platform === "tiktok") {
       return value === "" || value.startsWith("@"); // Требуется @
     }
-    return true; // Instagram и Facebook могут быть без @
+    if (platform === "instagram" || platform === "facebook") {
+      return value === "" || !value.startsWith("@"); // Запрещено @
+    }
+    return true;
   };
 
   const handleSave = async () => {
@@ -89,6 +92,14 @@ const Settings: React.FC = () => {
       setError("TikTok handle should start with '@'.");
       return;
     }
+    if (!validateSocialMedia("instagram", instagram)) {
+      setError("Instagram username should NOT start with '@'.");
+      return;
+    }
+    if (!validateSocialMedia("facebook", facebook)) {
+      setError("Facebook username should NOT start with '@'.");
+      return;
+    }
 
     const user = auth.currentUser;
     if (user) {
@@ -98,7 +109,6 @@ const Settings: React.FC = () => {
           { nickname, country, team, youtube, instagram, facebook, tiktok },
           { merge: true }
         );
-
         setDebugMessage("Settings saved successfully.");
       } catch (err: any) {
         setError("Error saving settings: " + err.message);
@@ -110,7 +120,7 @@ const Settings: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
         User Settings
       </Typography>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -124,6 +134,7 @@ const Settings: React.FC = () => {
             required
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
+            sx={{ mt: 2 }}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -153,7 +164,7 @@ const Settings: React.FC = () => {
           />
         </Grid>
         <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
             Social Media Links
           </Typography>
         </Grid>
@@ -198,7 +209,7 @@ const Settings: React.FC = () => {
           />
         </Grid>
         <Grid item xs={12}>
-          <Button variant="contained" color="primary" onClick={handleSave}>
+          <Button variant="contained" color="primary" onClick={handleSave} sx={{ mt: 3 }}>
             Save Changes
           </Button>
         </Grid>

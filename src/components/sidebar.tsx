@@ -108,8 +108,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
 
   return (
     <>
-      {/* Кнопка меню (гамбургер) теперь НЕ дублируется */}
-      {isMobile && (
+      {/* Кнопка-меню (гамбургер) БОЛЬШЕ НЕ ДУБЛИРУЕТСЯ */}
+      {isMobile && !mobileOpen && (
         <IconButton
           onClick={handleDrawerToggle}
           color="inherit"
@@ -118,7 +118,6 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
             top: 10,
             left: 10,
             zIndex: (theme) => theme.zIndex.drawer + 3,
-            display: mobileOpen ? "none" : "block", // Скрываем, если меню открыто
           }}
         >
           <MenuIcon />
@@ -133,7 +132,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: "block", md: "none" },
-          zIndex: (theme) => theme.zIndex.modal + 2, // Устанавливаем Sidebar выше Navbar
+          zIndex: (theme) => theme.zIndex.modal + 2,
           "& .MuiDrawer-paper": {
             width: drawerWidth,
             height: "100vh",

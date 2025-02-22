@@ -35,15 +35,26 @@ const Sidebar: React.FC = () => {
       sx={{
         width: drawerWidth,
         flexShrink: 0,
-        [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+        [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', backgroundColor: '#fff' },
       }}
     >
       <Toolbar>
-        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
           <img
             src={logo}
             alt="EuCrace Logo"
-            style={{ width: '80%', objectFit: 'contain' }}
+            style={{
+              width: '100%',
+              maxWidth: '200px',
+              objectFit: 'contain',
+            }}
           />
         </Box>
       </Toolbar>

@@ -28,7 +28,6 @@ const Settings: React.FC = () => {
   const [debugMessage, setDebugMessage] = useState("");
 
   useEffect(() => {
-    // Получаем список стран
     fetch("https://restcountries.com/v3.1/all")
       .then((response) => response.json())
       .then((data) => {
@@ -38,7 +37,6 @@ const Settings: React.FC = () => {
       })
       .catch((error) => console.error("Error fetching countries:", error));
 
-    // Загружаем данные пользователя из Firestore
     const fetchUserData = async () => {
       const user = auth.currentUser;
       if (user) {
@@ -64,60 +62,6 @@ const Settings: React.FC = () => {
     fetchUserData();
   }, []);
 
-  // Функция валидации для социальных сетей
-  const validateSocialMedia = (platform: string, value: string) => {
-    if (platform === "youtube" || platform === "tiktok") {
-      return value === "" || value.startsWith("@"); // Требуется @
-    }
-    if (platform === "instagram" || platform === "facebook") {
-      return value === "" || !value.startsWith("@"); // Запрещено @
-    }
-    return true;
-  };
-
-  const handleSave = async () => {
-    setError("");
-    setDebugMessage("");
-
-    if (!nickname.trim()) {
-      setError("Nickname is required.");
-      return;
-    }
-
-    if (!validateSocialMedia("youtube", youtube)) {
-      setError("YouTube channel should start with '@'.");
-      return;
-    }
-    if (!validateSocialMedia("tiktok", tiktok)) {
-      setError("TikTok handle should start with '@'.");
-      return;
-    }
-    if (!validateSocialMedia("instagram", instagram)) {
-      setError("Instagram username should NOT start with '@'.");
-      return;
-    }
-    if (!validateSocialMedia("facebook", facebook)) {
-      setError("Facebook username should NOT start with '@'.");
-      return;
-    }
-
-    const user = auth.currentUser;
-    if (user) {
-      try {
-        await setDoc(
-          doc(db, "users", user.uid),
-          { nickname, country, team, youtube, instagram, facebook, tiktok },
-          { merge: true }
-        );
-        setDebugMessage("Settings saved successfully.");
-      } catch (err: any) {
-        setError("Error saving settings: " + err.message);
-      }
-    } else {
-      setError("No user is logged in.");
-    }
-  };
-
   return (
     <Box sx={{ p: 3, maxWidth: 600, mx: "auto" }}>
       <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
@@ -134,7 +78,6 @@ const Settings: React.FC = () => {
             required
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
-            sx={{ mt: 2 }}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -154,62 +97,8 @@ const Settings: React.FC = () => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Team"
-            variant="outlined"
-            fullWidth
-            value={team}
-            onChange={(e) => setTeam(e.target.value)}
-          />
-        </Grid>
         <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-            Social Media Links
-          </Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="YouTube"
-            variant="outlined"
-            fullWidth
-            placeholder="@YourYouTubeChannel"
-            value={youtube}
-            onChange={(e) => setYoutube(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Instagram"
-            variant="outlined"
-            fullWidth
-            placeholder="YourInstagramHandle"
-            value={instagram}
-            onChange={(e) => setInstagram(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Facebook"
-            variant="outlined"
-            fullWidth
-            placeholder="YourFacebookUsername"
-            value={facebook}
-            onChange={(e) => setFacebook(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="TikTok"
-            variant="outlined"
-            fullWidth
-            placeholder="@YourTikTokHandle"
-            value={tiktok}
-            onChange={(e) => setTiktok(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <Button variant="contained" color="primary" onClick={handleSave} sx={{ mt: 3 }}>
+          <Button variant="contained" color="primary" fullWidth sx={{ mt: 3 }}>
             Save Changes
           </Button>
         </Grid>

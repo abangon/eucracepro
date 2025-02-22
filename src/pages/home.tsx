@@ -4,7 +4,7 @@ import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import MapChart from "../components/MapChart"; // Обновленный круговой график
+import MapChart from "../components/MapChart"; // Круговой график
 
 const Home: React.FC = () => {
   const [totalRacers, setTotalRacers] = useState(0);
@@ -86,4 +86,21 @@ const Home: React.FC = () => {
               <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
                 <SportsMotorsportsIcon fontSize="large" />
               </Avatar>
-       
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Круговой график стран */}
+        <Grid item xs={12} md={4}>
+          <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2 }}>
+            <CardContent>
+              <MapChart data={countryData} totalRacers={totalRacers} />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
+
+export default Home;

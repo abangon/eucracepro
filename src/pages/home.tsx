@@ -4,7 +4,7 @@ import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import MapChart from "../components/MapChart"; // Подключаем круговой график стран
+import MapChart from "../components/MapChart"; // Круговой график
 
 const Home: React.FC = () => {
   const [totalRacers, setTotalRacers] = useState(0);
@@ -92,7 +92,7 @@ const Home: React.FC = () => {
 
         {/* Круговой график стран */}
         <Grid item xs={12} md={4}>
-          <MapChart data={countryData} />
+          <MapChart data={countryData} totalRacers={totalRacers} />
         </Grid>
       </Grid>
     </Box>

@@ -4,7 +4,7 @@ import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import Map from "../components/Map"; // Подключаем карту
+import Map from "../components/MapChart"; // Подключаем круговой гео график
 
 const Home: React.FC = () => {
   const [totalRacers, setTotalRacers] = useState(0);

@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
   ];
 
   const drawerContent = (
-    <Box sx={{ width: drawerWidth, overflowX: "hidden" }}>
+    <Box sx={{ width: drawerWidth, overflowX: "hidden", height: "100vh", display: "flex", flexDirection: "column" }}>
       <Toolbar sx={{ display: "flex", justifyContent: "center", p: 2 }}>
         <Box
           sx={{
@@ -62,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
         </Box>
       </Toolbar>
       <Divider />
-      <List sx={{ px: 1 }}>
+      <List sx={{ px: 1, flexGrow: 1 }}>
         {menuItems.map((item) => (
           <ListItemButton
             key={item.text}
@@ -87,6 +87,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
                 fontSize: 14,
                 fontWeight: location.pathname === item.path ? "bold" : "normal",
                 color: location.pathname === item.path ? "#1976d2" : "inherit",
+                whiteSpace: "nowrap", // Текст больше не переносится
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             />
           </ListItemButton>
@@ -108,6 +111,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
           "& .MuiDrawer-paper": {
             width: drawerWidth,
             overflowX: "hidden", // Убираем горизонтальную прокрутку
+            height: "100vh",
+            position: "fixed",
           },
         }}
       >
@@ -122,6 +127,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
           "& .MuiDrawer-paper": {
             width: drawerWidth,
             overflowX: "hidden", // Убираем горизонтальную прокрутку
+            height: "100vh",
+            position: "fixed", // Фиксируем Sidebar, чтобы текст не вылазил
             boxSizing: "border-box",
             backgroundColor: "#FFFFFF",
             borderRight: "1px solid #e0e0e0",

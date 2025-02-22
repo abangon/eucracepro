@@ -37,9 +37,6 @@ const Navbar: React.FC = () => {
               {user.displayName || user.email}
             </Typography>
           )}
-          <Typography variant="h6" color="primary">
-            EuCracePro
-          </Typography>
         </Box>
         <Box>
           <Button variant="outlined" color="primary" onClick={handleAuthClick}>

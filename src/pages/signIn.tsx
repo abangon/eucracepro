@@ -1,11 +1,16 @@
+// src/pages/signIn.tsx
 import React from 'react';
 import { Button, Box, Typography } from '@mui/material';
 import { signInWithGoogle } from '../utils/firebase';
+import { useNavigate } from 'react-router-dom';
 
 const SignIn: React.FC = () => {
+  const navigate = useNavigate();
+
   const handleSignIn = async () => {
     try {
       await signInWithGoogle();
+      navigate('/'); // Перенаправление на главную страницу
     } catch (error) {
       console.error("Error signing in:", error);
     }

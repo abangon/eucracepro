@@ -80,14 +80,7 @@ const Home: React.FC = () => {
 
         {/* Карта пользователей */}
         <Grid item xs={12}>
-          <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2 }}>
-            <CardContent>
-              <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: 16, fontWeight: 600, mb: 2 }}>
-                🌍 Registered Racers by Country
-              </Typography>
-              <Map highlightedCountries={highlightedCountries} />
-            </CardContent>
-          </Card>
+          <Map highlightedCountries={highlightedCountries} />
         </Grid>
       </Grid>
     </Box>

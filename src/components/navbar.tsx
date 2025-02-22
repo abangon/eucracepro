@@ -1,7 +1,6 @@
 // src/components/navbar.tsx
 import React from 'react';
-import { AppBar, Toolbar, Box } from '@mui/material';
-import logo from '../images/logo/eucrace-logo.jpg';  // Добавлен импорт логотипа
+import { AppBar, Toolbar, Typography } from '@mui/material';
 
 const Navbar: React.FC = () => {
   return (
@@ -11,13 +10,9 @@ const Navbar: React.FC = () => {
       sx={{ borderBottom: '1px solid #e0e0e0', p: 1 }}
     >
       <Toolbar sx={{ padding: 0 }}>
-        <Box sx={{ width: { xs: '120px', md: '200px' } }}>
-          <img
-            src={logo}
-            alt="EuCrace Logo"
-            style={{ width: '100%', objectFit: 'contain' }}
-          />
-        </Box>
+        <Typography variant="h6" color="primary">
+          EuCracePro
+        </Typography>
       </Toolbar>
     </AppBar>
   );

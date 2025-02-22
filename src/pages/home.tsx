@@ -1,10 +1,10 @@
-// src/pages/home.tsx
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Grid, Card, CardContent, Avatar } from "@mui/material";
 import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import { getAuth, listUsers } from "firebase/auth";
-import { app } from "../utils/firebase";
+import { getAuth } from "firebase/auth";
+import { db } from "../utils/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 const Home: React.FC = () => {
   const [totalRacers, setTotalRacers] = useState(0);
@@ -13,27 +13,27 @@ const Home: React.FC = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const auth = getAuth(app);
-        const usersList = await listUsers(auth, 1000); // Получаем до 1000 пользователей
-
-        const users = usersList.users.map(user => ({
-          createdAt: new Date(user.metadata.creationTime)
-        }));
+        // 🔹 Получаем всех пользователей из коллекции "users"
+        const usersCollection = collection(db, "users");
+        const usersSnapshot = await getDocs(usersCollection);
+        const users = usersSnapshot.docs.map(doc => doc.data());
 
         // 1️⃣ Общее количество зарегистрированных пользователей
         const totalUsers = users.length;
         setTotalRacers(totalUsers);
 
-        // 2️⃣ Фильтруем пользователей, созданных до месяца назад
+        // 2️⃣ Определяем пользователей, зарегистрированных месяц назад
         const oneMonthAgo = new Date();
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
-        const pastUsers = users.filter(user => user.createdAt < oneMonthAgo).length;
+        const pastUsers = users.filter(user => 
+          user.createdAt && new Date(user.createdAt) < oneMonthAgo
+        ).length;
 
         // 3️⃣ Рассчитываем прирост (%)
         let growth = 0;
         if (pastUsers === 0 && totalUsers > 0) {
-          growth = 300; // Если месяц назад было 0, значит рост 300%
+          growth = 300; // Если месяц назад было 0, то рост 300%
         } else if (pastUsers > 0) {
           growth = ((totalUsers - pastUsers) / pastUsers) * 100;
         }

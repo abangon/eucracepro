@@ -15,9 +15,11 @@ import Settings from "./pages/settings";
 
 const App: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   return (
@@ -25,10 +27,9 @@ const App: React.FC = () => {
       <CssBaseline />
       <Router>
         <Box sx={{ display: "flex", width: "100%", minHeight: "100vh" }}>
-          {/* Передаем `mobileOpen` в Sidebar и Navbar */}
           <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
           <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
-            <Navbar handleDrawerToggle={handleDrawerToggle} />
+            <Navbar onMenuClick={handleDrawerToggle} isSidebarOpen={isSidebarOpen} />
             <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
               <Routes>
                 <Route path="/" element={<Home />} />

@@ -21,7 +21,6 @@ const drawerWidth = 240;
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
 
-  // Удалён пункт "Sign In"
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Races', icon: <SportsEsportsIcon />, path: '/races' },
@@ -45,7 +44,9 @@ const Sidebar: React.FC = () => {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
+            cursor: 'pointer'
           }}
+          onClick={() => navigate('/')}
         >
           <img
             src={logo}

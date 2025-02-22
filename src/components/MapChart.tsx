@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, Typography, Box } from "@mui/material";
 import PublicIcon from "@mui/icons-material/Public";
 
 const COLORS = ["#6A5ACD", "#8A2BE2", "#7B68EE", "#9370DB", "#BA55D3"]; // Фиолетовые оттенки
 const GRAY_COLOR = "#E0E0E0"; // Серый фон для пустых мест
+const HOVER_OPACITY = 0.7; // Затемнение при наведении
 
 const MapChart = ({ data }: { data: { country: string; count: number }[] }) => {
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const total = data.reduce((sum, item) => sum + item.count, 0);
 
   return (
@@ -22,10 +24,10 @@ const MapChart = ({ data }: { data: { country: string; count: number }[] }) => {
           <PieChart>
             {/* Серый фон */}
             <Pie
-              data={[{ value: 1 }]} // Одна секция, заполняющая круг
+              data={[{ value: 1 }]}
               dataKey="value"
-              outerRadius={100} // Увеличил радиус круга
-              innerRadius={70} // Сделал его толще
+              outerRadius={100}
+              innerRadius={70}
               fill={GRAY_COLOR}
             />
             {/* Основные данные */}
@@ -34,16 +36,22 @@ const MapChart = ({ data }: { data: { country: string; count: number }[] }) => {
               dataKey="count"
               cx="50%"
               cy="50%"
-              innerRadius={70} // Сделал толще
-              outerRadius={100} // Радиус теперь больше
-              fill="#8884d8"
+              innerRadius={70}
+              outerRadius={100}
               paddingAngle={5}
-              startAngle={90} // Начало с 12 часов
-              endAngle={-270} // Направление против часовой стрелки
-              cornerRadius={15} // Еще больше закругленные концы
+              startAngle={90}
+              endAngle={-270}
+              cornerRadius={15}
+              onMouseLeave={() => setHoverIndex(null)}
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[index % COLORS.length]}
+                  opacity={hoverIndex === index ? HOVER_OPACITY : 1} // Затемнение
+                  onMouseEnter={() => setHoverIndex(index)}
+                  style={{ outline: "none" }} // Убираем рамку при клике
+                />
               ))}
             </Pie>
             <Tooltip formatter={(value, name, props) => [`${((value as number / total) * 100).toFixed(1)}%`, props.payload.country]} />

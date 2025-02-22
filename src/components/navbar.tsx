@@ -1,113 +1,52 @@
 // src/components/navbar.tsx
-import React, { useEffect, useState } from "react";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Box,
-  Button,
-  IconButton,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
+import React from "react";
+import { AppBar, Toolbar, Box, IconButton, Button, Typography } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import SettingsIcon from "@mui/icons-material/Settings";
 import { useNavigate } from "react-router-dom";
-import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db, logOut } from "../utils/firebase";
+import { auth, logOut } from "../utils/firebase";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 interface NavbarProps {
-  onMenuClick: () => void;
-  isSidebarOpen: boolean;
+  handleDrawerToggle: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onMenuClick, isSidebarOpen }) => {
+const Navbar: React.FC<NavbarProps> = ({ handleDrawerToggle }) => {
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  const [user, setUser] = useState<any>(null);
-  const [nickname, setNickname] = useState<string | null>(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          setNickname(userDoc.data().nickname || null);
-        }
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleAuthClick = async () => {
-    if (user) {
-      await logOut();
-      navigate("/");
-    } else {
-      navigate("/sign-in");
-    }
-  };
+  const user = auth.currentUser;
 
   return (
     <AppBar
       position="fixed"
       color="inherit"
       sx={{
-        zIndex: (theme) => theme.zIndex.drawer + 1,
-        width: isMobile ? "100%" : `calc(100% - ${isSidebarOpen ? 240 : 0}px)`,
-        marginLeft: isMobile ? 0 : `${isSidebarOpen ? 240 : 0}px`,
-        transition: "width 0.3s, margin-left 0.3s",
-        boxShadow: "none",
         borderBottom: "1px solid #e0e0e0",
+        px: 2,
+        zIndex: (theme) => theme.zIndex.drawer + 1, // Чтобы навбар был выше сайдбара
       }}
     >
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", px: 2 }}>
-        {/* Кнопка меню (гамбургер) для мобильных устройств */}
-        {isMobile && (
-          <IconButton onClick={onMenuClick} color="inherit">
-            <MenuIcon />
-          </IconButton>
-        )}
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+        {/* Кнопка меню для мобильных устройств */}
+        <IconButton
+          onClick={handleDrawerToggle}
+          color="inherit"
+          sx={{ display: { xs: "block", md: "none" } }}
+        >
+          <MenuIcon />
+        </IconButton>
 
-        {/* Блок с Username, Settings, Sign Out (Все элементы выровнены по расстоянию) */}
-        <Box sx={{ display: "flex", alignItems: "center", ml: "auto", gap: "16px" }}>
+        {/* Правый блок с именем и кнопками */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           {user && (
-            <Typography
-              variant="body1"
-              color="primary"
-              sx={{
-                fontSize: 14, // Совпадает со шрифтом в Sidebar
-                fontWeight: "bold",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                maxWidth: "200px",
-              }}
-            >
-              {nickname || user.displayName || user.email}
-            </Typography>
+            <>
+              <Typography variant="subtitle2">{user.displayName || "User"}</Typography>
+              <IconButton onClick={() => navigate("/settings")}>
+                <SettingsIcon />
+              </IconButton>
+              <Button variant="outlined" onClick={logOut}>
+                Sign Out
+              </Button>
+            </>
           )}
-          {user && (
-            <IconButton onClick={() => navigate("/settings")} color="primary" sx={{ fontSize: "1.2rem" }}>
-              <SettingsIcon fontSize="small" />
-            </IconButton>
-          )}
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={handleAuthClick}
-            sx={{
-              fontSize: 14, // Такой же размер, как текст в Sidebar
-              fontWeight: "bold",
-              textTransform: "none", // Отключаем заглавные буквы
-            }}
-          >
-            {user ? "Sign Out" : "Sign In"}
-          </Button>
         </Box>
       </Toolbar>
     </AppBar>

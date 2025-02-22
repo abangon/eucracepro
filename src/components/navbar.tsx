@@ -61,9 +61,11 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, isSidebarOpen }) => {
         width: isMobile ? "100%" : `calc(100% - ${isSidebarOpen ? 240 : 0}px)`,
         marginLeft: isMobile ? 0 : `${isSidebarOpen ? 240 : 0}px`,
         transition: "width 0.3s, margin-left 0.3s",
+        boxShadow: "none",
+        borderBottom: "1px solid #e0e0e0",
       }}
     >
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", px: 2 }}>
         {/* Кнопка меню (гамбургер) для мобильных устройств */}
         {isMobile && (
           <IconButton onClick={onMenuClick} color="inherit">
@@ -71,35 +73,41 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, isSidebarOpen }) => {
           </IconButton>
         )}
 
-        {/* Имя пользователя (Nickname) теперь правильно центрируется и совпадает по размеру с "Sign Out" */}
-        {user && (
-          <Box sx={{ flexGrow: 1, textAlign: isMobile ? "center" : "left" }}>
+        {/* Кнопки справа: Username, Settings, Sign Out */}
+        <Box sx={{ display: "flex", alignItems: "center", ml: "auto" }}>
+          {user && (
             <Typography
               variant="body1"
               color="primary"
               sx={{
-                fontSize: "1rem", // Одинаковый размер с кнопкой "Sign Out"
-                overflow: "hidden",
+                fontSize: 14, // Совпадает со шрифтом в Sidebar
+                fontWeight: "bold",
                 whiteSpace: "nowrap",
+                overflow: "hidden",
                 textOverflow: "ellipsis",
-                maxWidth: isMobile ? "50%" : "300px",
-                mx: isMobile ? "auto" : 0,
-                display: "inline-block",
+                maxWidth: "200px",
+                mr: 2, // Добавлен отступ, чтобы текст не прилипал к иконкам
               }}
             >
               {nickname || user.displayName || user.email}
             </Typography>
-          </Box>
-        )}
-
-        {/* Кнопки настроек и выхода */}
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+          )}
           {user && (
-            <IconButton onClick={() => navigate("/settings")} color="primary">
-              <SettingsIcon />
+            <IconButton onClick={() => navigate("/settings")} color="primary" sx={{ fontSize: "1.2rem" }}>
+              <SettingsIcon fontSize="small" /> {/* Размер как у Sidebar */}
             </IconButton>
           )}
-          <Button variant="outlined" color="primary" onClick={handleAuthClick} sx={{ ml: 1 }}>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={handleAuthClick}
+            sx={{
+              fontSize: 14, // Такой же размер, как текст в Sidebar
+              fontWeight: "bold",
+              textTransform: "none", // Отключаем заглавные буквы
+              ml: 1,
+            }}
+          >
             {user ? "Sign Out" : "Sign In"}
           </Button>
         </Box>

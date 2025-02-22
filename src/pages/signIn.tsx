@@ -12,8 +12,8 @@ import {
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth, signInWithGoogle } from "../utils/firebase";
 import { useNavigate } from "react-router-dom";
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
@@ -22,11 +22,15 @@ const SignIn: React.FC = () => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   const handleEmailSignIn = async () => {
     setError("");
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/"); // Redirect to home page after sign in
+      navigate("/"); // Перенаправление на главную страницу после входа
     } catch (err: any) {
       setError(err.message);
     }
@@ -50,10 +54,6 @@ const SignIn: React.FC = () => {
     } catch (err: any) {
       setError(err.message);
     }
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
   };
 
   return (

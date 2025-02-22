@@ -1,36 +1,41 @@
 import React from 'react';
-import { Drawer, List, ListItemButton, ListItemIcon, ListItemText, Toolbar } from '@mui/material';
-import { Home, DirectionsCar, Leaderboard, Login } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { Drawer, List, ListItem, ListItemIcon, ListItemText, Toolbar, Divider } from '@mui/material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import LeaderboardIcon from '@mui/icons-material/Leaderboard';
+import LoginIcon from '@mui/icons-material/Login';
+import { useNavigate } from 'react-router-dom';
+
+const drawerWidth = 240;
 
 const Sidebar: React.FC = () => {
+  const navigate = useNavigate();
+
+  const menuItems = [
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+    { text: 'Races', icon: <SportsEsportsIcon />, path: '/races' },
+    { text: 'Leaderboard', icon: <LeaderboardIcon />, path: '/leaderboard' },
+    { text: 'Sign In', icon: <LoginIcon />, path: '/sign-in' },
+  ];
+
   return (
     <Drawer
       variant="permanent"
       sx={{
-        width: 240,
+        width: drawerWidth,
         flexShrink: 0,
-        '& .MuiDrawer-paper': { width: 240, boxSizing: 'border-box' },
+        [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
       }}
     >
       <Toolbar />
+      <Divider />
       <List>
-        <ListItemButton component={Link} to="/">
-          <ListItemIcon><Home /></ListItemIcon>
-          <ListItemText primary="Home" />
-        </ListItemButton>
-        <ListItemButton component={Link} to="/races">
-          <ListItemIcon><DirectionsCar /></ListItemIcon>
-          <ListItemText primary="Races" />
-        </ListItemButton>
-        <ListItemButton component={Link} to="/leaderboard">
-          <ListItemIcon><Leaderboard /></ListItemIcon>
-          <ListItemText primary="Leaderboard" />
-        </ListItemButton>
-        <ListItemButton component={Link} to="/sign-in">
-          <ListItemIcon><Login /></ListItemIcon>
-          <ListItemText primary="Sign In" />
-        </ListItemButton>
+        {menuItems.map((item) => (
+          <ListItem button key={item.text} onClick={() => navigate(item.path)}>
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.text} />
+          </ListItem>
+        ))}
       </List>
     </Drawer>
   );

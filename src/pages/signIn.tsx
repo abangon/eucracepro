@@ -7,7 +7,9 @@ import {
   Button,
   Alert,
   InputAdornment,
-  IconButton
+  IconButton,
+  useMediaQuery,
+  useTheme
 } from "@mui/material";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth, signInWithGoogle } from "../utils/firebase";
@@ -21,23 +23,20 @@ const SignIn: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
-  };
-
-  const cleanErrorMessage = (message: string) => {
-    // Удаляем упоминание "Firebase:" из сообщения
-    return message.replace(/Firebase:\s*/gi, "");
   };
 
   const handleEmailSignIn = async () => {
     setError("");
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/"); // Перенаправление на главную страницу после входа
+      navigate("/");
     } catch (err: any) {
-      setError(cleanErrorMessage(err.message));
+      setError(err.message.replace(/Firebase:\s*/gi, ""));
     }
   };
 
@@ -47,7 +46,7 @@ const SignIn: React.FC = () => {
       await sendPasswordResetEmail(auth, email);
       alert("Password reset email sent! Please check your inbox.");
     } catch (err: any) {
-      setError(cleanErrorMessage(err.message));
+      setError(err.message.replace(/Firebase:\s*/gi, ""));
     }
   };
 
@@ -57,12 +56,12 @@ const SignIn: React.FC = () => {
       await signInWithGoogle();
       navigate("/");
     } catch (err: any) {
-      setError(cleanErrorMessage(err.message));
+      setError(err.message.replace(/Firebase:\s*/gi, ""));
     }
   };
 
   return (
-    <Box sx={{ p: 3, textAlign: "center" }}>
+    <Box sx={{ p: 3, textAlign: "center", maxWidth: 400, mx: "auto", mt: isMobile ? 2 : 5 }}>
       <Typography variant="h4" gutterBottom>
         Sign In
       </Typography>
@@ -71,15 +70,7 @@ const SignIn: React.FC = () => {
           {error}
         </Alert>
       )}
-      <Box
-        sx={{
-          maxWidth: 400,
-          margin: "0 auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <TextField
           label="Email"
           variant="outlined"
@@ -104,14 +95,14 @@ const SignIn: React.FC = () => {
             ),
           }}
         />
-        <Button variant="contained" color="primary" onClick={handleEmailSignIn}>
+        <Button variant="contained" color="primary" onClick={handleEmailSignIn} fullWidth>
           Sign in with Email
         </Button>
         <Button variant="text" color="primary" onClick={handlePasswordReset}>
           Forgot Password?
         </Button>
         <Typography variant="subtitle1">or</Typography>
-        <Button variant="contained" color="secondary" onClick={handleGoogleSignIn}>
+        <Button variant="contained" color="secondary" onClick={handleGoogleSignIn} fullWidth>
           Sign in with Google
         </Button>
       </Box>

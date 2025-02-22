@@ -1,6 +1,16 @@
 import React from "react";
-import { Box, Typography, Grid, Paper } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Avatar
+} from "@mui/material";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import SportsMotorsportsIcon from '@mui/icons-material/SportsMotorsports';
+import PeopleIcon from '@mui/icons-material/People';
+import TimerIcon from '@mui/icons-material/Timer';
 
 const data = [
   { name: "Jan", races: 5 },
@@ -17,36 +27,83 @@ const Home: React.FC = () => {
         📊 Dashboard
       </Typography>
       <Grid container spacing={3}>
+        {/* Total Races Card */}
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h6">Total Races</Typography>
-            <Typography variant="h3" color="primary">52</Typography>
-          </Paper>
+          <Card sx={{ boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', borderRadius: 2, p: 2 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48, mr: 2 }}>
+                  <SportsMotorsportsIcon fontSize="large" />
+                </Avatar>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                    Total Races
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    52
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
+        {/* Total Participants Card */}
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h6">Total Participants</Typography>
-            <Typography variant="h3" color="secondary">1,340</Typography>
-          </Paper>
+          <Card sx={{ boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', borderRadius: 2, p: 2 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: 'secondary.main', width: 48, height: 48, mr: 2 }}>
+                  <PeopleIcon fontSize="large" />
+                </Avatar>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                    Total Participants
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    1,340
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
+        {/* Total Laps Card */}
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h6">Total Laps</Typography>
-            <Typography variant="h3" color="success">15,230</Typography>
-          </Paper>
+          <Card sx={{ boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', borderRadius: 2, p: 2 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: 'success.main', width: 48, height: 48, mr: 2 }}>
+                  <TimerIcon fontSize="large" />
+                </Avatar>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                    Total Laps
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    15,230
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
+        {/* Races Over Time Chart */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6">Races Over Time</Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="races" fill="#3f51b5" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Paper>
+          <Card sx={{ boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', borderRadius: 2, p: 2 }}>
+            <CardContent>
+              <Typography variant="subtitle2" gutterBottom>
+                Races Over Time
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={data}>
+                  <XAxis dataKey="name" stroke="rgba(0, 0, 0, 0.6)" />
+                  <YAxis stroke="rgba(0, 0, 0, 0.6)" />
+                  <Tooltip />
+                  <Bar dataKey="races" fill="#7367F0" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
     </Box>

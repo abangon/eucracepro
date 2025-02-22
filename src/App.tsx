@@ -12,10 +12,12 @@ import Leaderboard from './pages/leaderboard';
 import SignIn from './pages/signIn';
 import Settings from './pages/settings';
 import Box from '@mui/material/Box';
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 const App: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -25,11 +27,19 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Box sx={{ display: 'flex' }}>
-          <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
-          <Box component="main" sx={{ flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', minHeight: "100vh" }}>
+          <Sidebar 
+            mobileOpen={mobileOpen} 
+            handleDrawerToggle={handleDrawerToggle} 
+          />
+          <Box component="main" sx={{ flexGrow: 1, width: "100%" }}>
             <Navbar onMenuClick={handleDrawerToggle} isSidebarOpen={sidebarOpen} />
-            <Box sx={{ mt: 10, p: 3 }}>
+            <Box sx={{
+              mt: 10, 
+              p: 3, 
+              width: isMobile ? "100%" : `calc(100% - ${sidebarOpen ? 240 : 0}px)`,
+              transition: "width 0.3s"
+            }}>
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/races" element={<Races />} />

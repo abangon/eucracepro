@@ -4,27 +4,31 @@ import { AppBar, Toolbar, Typography, Box, Button, IconButton } from "@mui/mater
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth, logOut } from "../utils/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db, logOut } from "../utils/firebase";
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const [nickname, setNickname] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
+      if (user) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          setNickname(userDoc.data().nickname || null);
+        }
+      }
     });
     return () => unsubscribe();
   }, []);
 
   const handleAuthClick = async () => {
     if (user) {
-      try {
-        await logOut();
-        navigate("/"); // перенаправляем на главную страницу после выхода
-      } catch (error) {
-        console.error("Error signing out:", error);
-      }
+      await logOut();
+      navigate("/"); // Перенаправление на главную страницу после выхода
     } else {
       navigate("/sign-in");
     }
@@ -40,7 +44,7 @@ const Navbar: React.FC = () => {
         <Box sx={{ display: "flex", alignItems: "center" }}>
           {user && (
             <Typography variant="h6" color="primary" sx={{ mr: 2 }}>
-              {user.displayName || user.email}
+              {nickname || user.displayName || user.email}
             </Typography>
           )}
         </Box>

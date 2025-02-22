@@ -4,12 +4,12 @@ import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import Map from "../components/MapChart"; // Подключаем круговой гео график
+import MapChart from "../components/MapChart"; // Подключаем круговой гео-график
 
 const Home: React.FC = () => {
   const [totalRacers, setTotalRacers] = useState(0);
   const [growthPercentage, setGrowthPercentage] = useState(0);
-  const [highlightedCountries, setHighlightedCountries] = useState<string[]>([]);
+  const [countryData, setCountryData] = useState<{ country: string; racers: number }[]>([]);
 
   useEffect(() => {
     const fetchActiveRacers = async () => {
@@ -18,13 +18,24 @@ const Home: React.FC = () => {
         const usersSnapshot = await getDocs(usersCollection);
         const users = usersSnapshot.docs.map(doc => doc.data());
 
-        // Количество активных гонщиков (заполнили профиль)
+        // Количество активных гонщиков (те, кто заполнил профиль)
         const totalUsers = users.length;
         setTotalRacers(totalUsers);
 
-        // Определяем страны пользователей
-        const activeCountries = users.map(user => user.country).filter(Boolean);
-        setHighlightedCountries(activeCountries);
+        // Группировка пользователей по странам
+        const countryMap: Record<string, number> = {};
+        users.forEach(user => {
+          if (user.country) {
+            countryMap[user.country] = (countryMap[user.country] || 0) + 1;
+          }
+        });
+
+        // Преобразуем объект в массив для передачи в `MapChart`
+        const formattedCountryData = Object.entries(countryMap).map(([country, racers]) => ({
+          country,
+          racers,
+        }));
+        setCountryData(formattedCountryData);
 
         // Определяем количество пользователей месяц назад
         const oneMonthAgo = new Date();
@@ -78,9 +89,9 @@ const Home: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Карта пользователей */}
+        {/* Круговая диаграмма с гонщиками по странам */}
         <Grid item xs={12}>
-          <Map highlightedCountries={highlightedCountries} />
+          <MapChart countryData={countryData} totalRacers={totalRacers} />
         </Grid>
       </Grid>
     </Box>

@@ -13,13 +13,12 @@
     "react-router-dom": "^6.0.0",
     "@mui/material": "^5.0.0",
     "@mui/icons-material": "^5.0.0",
-    "@mui/lab": "^6.0.0-alpha.115",
+    "@mui/lab": "5.0.0-alpha.120",
     "@emotion/react": "^11.0.0",
     "@emotion/styled": "^11.0.0",
     "react-hook-form": "^7.0.0",
-    "@mui/x-data-grid": "^6.0.0",
+    "@mui/x-data-grid": "^5.2.1",
     "recharts": "^2.1.10"
-
   },
   "devDependencies": {
     "vite": "^4.0.0",

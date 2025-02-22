@@ -1,6 +1,18 @@
 // src/pages/settings.tsx
-import React, { useState } from "react";
-import { Box, Typography, TextField, Button, Grid } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl
+} from "@mui/material";
+import { doc, setDoc } from "firebase/firestore";
+import { db, auth } from "../utils/firebase";
 
 const Settings: React.FC = () => {
   const [nickname, setNickname] = useState("");
@@ -10,19 +22,38 @@ const Settings: React.FC = () => {
   const [instagram, setInstagram] = useState("");
   const [facebook, setFacebook] = useState("");
   const [tiktok, setTiktok] = useState("");
+  const [countries, setCountries] = useState<string[]>([]);
 
-  const handleSave = () => {
-    // Здесь можно реализовать сохранение данных, например, в Firestore
-    console.log("Saved settings:", {
-      nickname,
-      country,
-      team,
-      youtube,
-      instagram,
-      facebook,
-      tiktok,
-    });
-    // Можно добавить уведомление об успешном сохранении
+  useEffect(() => {
+    // Получаем список стран с API
+    fetch("https://restcountries.com/v3.1/all")
+      .then(response => response.json())
+      .then(data => {
+        // Извлекаем названия стран и сортируем их
+        const countryNames = data.map((item: any) => item.name.common);
+        countryNames.sort();
+        setCountries(countryNames);
+      })
+      .catch(error => console.error("Error fetching countries:", error));
+  }, []);
+
+  const handleSave = async () => {
+    // Сохраняем данные в Firestore, если пользователь авторизован
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await setDoc(
+          doc(db, "users", user.uid),
+          { nickname, country, team, youtube, instagram, facebook, tiktok },
+          { merge: true }
+        );
+        console.log("Settings saved successfully");
+      } catch (error) {
+        console.error("Error saving settings:", error);
+      }
+    } else {
+      console.error("No user is logged in");
+    }
   };
 
   return (
@@ -41,13 +72,21 @@ const Settings: React.FC = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <TextField
-            label="Country"
-            variant="outlined"
-            fullWidth
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-          />
+          <FormControl fullWidth variant="outlined">
+            <InputLabel id="country-select-label">Country</InputLabel>
+            <Select
+              labelId="country-select-label"
+              value={country}
+              label="Country"
+              onChange={(e) => setCountry(e.target.value)}
+            >
+              {countries.map((countryName) => (
+                <MenuItem key={countryName} value={countryName}>
+                  {countryName}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Grid>
         <Grid item xs={12} sm={6}>
           <TextField

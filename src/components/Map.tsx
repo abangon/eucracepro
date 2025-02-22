@@ -35,7 +35,7 @@ const Map: React.FC = () => {
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
           🌍 Registered Racers by Country
         </Typography>
-        <Box sx={{ width: "100%", height: "100%" }}>
+        <Box sx={{ width: "100%", height: 300 }}>
           <ComposableMap projectionConfig={{ scale: 220 }}>
             <Geographies geography={geoUrl}>
               {({ geographies }) =>

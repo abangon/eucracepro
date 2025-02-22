@@ -3,10 +3,10 @@ import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
 
-// 📌 Данные карты мира
-const geoUrl = "https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries.json";
+// ✅ Новый корректный URL для карты мира (Topographic JSON)
+const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
-// 📌 Сопоставление стран в Firestore с ISO-кодами (чтобы правильно подсвечивать)
+// 📌 Сопоставление стран с ISO-кодами
 const countryISO: { [key: string]: string } = {
   USA: "USA",
   Canada: "CAN",
@@ -29,7 +29,7 @@ const MapChart: React.FC = () => {
         const usersSnapshot = await getDocs(collection(db, "users"));
         const users = usersSnapshot.docs.map(doc => doc.data());
 
-        // 📌 Собираем список стран пользователей (преобразуем в ISO-коды)
+        // 📌 Собираем список стран пользователей (ISO-коды)
         const activeCountries = users
           .map(user => countryISO[user.country])
           .filter(Boolean) as string[];

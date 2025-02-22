@@ -4,7 +4,7 @@ import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import MapChart from "../components/MapChart"; // Новый круговой график стран
+import MapChart from "../components/MapChart"; // Подключаем круговой график стран
 
 const Home: React.FC = () => {
   const [totalRacers, setTotalRacers] = useState(0);
@@ -92,18 +92,7 @@ const Home: React.FC = () => {
 
         {/* Круговой график стран */}
         <Grid item xs={12} md={4}>
-          <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2 }}>
-            <CardContent>
-              <Typography
-                variant="subtitle2"
-                color="text.secondary"
-                sx={{ fontSize: 16, fontWeight: 600, mb: 2 }}
-              >
-                🌍 Registered Racers by Country
-              </Typography>
-              <MapChart data={countryData} />
-            </CardContent>
-          </Card>
+          <MapChart data={countryData} />
         </Grid>
       </Grid>
     </Box>

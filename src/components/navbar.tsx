@@ -1,6 +1,7 @@
 // src/components/navbar.tsx
 import React, { useEffect, useState } from "react";
-import { AppBar, Toolbar, Typography, Box, Button } from "@mui/material";
+import { AppBar, Toolbar, Typography, Box, Button, IconButton } from "@mui/material";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, logOut } from "../utils/firebase";
@@ -38,8 +39,13 @@ const Navbar: React.FC = () => {
             </Typography>
           )}
         </Box>
-        <Box>
-          <Button variant="outlined" color="primary" onClick={handleAuthClick}>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          {user && (
+            <IconButton onClick={() => navigate("/settings")} color="primary">
+              <SettingsIcon />
+            </IconButton>
+          )}
+          <Button variant="outlined" color="primary" onClick={handleAuthClick} sx={{ ml: 1 }}>
             {user ? "Sign Out" : "Sign In"}
           </Button>
         </Box>

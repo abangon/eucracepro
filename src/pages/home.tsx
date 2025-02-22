@@ -1,110 +1,83 @@
 // src/pages/home.tsx
 import React from "react";
-import {
-  Box,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Avatar,
-} from "@mui/material";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Box, Typography, Grid, Card, CardContent, Avatar } from "@mui/material";
 import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
 import PeopleIcon from "@mui/icons-material/People";
 import TimerIcon from "@mui/icons-material/Timer";
-
-const data = [
-  { name: "Jan", races: 5 },
-  { name: "Feb", races: 8 },
-  { name: "Mar", races: 3 },
-  { name: "Apr", races: 10 },
-  { name: "May", races: 7 },
-];
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 
 const Home: React.FC = () => {
   return (
-    <Box sx={{ flexGrow: 1, p: 3, maxWidth: { xs: "100%", md: 1200 }, mx: "auto" }}>
+    <Box sx={{ flexGrow: 1, p: 3 }}>
       <Typography variant="h4" gutterBottom>
         📊 Dashboard
       </Typography>
-      <Grid container spacing={2} sx={{ display: "flex", justifyContent: "center" }}>
-        {/* Total Races Card */}
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ boxShadow: "0px 4px 12px rgba(0,0,0,0.1)", borderRadius: 2, p: 2 }}>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48, mr: 2 }}>
-                  <SportsMotorsportsIcon fontSize="large" />
-                </Avatar>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
-                    Total Races
-                  </Typography>
-                  <Typography variant="h4" fontWeight="bold">
-                    52
-                  </Typography>
+      <Grid container spacing={3}>
+        {/* Total Active Racers */}
+        <Grid item xs={12} md={4}>
+          <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2 }}>
+            <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Total Active Racers
+                </Typography>
+                <Typography variant="h3" fontWeight="bold">
+                  52
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 1, color: "success.main" }}>
+                  <TrendingUpIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  <Typography variant="body2">+3.2% last 7 days</Typography>
                 </Box>
               </Box>
+              <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
+                <SportsMotorsportsIcon fontSize="large" />
+              </Avatar>
             </CardContent>
           </Card>
         </Grid>
-        {/* Total Participants Card */}
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ boxShadow: "0px 4px 12px rgba(0,0,0,0.1)", borderRadius: 2, p: 2 }}>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Avatar sx={{ bgcolor: "secondary.main", width: 48, height: 48, mr: 2 }}>
-                  <PeopleIcon fontSize="large" />
-                </Avatar>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
-                    Total Participants
-                  </Typography>
-                  <Typography variant="h4" fontWeight="bold">
-                    1,340
-                  </Typography>
+
+        {/* Total Participants */}
+        <Grid item xs={12} md={4}>
+          <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2 }}>
+            <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Total Participants
+                </Typography>
+                <Typography variant="h3" fontWeight="bold">
+                  1,340
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 1, color: "success.main" }}>
+                  <TrendingUpIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  <Typography variant="body2">+2.1% last 7 days</Typography>
                 </Box>
               </Box>
+              <Avatar sx={{ bgcolor: "secondary.main", width: 56, height: 56 }}>
+                <PeopleIcon fontSize="large" />
+              </Avatar>
             </CardContent>
           </Card>
         </Grid>
-        {/* Total Laps Card */}
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ boxShadow: "0px 4px 12px rgba(0,0,0,0.1)", borderRadius: 2, p: 2 }}>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Avatar sx={{ bgcolor: "success.main", width: 48, height: 48, mr: 2 }}>
-                  <TimerIcon fontSize="large" />
-                </Avatar>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
-                    Total Laps
-                  </Typography>
-                  <Typography variant="h4" fontWeight="bold">
-                    15,230
-                  </Typography>
+
+        {/* Total Laps */}
+        <Grid item xs={12} md={4}>
+          <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2 }}>
+            <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Total Laps
+                </Typography>
+                <Typography variant="h3" fontWeight="bold">
+                  15,230
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 1, color: "success.main" }}>
+                  <TrendingUpIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  <Typography variant="body2">+1.5% last 7 days</Typography>
                 </Box>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        {/* Races Over Time Chart */}
-        <Grid item xs={12}>
-          <Card sx={{ boxShadow: "0px 4px 12px rgba(0,0,0,0.1)", borderRadius: 2, p: 2 }}>
-            <CardContent>
-              <Typography variant="subtitle2" gutterBottom>
-                Races Over Time
-              </Typography>
-              <Box sx={{ width: "100%", height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data}>
-                    <XAxis dataKey="name" stroke="rgba(0, 0, 0, 0.6)" />
-                    <YAxis stroke="rgba(0, 0, 0, 0.6)" />
-                    <Tooltip />
-                    <Bar dataKey="races" fill="#7367F0" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Box>
+              <Avatar sx={{ bgcolor: "success.main", width: 56, height: 56 }}>
+                <TimerIcon fontSize="large" />
+              </Avatar>
             </CardContent>
           </Card>
         </Grid>

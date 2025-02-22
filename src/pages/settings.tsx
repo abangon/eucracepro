@@ -12,7 +12,7 @@ import {
   FormControl,
   Alert,
 } from "@mui/material";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { db, auth } from "../utils/firebase";
 
 const Settings: React.FC = () => {
@@ -27,15 +27,6 @@ const Settings: React.FC = () => {
   const [error, setError] = useState("");
   const [debugMessage, setDebugMessage] = useState("");
 
-  // Функция валидации для социальных сетей:
-  const validateSocialMedia = (value: string) => {
-    // Если поле заполнено, оно должно начинаться с '@'
-    if (value && !value.startsWith("@")) {
-      return false;
-    }
-    return true;
-  };
-
   useEffect(() => {
     // Получаем список стран с публичного API
     fetch("https://restcountries.com/v3.1/all")
@@ -46,19 +37,46 @@ const Settings: React.FC = () => {
         setCountries(countryNames);
       })
       .catch((error) => console.error("Error fetching countries:", error));
+
+    // Загружаем данные пользователя из Firestore
+    const fetchUserData = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setNickname(userData.nickname || "");
+            setCountry(userData.country || "");
+            setTeam(userData.team || "");
+            setYoutube(userData.youtube || "");
+            setInstagram(userData.instagram || "");
+            setFacebook(userData.facebook || "");
+            setTiktok(userData.tiktok || "");
+          }
+        } catch (err: any) {
+          console.error("Error fetching user data:", err);
+          setError("Failed to load user data.");
+        }
+      }
+    };
+
+    fetchUserData();
   }, []);
+
+  const validateSocialMedia = (value: string) => {
+    return value === "" || value.startsWith("@");
+  };
 
   const handleSave = async () => {
     setError("");
     setDebugMessage("");
 
-    // Проверка обязательного поля Nickname
     if (!nickname.trim()) {
       setError("Nickname is required.");
       return;
     }
 
-    // Проверка социальных сетей
     if (!validateSocialMedia(youtube)) {
       setError("YouTube channel should start with '@'.");
       return;

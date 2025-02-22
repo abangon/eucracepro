@@ -1,3 +1,4 @@
+// src/components/sidebar.tsx
 import React from 'react';
 import { Drawer, List, ListItem, ListItemIcon, ListItemText, Toolbar, Divider } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -32,7 +33,7 @@ const Sidebar: React.FC = () => {
       <List>
         {menuItems.map((item) => (
           <ListItem button key={item.text} onClick={() => navigate(item.path)}>
-            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemIcon sx={{ color: theme => theme.palette.primary.main }}>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
           </ListItem>
         ))}

@@ -1,32 +1,33 @@
+// src/theme.ts
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
-    mode: 'light',
     primary: {
-      main: '#2065D1',
+      main: '#1a73e8', // основной цвет кнопок и элементов
     },
     secondary: {
-      main: '#3366FF',
+      main: '#e91e63',
     },
     background: {
-      default: '#F9FAFB',
-      paper: '#FFFFFF',
+      default: '#fafafa',
     },
   },
   typography: {
-    fontFamily: 'Public Sans, sans-serif',
-    h1: { fontSize: '2rem', fontWeight: 700 },
-    h2: { fontSize: '1.75rem', fontWeight: 700 },
-    h3: { fontSize: '1.5rem', fontWeight: 700 },
-    h4: { fontSize: '1.25rem', fontWeight: 700 },
-    h5: { fontSize: '1rem', fontWeight: 700 },
-    h6: { fontSize: '0.875rem', fontWeight: 700 },
-    body1: { fontSize: '1rem' },
-    body2: { fontSize: '0.875rem' },
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
   },
-  shape: {
-    borderRadius: 8,
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: '8px',
+          textTransform: 'none',
+          padding: '8px 16px',
+          fontWeight: 600,
+        },
+      },
+    },
+    // Здесь можно добавить другие настройки для компонентов, как в тестовой версии
   },
 });
 

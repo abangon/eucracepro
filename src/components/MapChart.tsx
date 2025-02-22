@@ -5,7 +5,7 @@ import PublicIcon from "@mui/icons-material/Public";
 
 // Функция для генерации цветов
 const getColor = (index: number) => {
-  const colors = ["#7B61FF", "#A084E8", "#C3A6F3", "#E5C7FF"]; // Фиолетовая палитра
+  const colors = ["#7B61FF", "#A084E8", "#C3A6F3", "#E5C7FF", "#FF69B4", "#32CD32", "#FFA500", "#00CED1"]; // Разнообразные цвета
   return colors[index % colors.length];
 };
 
@@ -39,7 +39,7 @@ const MapChart: React.FC<Props> = ({ data, totalRacers }) => {
         {/* Круговой график */}
         <PieChart width={250} height={250}>
           {/* Серые незаполненные круги */}
-          <Pie data={sortedData} dataKey="count" cx="50%" cy="50%" outerRadius={100} fill="#EAEAEA" />
+          <Pie data={[{ value: 1 }]} dataKey="value" cx="50%" cy="50%" outerRadius={100} fill="#EAEAEA" />
 
           {/* Основные цветные круги */}
           <Pie
@@ -75,16 +75,6 @@ const MapChart: React.FC<Props> = ({ data, totalRacers }) => {
             }}
           />
         </PieChart>
-
-        {/* Легенда */}
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-          {sortedData.map((entry, index) => (
-            <Box key={entry.country} sx={{ display: "flex", alignItems: "center", mx: 1 }}>
-              <Box sx={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: getColor(index), mr: 1 }} />
-              <Typography variant="body2">{entry.country}</Typography>
-            </Box>
-          ))}
-        </Box>
       </CardContent>
     </Card>
   );

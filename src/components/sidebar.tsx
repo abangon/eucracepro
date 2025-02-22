@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
 
   const drawerContent = (
     <Box sx={{ width: drawerWidth, height: "100vh", display: "flex", flexDirection: "column" }}>
-      <Toolbar sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "center", p: 2, minHeight: 80 }}>
         <Box
           sx={{
             width: "100%",
@@ -102,6 +102,17 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
 
   return (
     <>
+      {/* Кнопка меню (гамбургер) должна скрываться, когда Sidebar открыт */}
+      {isMobile && !mobileOpen && (
+        <IconButton
+          onClick={handleDrawerToggle}
+          color="inherit"
+          sx={{ position: "fixed", top: 10, left: 10, zIndex: (theme) => theme.zIndex.drawer + 3 }}
+        >
+          <MenuIcon />
+        </IconButton>
+      )}
+
       {/* Выдвижное меню для мобильных устройств */}
       <Drawer
         variant="temporary"
@@ -110,11 +121,12 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: "block", md: "none" },
-          zIndex: (theme) => theme.zIndex.appBar + 2, // Теперь Sidebar выше Navbar
+          zIndex: (theme) => theme.zIndex.appBar + 3, // Теперь Sidebar выше Navbar
           "& .MuiDrawer-paper": {
             width: drawerWidth,
             height: "100vh",
             position: "fixed",
+            top: 0,
           },
         }}
       >

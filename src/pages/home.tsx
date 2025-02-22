@@ -4,11 +4,12 @@ import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import MapChart from "../components/Map"; // 🔹 Подключаем карту
+import Map from "../components/Map"; // Подключаем карту
 
 const Home: React.FC = () => {
   const [totalRacers, setTotalRacers] = useState(0);
   const [growthPercentage, setGrowthPercentage] = useState(0);
+  const [highlightedCountries, setHighlightedCountries] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchActiveRacers = async () => {
@@ -17,25 +18,29 @@ const Home: React.FC = () => {
         const usersSnapshot = await getDocs(usersCollection);
         const users = usersSnapshot.docs.map(doc => doc.data());
 
-        // 1️⃣ Общее количество активных гонщиков (те, кто заполнил профиль)
+        // Количество активных гонщиков (заполнили профиль)
         const totalUsers = users.length;
         setTotalRacers(totalUsers);
 
-        // 2️⃣ Определяем количество пользователей месяц назад
+        // Определяем страны пользователей
+        const activeCountries = users.map(user => user.country).filter(Boolean);
+        setHighlightedCountries(activeCountries);
+
+        // Определяем количество пользователей месяц назад
         const oneMonthAgo = new Date();
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
         const pastUsers = users.filter(user => new Date(user.createdAt) < oneMonthAgo).length;
 
-        // 3️⃣ Корректный расчет прироста (%)
+        // Корректный расчет прироста (%)
         let growth = 0;
         if (pastUsers === 0) {
-          growth = totalUsers > 0 ? totalUsers * 100 : 0; // Если раньше было 0, считаем 100% на каждого нового
+          growth = totalUsers > 0 ? totalUsers * 100 : 0;
         } else {
           growth = ((totalUsers - pastUsers) / pastUsers) * 100;
         }
 
-        setGrowthPercentage(parseFloat(growth.toFixed(1))); // Округляем до 1 знака
+        setGrowthPercentage(parseFloat(growth.toFixed(1)));
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -63,9 +68,7 @@ const Home: React.FC = () => {
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", mt: 1, color: "success.main" }}>
                   <TrendingUpIcon fontSize="small" sx={{ mr: 0.5 }} />
-                  <Typography variant="body2">
-                    +{growthPercentage}% last 30 days
-                  </Typography>
+                  <Typography variant="body2">+{growthPercentage}% last 30 days</Typography>
                 </Box>
               </Box>
               <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
@@ -75,14 +78,14 @@ const Home: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* 🌍 Карта на отдельной плитке */}
+        {/* Карта пользователей */}
         <Grid item xs={12}>
           <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2 }}>
             <CardContent>
-              <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: 16, fontWeight: 600, mb: 2 }}>
                 🌍 Registered Racers by Country
               </Typography>
-              <MapChart /> {/* 🔹 Вставляем карту */}
+              <Map highlightedCountries={highlightedCountries} />
             </CardContent>
           </Card>
         </Grid>

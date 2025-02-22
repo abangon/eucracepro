@@ -15,7 +15,7 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md")); // Определяем, мобильное устройство или нет
+  const isMobile = useMediaQuery(theme.breakpoints.down("md")); 
 
   const [user, setUser] = useState<any>(null);
   const [nickname, setNickname] = useState<string | null>(null);
@@ -36,7 +36,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const handleAuthClick = async () => {
     if (user) {
       await logOut();
-      navigate("/"); // Перенаправление на главную после выхода
+      navigate("/");
     } else {
       navigate("/sign-in");
     }
@@ -45,33 +45,33 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   return (
     <AppBar position="static" color="inherit" sx={{ borderBottom: "1px solid #e0e0e0", p: 1 }}>
       <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        {/* Кнопка меню (гамбургер) для мобильных устройств */}
         {isMobile && (
           <IconButton onClick={onMenuClick} color="inherit">
             <MenuIcon />
           </IconButton>
         )}
 
-        {/* Имя пользователя (адаптивное) */}
+        {/* User Name (Теперь центрируется на мобильных, а на ПК выравнивается влево) */}
         {user && (
-          <Typography
-            variant="h6"
-            color="primary"
-            sx={{
-              flexGrow: 1,
-              textAlign: isMobile ? "center" : "left",
-              fontSize: isMobile ? "1rem" : "1.25rem", // Адаптивный размер шрифта
-              overflow: "hidden",
-              whiteSpace: "nowrap",
-              textOverflow: "ellipsis",
-              maxWidth: isMobile ? "60%" : "unset",
-            }}
-          >
-            {nickname || user.displayName || user.email}
-          </Typography>
+          <Box sx={{ flexGrow: 1, textAlign: isMobile ? "center" : "left" }}>
+            <Typography
+              variant="h6"
+              color="primary"
+              sx={{
+                fontSize: isMobile ? "1rem" : "1.25rem",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+                maxWidth: isMobile ? "60%" : "unset",
+                mx: isMobile ? "auto" : 0, // Центрируем только на мобильных
+                display: "inline-block",
+              }}
+            >
+              {nickname || user.displayName || user.email}
+            </Typography>
+          </Box>
         )}
 
-        {/* Кнопки настроек и выхода */}
         <Box sx={{ display: "flex", alignItems: "center" }}>
           {user && (
             <IconButton onClick={() => navigate("/settings")} color="primary">

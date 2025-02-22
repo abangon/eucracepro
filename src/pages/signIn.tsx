@@ -1,40 +1,59 @@
 // src/pages/signIn.tsx
 import React, { useState } from "react";
-import { Box, Typography, TextField, Button } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Alert,
+  InputAdornment,
+  IconButton
+} from "@mui/material";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth, signInWithGoogle } from "../utils/firebase";
 import { useNavigate } from "react-router-dom";
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleEmailSignIn = async () => {
+    setError("");
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate("/"); // Redirect to home page after sign in
-    } catch (error) {
-      console.error("Error signing in with email:", error);
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
   const handlePasswordReset = async () => {
+    setError("");
     try {
       await sendPasswordResetEmail(auth, email);
       alert("Password reset email sent! Please check your inbox.");
-    } catch (error) {
-      console.error("Error sending password reset email:", error);
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    setError("");
     try {
       await signInWithGoogle();
       navigate("/");
-    } catch (error) {
-      console.error("Error signing in with Google:", error);
+    } catch (err: any) {
+      setError(err.message);
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
   };
 
   return (
@@ -42,6 +61,11 @@ const SignIn: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         Sign In
       </Typography>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
       <Box
         sx={{
           maxWidth: 400,
@@ -61,10 +85,19 @@ const SignIn: React.FC = () => {
         <TextField
           label="Password"
           variant="outlined"
-          type="password"
           fullWidth
+          type={showPassword ? "text" : "password"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={togglePasswordVisibility} edge="end">
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
         />
         <Button variant="contained" color="primary" onClick={handleEmailSignIn}>
           Sign in with Email

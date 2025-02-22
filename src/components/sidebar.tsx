@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
   ];
 
   const drawerContent = (
-    <Box sx={{ width: drawerWidth, overflowX: "hidden", height: "100vh", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ width: drawerWidth, height: "100vh", display: "flex", flexDirection: "column" }}>
       <Toolbar sx={{ display: "flex", justifyContent: "center", p: 2 }}>
         <Box
           sx={{
@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
                 fontSize: 14,
                 fontWeight: location.pathname === item.path ? "bold" : "normal",
                 color: location.pathname === item.path ? "#1976d2" : "inherit",
-                whiteSpace: "nowrap", // Текст больше не переносится
+                whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
               }}
@@ -108,11 +108,12 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: "block", md: "none" },
+          zIndex: 1301, // Теперь Sidebar ОТКРЫВАЕТСЯ НАД Navbar
           "& .MuiDrawer-paper": {
             width: drawerWidth,
-            overflowX: "hidden", // Убираем горизонтальную прокрутку
             height: "100vh",
             position: "fixed",
+            top: 0,
           },
         }}
       >
@@ -126,12 +127,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
           display: { xs: "none", md: "block" },
           "& .MuiDrawer-paper": {
             width: drawerWidth,
-            overflowX: "hidden", // Убираем горизонтальную прокрутку
             height: "100vh",
-            position: "fixed", // Фиксируем Sidebar, чтобы текст не вылазил
-            boxSizing: "border-box",
-            backgroundColor: "#FFFFFF",
-            borderRight: "1px solid #e0e0e0",
+            position: "fixed",
+            zIndex: 1300,
           },
         }}
         open

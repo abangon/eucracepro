@@ -16,11 +16,29 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Box sx={{ display: 'flex' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            minHeight: '100vh',
+            backgroundColor: theme.palette.background.default,
+          }}
+        >
           <Sidebar />
-          <Box sx={{ flexGrow: 1 }}>
+          <Box
+            sx={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
             <Navbar />
-            <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+            <Box
+              component="main"
+              sx={{
+                flex: 1,
+                p: 3,
+              }}
+            >
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/races" element={<Races />} />

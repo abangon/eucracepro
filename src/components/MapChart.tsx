@@ -4,7 +4,7 @@ import { Card, CardContent, Typography, Box } from "@mui/material";
 import PublicIcon from "@mui/icons-material/Public";
 
 const COLORS = ["#6A5ACD", "#8A2BE2", "#7B68EE", "#9370DB", "#BA55D3"]; // Фиолетовые оттенки
-const GRAY_COLOR = "#E0E0E0"; // Серый для фона
+const GRAY_COLOR = "#E0E0E0"; // Серый фон для пустых мест
 
 const MapChart = ({ data }: { data: { country: string; count: number }[] }) => {
   const total = data.reduce((sum, item) => sum + item.count, 0);
@@ -18,13 +18,14 @@ const MapChart = ({ data }: { data: { country: string; count: number }[] }) => {
             Registered Racers by Country
           </Typography>
         </Box>
-        <ResponsiveContainer width="100%" height={250}>
+        <ResponsiveContainer width="100%" height={260}>
           <PieChart>
             {/* Серый фон */}
             <Pie
               data={[{ value: 1 }]} // Одна секция, заполняющая круг
               dataKey="value"
-              outerRadius={90}
+              outerRadius={100} // Увеличил радиус круга
+              innerRadius={70} // Сделал его толще
               fill={GRAY_COLOR}
             />
             {/* Основные данные */}
@@ -33,13 +34,13 @@ const MapChart = ({ data }: { data: { country: string; count: number }[] }) => {
               dataKey="count"
               cx="50%"
               cy="50%"
-              innerRadius={50}
-              outerRadius={90}
+              innerRadius={70} // Сделал толще
+              outerRadius={100} // Радиус теперь больше
               fill="#8884d8"
               paddingAngle={5}
               startAngle={90} // Начало с 12 часов
               endAngle={-270} // Направление против часовой стрелки
-              cornerRadius={10} // Закругленные концы
+              cornerRadius={15} // Еще больше закругленные концы
             >
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

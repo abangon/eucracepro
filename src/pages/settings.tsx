@@ -9,7 +9,8 @@ import {
   MenuItem,
   Select,
   InputLabel,
-  FormControl
+  FormControl,
+  Alert,
 } from "@mui/material";
 import { doc, setDoc } from "firebase/firestore";
 import { db, auth } from "../utils/firebase";
@@ -23,21 +24,58 @@ const Settings: React.FC = () => {
   const [facebook, setFacebook] = useState("");
   const [tiktok, setTiktok] = useState("");
   const [countries, setCountries] = useState<string[]>([]);
+  const [error, setError] = useState("");
+  const [debugMessage, setDebugMessage] = useState("");
+
+  // Функция валидации для социальных сетей:
+  const validateSocialMedia = (value: string) => {
+    // Если поле заполнено, оно должно начинаться с '@'
+    if (value && !value.startsWith("@")) {
+      return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     // Получаем список стран с публичного API
     fetch("https://restcountries.com/v3.1/all")
-      .then(response => response.json())
-      .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         const countryNames = data.map((item: any) => item.name.common);
         countryNames.sort();
         setCountries(countryNames);
       })
-      .catch(error => console.error("Error fetching countries:", error));
+      .catch((error) => console.error("Error fetching countries:", error));
   }, []);
 
   const handleSave = async () => {
-    // Если пользователь авторизован, сохраняем данные в Firestore в коллекцию "users"
+    setError("");
+    setDebugMessage("");
+
+    // Проверка обязательного поля Nickname
+    if (!nickname.trim()) {
+      setError("Nickname is required.");
+      return;
+    }
+
+    // Проверка социальных сетей
+    if (!validateSocialMedia(youtube)) {
+      setError("YouTube channel should start with '@'.");
+      return;
+    }
+    if (!validateSocialMedia(instagram)) {
+      setError("Instagram handle should start with '@'.");
+      return;
+    }
+    if (!validateSocialMedia(facebook)) {
+      setError("Facebook username should start with '@'.");
+      return;
+    }
+    if (!validateSocialMedia(tiktok)) {
+      setError("TikTok handle should start with '@'.");
+      return;
+    }
+
     const user = auth.currentUser;
     if (user) {
       try {
@@ -46,12 +84,12 @@ const Settings: React.FC = () => {
           { nickname, country, team, youtube, instagram, facebook, tiktok },
           { merge: true }
         );
-        console.log("Settings saved successfully");
-      } catch (error) {
-        console.error("Error saving settings:", error);
+        setDebugMessage("Settings saved successfully.");
+      } catch (err: any) {
+        setError("Error saving settings: " + err.message);
       }
     } else {
-      console.error("No user is logged in");
+      setError("No user is logged in.");
     }
   };
 
@@ -60,12 +98,23 @@ const Settings: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         User Settings
       </Typography>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      {debugMessage && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {debugMessage}
+        </Alert>
+      )}
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField
             label="Nickname"
             variant="outlined"
             fullWidth
+            required
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
           />

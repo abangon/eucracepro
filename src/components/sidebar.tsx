@@ -42,6 +42,7 @@ const Sidebar: React.FC = () => {
         <Box
           sx={{
             width: '100%',
+            p: 2, // равные отступы со всех сторон
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',

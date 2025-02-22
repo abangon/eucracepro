@@ -1,30 +1,31 @@
 // src/components/sidebar.tsx
-import React from 'react';
+import React from "react";
 import {
   Drawer,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Toolbar,
   Divider,
-  Box
-} from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import LeaderboardIcon from '@mui/icons-material/Leaderboard';
-import { useNavigate } from 'react-router-dom';
-import logo from '../images/logo/eucrace-logo.jpg';
+  Box,
+} from "@mui/material";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import { useNavigate, useLocation } from "react-router-dom";
+import logo from "../images/logo/eucrace-logo.jpg";
 
 const drawerWidth = 240;
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-    { text: 'Races', icon: <SportsEsportsIcon />, path: '/races' },
-    { text: 'Leaderboard', icon: <LeaderboardIcon />, path: '/leaderboard' },
+    { text: "Dashboard", icon: <DashboardIcon fontSize="small" />, path: "/" },
+    { text: "Races", icon: <SportsEsportsIcon fontSize="small" />, path: "/races" },
+    { text: "Leaderboard", icon: <LeaderboardIcon fontSize="small" />, path: "/leaderboard" },
   ];
 
   return (
@@ -33,39 +34,69 @@ const Sidebar: React.FC = () => {
       sx={{
         width: drawerWidth,
         flexShrink: 0,
-        [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', backgroundColor: '#fff' },
+        [`& .MuiDrawer-paper`]: {
+          width: drawerWidth,
+          boxSizing: "border-box",
+          backgroundColor: "#FFFFFF",
+          borderRight: "1px solid #e0e0e0",
+        },
       }}
     >
-      <Toolbar>
+      <Toolbar sx={{ display: "flex", justifyContent: "center", p: 2 }}>
         <Box
           sx={{
-            width: '100%',
-            p: 2, // равные отступы со всех сторон
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            cursor: 'pointer'
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            cursor: "pointer",
           }}
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
         >
           <img
             src={logo}
             alt="EuCrace Logo"
             style={{
-              width: '100%',
-              maxWidth: '200px',
-              objectFit: 'contain',
+              width: "80%",
+              maxWidth: "180px",
+              objectFit: "contain",
             }}
           />
         </Box>
       </Toolbar>
       <Divider />
-      <List>
+      <List sx={{ px: 1 }}>
         {menuItems.map((item) => (
-          <ListItem button key={item.text} onClick={() => navigate(item.path)}>
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItem>
+          <ListItemButton
+            key={item.text}
+            onClick={() => navigate(item.path)}
+            selected={location.pathname === item.path}
+            sx={{
+              borderRadius: "8px",
+              mb: 1,
+              "&.Mui-selected": {
+                backgroundColor: "#F4F6F8",
+                "&:hover": {
+                  backgroundColor: "#E0E3E7",
+                },
+              },
+              "&:hover": {
+                backgroundColor: "#F4F6F8",
+              },
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 32, color: location.pathname === item.path ? "#1976d2" : "inherit" }}>
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText
+              primary={item.text}
+              primaryTypographyProps={{
+                fontSize: 14,
+                fontWeight: location.pathname === item.path ? "bold" : "normal",
+                color: location.pathname === item.path ? "#1976d2" : "inherit",
+              }}
+            />
+          </ListItemButton>
         ))}
       </List>
     </Drawer>

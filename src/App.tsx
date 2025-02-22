@@ -6,7 +6,7 @@ import theme from './theme/theme';
 import Sidebar from './components/sidebar';
 import Navbar from './components/navbar';
 import Home from './pages/home';
-import Races from './pages/taces';
+import Races from './pages/races';
 import Leaderboard from './pages/leaderboard';
 import SignIn from './pages/signIn';
 import Box from '@mui/material/Box';

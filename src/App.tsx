@@ -1,3 +1,4 @@
+// src/App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -16,18 +17,11 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+        <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: theme.palette.background.default }}>
           <Sidebar />
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <Navbar />
-            <Box
-              component="main"
-              sx={{
-                flex: 1,
-                p: 3,
-                backgroundColor: 'background.default',
-              }}
-            >
+            <Box component="main" sx={{ flex: 1, p: 3 }}>
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/races" element={<Races />} />

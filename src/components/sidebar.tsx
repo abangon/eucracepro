@@ -12,6 +12,7 @@ import {
   useMediaQuery,
   useTheme,
   IconButton,
+  Typography,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
@@ -46,6 +47,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
           sx={{
             width: "100%",
             display: "flex",
+            flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
             cursor: "pointer",
@@ -59,8 +61,12 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
               width: "80%",
               maxWidth: "180px",
               objectFit: "contain",
+              marginBottom: "8px",
             }}
           />
+          <Typography variant="body2" color="text.secondary">
+            EUC Race Pro
+          </Typography>
         </Box>
       </Toolbar>
       <Divider />
@@ -102,12 +108,18 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
 
   return (
     <>
-      {/* Кнопка меню (гамбургер) должна скрываться, когда Sidebar открыт */}
-      {isMobile && !mobileOpen && (
+      {/* Кнопка меню (гамбургер) теперь НЕ дублируется */}
+      {isMobile && (
         <IconButton
           onClick={handleDrawerToggle}
           color="inherit"
-          sx={{ position: "fixed", top: 10, left: 10, zIndex: (theme) => theme.zIndex.drawer + 3 }}
+          sx={{
+            position: "fixed",
+            top: 10,
+            left: 10,
+            zIndex: (theme) => theme.zIndex.drawer + 3,
+            display: mobileOpen ? "none" : "block", // Скрываем, если меню открыто
+          }}
         >
           <MenuIcon />
         </IconButton>
@@ -121,7 +133,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: "block", md: "none" },
-          zIndex: (theme) => theme.zIndex.appBar + 3, // Теперь Sidebar выше Navbar
+          zIndex: (theme) => theme.zIndex.modal + 2, // Устанавливаем Sidebar выше Navbar
           "& .MuiDrawer-paper": {
             width: drawerWidth,
             height: "100vh",

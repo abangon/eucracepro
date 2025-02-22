@@ -73,8 +73,8 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, isSidebarOpen }) => {
           </IconButton>
         )}
 
-        {/* Кнопки справа: Username, Settings, Sign Out */}
-        <Box sx={{ display: "flex", alignItems: "center", ml: "auto" }}>
+        {/* Блок с Username, Settings, Sign Out (Все элементы выровнены по расстоянию) */}
+        <Box sx={{ display: "flex", alignItems: "center", ml: "auto", gap: "16px" }}>
           {user && (
             <Typography
               variant="body1"
@@ -86,7 +86,6 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, isSidebarOpen }) => {
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 maxWidth: "200px",
-                mr: 2, // Добавлен отступ, чтобы текст не прилипал к иконкам
               }}
             >
               {nickname || user.displayName || user.email}
@@ -94,7 +93,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, isSidebarOpen }) => {
           )}
           {user && (
             <IconButton onClick={() => navigate("/settings")} color="primary" sx={{ fontSize: "1.2rem" }}>
-              <SettingsIcon fontSize="small" /> {/* Размер как у Sidebar */}
+              <SettingsIcon fontSize="small" />
             </IconButton>
           )}
           <Button
@@ -105,7 +104,6 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, isSidebarOpen }) => {
               fontSize: 14, // Такой же размер, как текст в Sidebar
               fontWeight: "bold",
               textTransform: "none", // Отключаем заглавные буквы
-              ml: 1,
             }}
           >
             {user ? "Sign Out" : "Sign In"}

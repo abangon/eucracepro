@@ -15,15 +15,16 @@ const MapChart = ({ countryData, totalRacers }: { countryData: { country: string
         <Box sx={{ width: "100%", height: 300 }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
+              {/* Внешний круг (самый большой процент) */}
               <Pie
                 data={countryData}
                 cx="50%"
                 cy="50%"
-                startAngle={180} 
-                endAngle={0}  
-                innerRadius={50}
-                outerRadius={80}
-                paddingAngle={5}
+                startAngle={180}
+                endAngle={0}
+                innerRadius={70}
+                outerRadius={100}
+                paddingAngle={3}
                 dataKey="racers"
                 isAnimationActive={true}
               >
@@ -31,13 +32,50 @@ const MapChart = ({ countryData, totalRacers }: { countryData: { country: string
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
+
+              {/* Средний круг */}
+              <Pie
+                data={countryData}
+                cx="50%"
+                cy="50%"
+                startAngle={180}
+                endAngle={0}
+                innerRadius={45}
+                outerRadius={65}
+                paddingAngle={3}
+                dataKey="racers"
+                isAnimationActive={true}
+              >
+                {countryData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+
+              {/* Внутренний круг (наименьший процент) */}
+              <Pie
+                data={countryData}
+                cx="50%"
+                cy="50%"
+                startAngle={180}
+                endAngle={0}
+                innerRadius={20}
+                outerRadius={40}
+                paddingAngle={3}
+                dataKey="racers"
+                isAnimationActive={true}
+              >
+                {countryData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
         </Box>
 
         {/* Центрируем общий счет */}
-        <Box sx={{ textAlign: "center", mt: -8 }}>
+        <Box sx={{ textAlign: "center", mt: -12 }}>
           <Typography variant="h5" fontWeight="bold">{totalRacers}</Typography>
           <Typography variant="body2" color="text.secondary">Total</Typography>
         </Box>

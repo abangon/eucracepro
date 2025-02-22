@@ -15,7 +15,7 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md")); 
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const [user, setUser] = useState<any>(null);
   const [nickname, setNickname] = useState<string | null>(null);
@@ -43,35 +43,29 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <AppBar position="static" color="inherit" sx={{ borderBottom: "1px solid #e0e0e0", p: 1 }}>
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <AppBar position="static" color="inherit" sx={{ borderBottom: "1px solid #e0e0e0" }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         {isMobile && (
           <IconButton onClick={onMenuClick} color="inherit">
             <MenuIcon />
           </IconButton>
         )}
-
-        {/* User Name (Теперь центрируется на мобильных, а на ПК выравнивается влево) */}
         {user && (
-          <Box sx={{ flexGrow: 1, textAlign: isMobile ? "center" : "left" }}>
-            <Typography
-              variant="h6"
-              color="primary"
-              sx={{
-                fontSize: isMobile ? "1rem" : "1.25rem",
-                overflow: "hidden",
-                whiteSpace: "nowrap",
-                textOverflow: "ellipsis",
-                maxWidth: isMobile ? "60%" : "unset",
-                mx: isMobile ? "auto" : 0, // Центрируем только на мобильных
-                display: "inline-block",
-              }}
-            >
-              {nickname || user.displayName || user.email}
-            </Typography>
-          </Box>
+          <Typography
+            variant="h6"
+            color="primary"
+            sx={{
+              flexGrow: 1,
+              textAlign: isMobile ? "center" : "left",
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+              textOverflow: "ellipsis",
+              mx: isMobile ? "auto" : 0,
+            }}
+          >
+            {nickname || user.displayName || user.email}
+          </Typography>
         )}
-
         <Box sx={{ display: "flex", alignItems: "center" }}>
           {user && (
             <IconButton onClick={() => navigate("/settings")} color="primary">

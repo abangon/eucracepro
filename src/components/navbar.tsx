@@ -1,6 +1,15 @@
 // src/components/navbar.tsx
 import React, { useEffect, useState } from "react";
-import { AppBar, Toolbar, Typography, Box, Button, IconButton, useMediaQuery, useTheme } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Box,
+  Button,
+  IconButton,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useNavigate } from "react-router-dom";
@@ -43,29 +52,37 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <AppBar position="static" color="inherit" sx={{ borderBottom: "1px solid #e0e0e0" }}>
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+    <AppBar position="fixed" color="inherit" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {/* Кнопка меню (гамбургер) для мобильных устройств */}
         {isMobile && (
           <IconButton onClick={onMenuClick} color="inherit">
             <MenuIcon />
           </IconButton>
         )}
+
+        {/* Имя пользователя (Nickname) теперь выравнивается правильно */}
         {user && (
-          <Typography
-            variant="h6"
-            color="primary"
-            sx={{
-              flexGrow: 1,
-              textAlign: isMobile ? "center" : "left",
-              overflow: "hidden",
-              whiteSpace: "nowrap",
-              textOverflow: "ellipsis",
-              mx: isMobile ? "auto" : 0,
-            }}
-          >
-            {nickname || user.displayName || user.email}
-          </Typography>
+          <Box sx={{ flexGrow: 1, textAlign: isMobile ? "center" : "left" }}>
+            <Typography
+              variant="h6"
+              color="primary"
+              sx={{
+                fontSize: isMobile ? "1rem" : "1.25rem",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+                maxWidth: isMobile ? "50%" : "300px",
+                mx: isMobile ? "auto" : 0,
+                display: "inline-block",
+              }}
+            >
+              {nickname || user.displayName || user.email}
+            </Typography>
+          </Box>
         )}
+
+        {/* Кнопки настроек и выхода */}
         <Box sx={{ display: "flex", alignItems: "center" }}>
           {user && (
             <IconButton onClick={() => navigate("/settings")} color="primary">

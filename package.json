@@ -13,7 +13,7 @@
     "react-router-dom": "^6.0.0",
     "@mui/material": "^5.0.0",
     "@mui/icons-material": "^5.0.0",
-    "@mui/lab": "^5.0.0",
+    "@mui/lab": "^4.0.0-alpha.126",
     "@emotion/react": "^11.0.0",
     "@emotion/styled": "^11.0.0",
     "react-hook-form": "^7.0.0",

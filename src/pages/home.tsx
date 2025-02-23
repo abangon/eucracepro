@@ -96,7 +96,7 @@ const Home: React.FC = () => {
             <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <Box>
                 <Typography variant="subtitle2" sx={{ fontSize: 14, fontWeight: 500, color: "#555" }}>
-                  Total active users
+                  Total active racers
                 </Typography>
                 <Typography variant="h3" sx={{ fontWeight: "bold", fontSize: 32 }}>
                   {totalRacers.toLocaleString()}

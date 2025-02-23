@@ -30,9 +30,15 @@ const Home: React.FC = () => {
         }).reverse();
 
         users.forEach(user => {
-          const createdAt = new Date(user.createdAt).toISOString().split("T")[0];
-          const dayEntry = last7Days.find(day => day.date === createdAt);
-          if (dayEntry) dayEntry.count += 1;
+          // Проверка наличия даты создания
+          if (user.createdAt) {
+            const createdAt = new Date(user.createdAt);
+            if (!isNaN(createdAt.getTime())) { // Проверка, корректна ли дата
+              const formattedDate = createdAt.toISOString().split("T")[0];
+              const dayEntry = last7Days.find(day => day.date === formattedDate);
+              if (dayEntry) dayEntry.count += 1;
+            }
+          }
         });
 
         setWeeklyData(last7Days);
@@ -41,7 +47,7 @@ const Home: React.FC = () => {
         const oneMonthAgo = new Date();
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
-        const pastUsers = users.filter(user => new Date(user.createdAt) < oneMonthAgo).length;
+        const pastUsers = users.filter(user => user.createdAt && !isNaN(new Date(user.createdAt).getTime()) && new Date(user.createdAt) < oneMonthAgo).length;
 
         // Корректный расчет прироста (%)
         let growth = 0;

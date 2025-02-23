@@ -30,9 +30,9 @@ interface Race {
   date: string;
   track_name: string;
   status: string; // "Registration", "Active", "Finished"
-  race_type?: string; // Новое поле Race Type
+  race_type?: string; // New field for Race Type
   participants: string[];
-  imageData?: string; // optional image as Data URL
+  imageData?: string; // Optional image as Data URL
 }
 
 const Races: React.FC = () => {
@@ -45,8 +45,8 @@ const Races: React.FC = () => {
   const [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceTrackName, setNewRaceTrackName] = useState("");
   const [newRaceStatus, setNewRaceStatus] = useState("Registration");
-  const [newRaceType, setNewRaceType] = useState("Race"); // новое состояние для Race Type
-  const [newRaceImage, setNewRaceImage] = useState<string>(""); // base64 string of the image
+  const [newRaceType, setNewRaceType] = useState("Race"); // New state for Race Type
+  const [newRaceImage, setNewRaceImage] = useState<string>(""); // Base64 string of the image
   const [formMessage, setFormMessage] = useState("");
 
   // Function to generate a random 4-digit race ID as string
@@ -54,7 +54,7 @@ const Races: React.FC = () => {
     return (Math.floor(Math.random() * 9000) + 1000).toString();
   };
 
-  // Fetch races list
+  // Fetch races list from Firestore
   useEffect(() => {
     const fetchRaces = async () => {
       try {
@@ -87,7 +87,7 @@ const Races: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Handle file change for race image
+  // Handle file input change for race image
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
@@ -113,7 +113,7 @@ const Races: React.FC = () => {
       date: newRaceDate,
       track_name: newRaceTrackName,
       status: newRaceStatus,
-      race_type: newRaceType, // сохраняем Race Type
+      race_type: newRaceType, // Save Race Type
       participants: [],
       ...(newRaceImage && { imageData: newRaceImage }),
     };
@@ -152,7 +152,7 @@ const Races: React.FC = () => {
     });
   };
 
-  // Helper function to capitalize status (if needed)
+  // Helper function to capitalize status if needed
   const capitalizeStatus = (status: string) => {
     return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   };
@@ -216,7 +216,7 @@ const Races: React.FC = () => {
         <Typography>No upcoming races.</Typography>
       )}
 
-      {/* Admin form for creating new race */}
+      {/* Admin form for creating a new race */}
       {isAdmin && (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>
@@ -271,7 +271,7 @@ const Races: React.FC = () => {
                 <MenuItem value="Finished">Finished</MenuItem>
               </Select>
             </FormControl>
-            {/* Новое поле Race Type */}
+            {/* New field for Race Type */}
             <FormControl fullWidth variant="outlined">
               <InputLabel id="race-type-select-label">Race Type</InputLabel>
               <Select

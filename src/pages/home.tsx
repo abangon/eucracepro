@@ -5,10 +5,12 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import MapChart from "../components/MapChart"; // Круговой график
 
 const Home: React.FC = () => {
   const [totalRacers, setTotalRacers] = useState(0);
   const [growthPercentage, setGrowthPercentage] = useState(0);
+  const [countryData, setCountryData] = useState<{ country: string; count: number }[]>([]);
   const [weeklyData, setWeeklyData] = useState([]);
 
   useEffect(() => {
@@ -18,11 +20,27 @@ const Home: React.FC = () => {
         const usersSnapshot = await getDocs(usersCollection);
         const users = usersSnapshot.docs.map(doc => doc.data());
 
-        // Подсчет общего количества активных гонщиков
+        // Количество активных гонщиков (заполнили профиль)
         const totalUsers = users.length;
         setTotalRacers(totalUsers);
 
-        // Подготовка данных для гистограммы (новые гонщики за последние 7 дней)
+        // Группируем по странам
+        const countryCounts: { [key: string]: number } = {};
+        users.forEach(user => {
+          if (user.country) {
+            countryCounts[user.country] = (countryCounts[user.country] || 0) + 1;
+          }
+        });
+
+        // Формируем массив данных для графика
+        const formattedData = Object.keys(countryCounts).map(country => ({
+          country,
+          count: countryCounts[country],
+        }));
+
+        setCountryData(formattedData);
+
+        // Создаем данные за последние 7 дней для гистограммы
         const last7Days = [...Array(7)].map((_, i) => {
           const day = new Date();
           day.setDate(day.getDate() - i);
@@ -30,10 +48,9 @@ const Home: React.FC = () => {
         }).reverse();
 
         users.forEach(user => {
-          // Проверка наличия даты создания
           if (user.createdAt) {
             const createdAt = new Date(user.createdAt);
-            if (!isNaN(createdAt.getTime())) { // Проверка, корректна ли дата
+            if (!isNaN(createdAt.getTime())) {
               const formattedDate = createdAt.toISOString().split("T")[0];
               const dayEntry = last7Days.find(day => day.date === formattedDate);
               if (dayEntry) dayEntry.count += 1;
@@ -95,13 +112,25 @@ const Home: React.FC = () => {
                   <BarChart data={weeklyData}>
                     <XAxis dataKey="date" hide />
                     <YAxis hide />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#7B61FF" radius={[5, 5, 0, 0]} />
+                    <Tooltip formatter={(value: any) => [`${value} new racers`, "Date"]} />
+                    {weeklyData.map((entry, index) => (
+                      <Bar
+                        key={index}
+                        dataKey="count"
+                        fill={entry.count > 0 ? "#7B61FF" : "#D3D3D3"} // Серый цвет, если 0 участников
+                        radius={[5, 5, 0, 0]}
+                      />
+                    ))}
                   </BarChart>
                 </ResponsiveContainer>
               </Box>
             </CardContent>
           </Card>
+        </Grid>
+
+        {/* Круговой график стран */}
+        <Grid item xs={12} md={4}>
+          <MapChart data={countryData} totalRacers={totalRacers} />
         </Grid>
       </Grid>
     </Box>

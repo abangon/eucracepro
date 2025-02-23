@@ -140,7 +140,7 @@ const Home: React.FC = () => {
                     />
                     <Bar
                       dataKey="count"
-                      fill="#7B61FF"
+                      fill="#d287fe"
                       radius={[5, 5, 0, 0]}
                       barSize={8}
                       minPointSize={3} // Минимальный размер 0-дней

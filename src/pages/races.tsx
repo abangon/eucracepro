@@ -29,8 +29,9 @@ interface Race {
   name: string;
   date: string;
   track_name: string;
+  country: string;
   status: string; // "Registration", "Active", "Finished"
-  race_type?: string; // New field for Race Type
+  race_type?: string; // "Race", "Training", "Camp"
   participants: string[];
   imageData?: string; // Optional image as Data URL
 }
@@ -44,10 +45,14 @@ const Races: React.FC = () => {
   const [newRaceName, setNewRaceName] = useState("");
   const [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceTrackName, setNewRaceTrackName] = useState("");
+  const [newRaceCountry, setNewRaceCountry] = useState("");
   const [newRaceStatus, setNewRaceStatus] = useState("Registration");
-  const [newRaceType, setNewRaceType] = useState("Race"); // New state for Race Type
-  const [newRaceImage, setNewRaceImage] = useState<string>(""); // Base64 string of the image
+  const [newRaceType, setNewRaceType] = useState("Race");
+  const [newRaceImage, setNewRaceImage] = useState<string>("");
   const [formMessage, setFormMessage] = useState("");
+
+  // State for list of countries (for admin form)
+  const [countries, setCountries] = useState<string[]>([]);
 
   // Function to generate a random 4-digit race ID as string
   const generateRaceId = () => {
@@ -75,7 +80,19 @@ const Races: React.FC = () => {
     fetchRaces();
   }, []);
 
-  // Check if the user is admin (only UID "ztnWBUkh6dUcXLOH8D5nLBEYm2J2" is allowed to create races)
+  // Load list of countries (similar to Settings page)
+  useEffect(() => {
+    fetch("https://restcountries.com/v3.1/all")
+      .then((response) => response.json())
+      .then((data) => {
+        const countryNames = data.map((item: any) => item.name.common);
+        countryNames.sort();
+        setCountries(countryNames);
+      })
+      .catch((error) => console.error("Error fetching countries:", error));
+  }, []);
+
+  // Check if the user is admin (only UID "ztnWBUkh6dUcXLOH8D5nLBEYm2J2" can create races)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && user.uid === "ztnWBUkh6dUcXLOH8D5nLBEYm2J2") {
@@ -103,7 +120,12 @@ const Races: React.FC = () => {
 
   // Handle creating a new race
   const handleCreateRace = async () => {
-    if (!newRaceName.trim() || !newRaceDate.trim() || !newRaceTrackName.trim()) {
+    if (
+      !newRaceName.trim() ||
+      !newRaceDate.trim() ||
+      !newRaceTrackName.trim() ||
+      !newRaceCountry.trim()
+    ) {
       setFormMessage("Please fill all fields.");
       return;
     }
@@ -112,8 +134,9 @@ const Races: React.FC = () => {
       name: newRaceName,
       date: newRaceDate,
       track_name: newRaceTrackName,
+      country: newRaceCountry,
       status: newRaceStatus,
-      race_type: newRaceType, // Save Race Type
+      race_type: newRaceType,
       participants: [],
       ...(newRaceImage && { imageData: newRaceImage }),
     };
@@ -125,6 +148,7 @@ const Races: React.FC = () => {
       setNewRaceName("");
       setNewRaceDate("");
       setNewRaceTrackName("");
+      setNewRaceCountry("");
       setNewRaceStatus("Registration");
       setNewRaceType("Race");
       setNewRaceImage("");
@@ -197,6 +221,11 @@ const Races: React.FC = () => {
                       {formatDate(race.date)} {race.track_name && `- ${race.track_name}`}
                     </Typography>
                   )}
+                  {race.country && (
+                    <Typography variant="body2" color="text.secondary">
+                      Country: {race.country}
+                    </Typography>
+                  )}
                   {race.status && (
                     <Typography variant="body2" color="text.secondary">
                       Status: {capitalizeStatus(race.status)}
@@ -216,7 +245,7 @@ const Races: React.FC = () => {
         <Typography>No upcoming races.</Typography>
       )}
 
-      {/* Admin form for creating a new race */}
+      {/* Admin form for creating new race */}
       {isAdmin && (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>
@@ -259,6 +288,21 @@ const Races: React.FC = () => {
               fullWidth
             />
             <FormControl fullWidth variant="outlined">
+              <InputLabel id="country-select-label">Country</InputLabel>
+              <Select
+                labelId="country-select-label"
+                value={newRaceCountry}
+                label="Country"
+                onChange={(e) => setNewRaceCountry(e.target.value)}
+              >
+                {countries.map((countryName) => (
+                  <MenuItem key={countryName} value={countryName}>
+                    {countryName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth variant="outlined">
               <InputLabel id="status-select-label">Status</InputLabel>
               <Select
                 labelId="status-select-label"
@@ -271,7 +315,6 @@ const Races: React.FC = () => {
                 <MenuItem value="Finished">Finished</MenuItem>
               </Select>
             </FormControl>
-            {/* New field for Race Type */}
             <FormControl fullWidth variant="outlined">
               <InputLabel id="race-type-select-label">Race Type</InputLabel>
               <Select

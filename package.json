@@ -23,7 +23,8 @@
     "react-simple-maps": "^3.0.0",
     "d3-geo": "^3.0.1",
     "d3-scale": "^4.0.2",
-    "react-country-flag": "^3.0.6"
+    "react-country-flag": "^3.0.6",
+    "react-icons": "^4.8.0"
   },
   "devDependencies": {
     "vite": "^4.0.0",

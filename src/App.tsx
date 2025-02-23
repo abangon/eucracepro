@@ -47,7 +47,7 @@ const App: React.FC = () => {
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/sign-in" element={<SignIn />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="/settings" element={<Settings />} />
+                <Route path="/about-us" element={<AboutUs />} />
               </Routes>
             </Box>
           </Box>

@@ -4,12 +4,12 @@ import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import MapChart from "../components/MapChart"; // Круговой график
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 const Home: React.FC = () => {
   const [totalRacers, setTotalRacers] = useState(0);
   const [growthPercentage, setGrowthPercentage] = useState(0);
-  const [countryData, setCountryData] = useState<{ country: string; count: number }[]>([]);
+  const [weeklyData, setWeeklyData] = useState([]);
 
   useEffect(() => {
     const fetchActiveRacers = async () => {
@@ -18,25 +18,24 @@ const Home: React.FC = () => {
         const usersSnapshot = await getDocs(usersCollection);
         const users = usersSnapshot.docs.map(doc => doc.data());
 
-        // Количество активных гонщиков (заполнили профиль)
+        // Подсчет общего количества активных гонщиков
         const totalUsers = users.length;
         setTotalRacers(totalUsers);
 
-        // Группируем по странам
-        const countryCounts: { [key: string]: number } = {};
+        // Подготовка данных для гистограммы (новые гонщики за последние 7 дней)
+        const last7Days = [...Array(7)].map((_, i) => {
+          const day = new Date();
+          day.setDate(day.getDate() - i);
+          return { date: day.toISOString().split("T")[0], count: 0 };
+        }).reverse();
+
         users.forEach(user => {
-          if (user.country) {
-            countryCounts[user.country] = (countryCounts[user.country] || 0) + 1;
-          }
+          const createdAt = new Date(user.createdAt).toISOString().split("T")[0];
+          const dayEntry = last7Days.find(day => day.date === createdAt);
+          if (dayEntry) dayEntry.count += 1;
         });
 
-        // Формируем массив данных для графика
-        const formattedData = Object.keys(countryCounts).map(country => ({
-          country,
-          count: countryCounts[country],
-        }));
-
-        setCountryData(formattedData);
+        setWeeklyData(last7Days);
 
         // Определяем количество пользователей месяц назад
         const oneMonthAgo = new Date();
@@ -83,16 +82,20 @@ const Home: React.FC = () => {
                   <Typography variant="body2">+{growthPercentage}% last 30 days</Typography>
                 </Box>
               </Box>
-              <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
-                <SportsMotorsportsIcon fontSize="large" />
-              </Avatar>
+
+              {/* Мини-гистограмма */}
+              <Box sx={{ width: 100, height: 50 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weeklyData}>
+                    <XAxis dataKey="date" hide />
+                    <YAxis hide />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#7B61FF" radius={[5, 5, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Box>
             </CardContent>
           </Card>
-        </Grid>
-
-        {/* Круговой график стран */}
-        <Grid item xs={12} md={4}>
-          <MapChart data={countryData} totalRacers={totalRacers} />
         </Grid>
       </Grid>
     </Box>

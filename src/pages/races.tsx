@@ -41,7 +41,7 @@ const Races: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
-  // Admin form states
+  // Состояния для админской формы
   const [newRaceName, setNewRaceName] = useState("");
   const [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceTrackName, setNewRaceTrackName] = useState("");
@@ -51,15 +51,15 @@ const Races: React.FC = () => {
   const [newRaceImage, setNewRaceImage] = useState<string>("");
   const [formMessage, setFormMessage] = useState("");
 
-  // List of countries for admin form
+  // Список стран для админской формы
   const [countries, setCountries] = useState<string[]>([]);
 
-  // Generate a random 4-digit race ID as string
+  // Функция для генерации случайного 4-значного ID гонки (в виде строки)
   const generateRaceId = () => {
     return (Math.floor(Math.random() * 9000) + 1000).toString();
   };
 
-  // Fetch races list from Firestore
+  // Получение списка гонок из Firestore
   useEffect(() => {
     const fetchRaces = async () => {
       try {
@@ -80,7 +80,7 @@ const Races: React.FC = () => {
     fetchRaces();
   }, []);
 
-  // Load list of countries (similar to Settings page)
+  // Подгрузка списка стран (аналогично странице Settings)
   useEffect(() => {
     fetch("https://restcountries.com/v3.1/all")
       .then((response) => response.json())
@@ -92,7 +92,7 @@ const Races: React.FC = () => {
       .catch((error) => console.error("Error fetching countries:", error));
   }, []);
 
-  // Check if the user is admin (only UID "ztnWBUkh6dUcXLOH8D5nLBEYm2J2" can create races)
+  // Проверка, является ли пользователь администратором (UID "ztnWBUkh6dUcXLOH8D5nLBEYm2J2")
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && user.uid === "ztnWBUkh6dUcXLOH8D5nLBEYm2J2") {
@@ -104,7 +104,7 @@ const Races: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Handle file input change for race image
+  // Обработка выбора файла для изображения гонки
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
@@ -118,7 +118,7 @@ const Races: React.FC = () => {
     }
   };
 
-  // Handle creating a new race
+  // Функция создания новой гонки
   const handleCreateRace = async () => {
     if (
       !newRaceName.trim() ||
@@ -144,7 +144,7 @@ const Races: React.FC = () => {
     try {
       await setDoc(doc(db, "races", raceId), newRace);
       setFormMessage(`Race created with ID: ${raceId}`);
-      // Clear form fields
+      // Очистка полей формы
       setNewRaceName("");
       setNewRaceDate("");
       setNewRaceTrackName("");
@@ -152,7 +152,7 @@ const Races: React.FC = () => {
       setNewRaceStatus("Registration");
       setNewRaceType("Race");
       setNewRaceImage("");
-      // Refresh the list of races
+      // Обновление списка гонок
       const q = query(collection(db, "races"), orderBy("date", "asc"));
       const snapshot = await getDocs(q);
       const fetchedRaces: Race[] = snapshot.docs.map((doc) => ({
@@ -166,7 +166,7 @@ const Races: React.FC = () => {
     }
   };
 
-  // Helper function to format date in English
+  // Функция форматирования даты (на английском языке)
   const formatDate = (dateStr: string) => {
     const dateObj = new Date(dateStr);
     return dateObj.toLocaleDateString("en-US", {
@@ -176,7 +176,7 @@ const Races: React.FC = () => {
     });
   };
 
-  // Helper function to capitalize status
+  // Функция для капитализации статуса
   const capitalizeStatus = (status: string) => {
     return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   };
@@ -248,7 +248,7 @@ const Races: React.FC = () => {
         <Typography>No upcoming races.</Typography>
       )}
 
-      {/* Admin form for creating a new race */}
+      {/* Админская форма для создания новой гонки */}
       {isAdmin && (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>
@@ -331,7 +331,6 @@ const Races: React.FC = () => {
                 <MenuItem value="Camp">Camp</MenuItem>
               </Select>
             </FormControl>
-            {/* Field for uploading race image */}
             <Box>
               <Typography variant="body2" sx={{ mb: 1 }}>
                 Upload Race Image:

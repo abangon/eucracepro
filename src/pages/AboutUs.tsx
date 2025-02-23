@@ -1,4 +1,5 @@
 import React from "react";
+import { useState } from "react";
 import {
   Box,
   Grid,
@@ -6,8 +7,9 @@ import {
   CardContent,
   Typography,
   Avatar,
-  Link,
   IconButton,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import PhoneIcon from "@mui/icons-material/Phone";
@@ -18,6 +20,24 @@ import OnealLogo from "../assets/oneal_logo1.jpg";
 import EkolkaLogo from "../assets/ekolka_logo1.jpg";
 
 const AboutUs: React.FC = () => {
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  const handleEmailClick = (email: string) => {
+    setSnackbarMessage(email);
+    setSnackbarOpen(true);
+  };
+
+  const handleCloseSnackbar = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       {/* 1. Описание проекта */}
@@ -71,28 +91,25 @@ const AboutUs: React.FC = () => {
                 </Typography>
                 <Box sx={{ display: "flex", gap: 2 }}>
                   <IconButton
-                    component={Link}
-                    href="tel:+420774309665"
+                    onClick={() => window.location.assign("tel:+420774309665")}
                     aria-label="phone"
                     color="primary"
                   >
                     <PhoneIcon />
                   </IconButton>
                   <IconButton
-                    component={Link}
-                    href="https://t.me/abangon"
+                    onClick={() =>
+                      window.open("https://t.me/abangon", "_blank")
+                    }
                     aria-label="telegram"
                     color="primary"
-                    target="_blank"
                   >
                     <FaTelegramPlane />
                   </IconButton>
                   <IconButton
-                    component={Link}
-                    href="mailto:info@eucrace.pro"
+                    onClick={() => handleEmailClick("info@eucrace.pro")}
                     aria-label="email"
                     color="primary"
-                    target="_blank"
                   >
                     <EmailIcon />
                   </IconButton>
@@ -126,28 +143,25 @@ const AboutUs: React.FC = () => {
                 </Typography>
                 <Box sx={{ display: "flex", gap: 2 }}>
                   <IconButton
-                    component={Link}
-                    href="tel:+420773555121"
+                    onClick={() => window.location.assign("tel:+420773555121")}
                     aria-label="phone"
                     color="primary"
                   >
                     <PhoneIcon />
                   </IconButton>
                   <IconButton
-                    component={Link}
-                    href="https://t.me/andrew_euc"
+                    onClick={() =>
+                      window.open("https://t.me/andrew_euc", "_blank")
+                    }
                     aria-label="telegram"
                     color="primary"
-                    target="_blank"
                   >
                     <FaTelegramPlane />
                   </IconButton>
                   <IconButton
-                    component={Link}
-                    href="mailto:info@eucrace.pro"
+                    onClick={() => handleEmailClick("info@eucrace.pro")}
                     aria-label="email"
                     color="primary"
-                    target="_blank"
                   >
                     <EmailIcon />
                   </IconButton>
@@ -181,8 +195,7 @@ const AboutUs: React.FC = () => {
                 </Typography>
                 <Box sx={{ display: "flex", gap: 2 }}>
                   <IconButton
-                    component={Link}
-                    href="tel:+420603838622"
+                    onClick={() => window.location.assign("tel:+420603838622")}
                     aria-label="phone"
                     color="primary"
                   >
@@ -190,11 +203,9 @@ const AboutUs: React.FC = () => {
                   </IconButton>
                   {/* У Jiří нет Telegram, поэтому иконка не отображается */}
                   <IconButton
-                    component={Link}
-                    href="mailto:info@eucrace.pro"
+                    onClick={() => handleEmailClick("info@eucrace.pro")}
                     aria-label="email"
                     color="primary"
-                    target="_blank"
                   >
                     <EmailIcon />
                   </IconButton>
@@ -250,6 +261,18 @@ const AboutUs: React.FC = () => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Snackbar для отображения email */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="info" sx={{ width: "100%" }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

@@ -51,10 +51,10 @@ const Races: React.FC = () => {
   const [newRaceImage, setNewRaceImage] = useState<string>("");
   const [formMessage, setFormMessage] = useState("");
 
-  // State for list of countries (for admin form)
+  // List of countries for admin form
   const [countries, setCountries] = useState<string[]>([]);
 
-  // Function to generate a random 4-digit race ID as string
+  // Generate a random 4-digit race ID as string
   const generateRaceId = () => {
     return (Math.floor(Math.random() * 9000) + 1000).toString();
   };
@@ -176,7 +176,7 @@ const Races: React.FC = () => {
     });
   };
 
-  // Helper function to capitalize status if needed
+  // Helper function to capitalize status
   const capitalizeStatus = (status: string) => {
     return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   };
@@ -196,25 +196,28 @@ const Races: React.FC = () => {
                 sx={{
                   width: "100%",
                   borderRadius: 2,
+                  overflow: "hidden",
                   display: "flex",
-                  alignItems: "center",
+                  flexDirection: "column",
                 }}
               >
                 {race.imageData && (
-                  <Box sx={{ mr: 2 }}>
+                  <Box>
                     <img
                       src={race.imageData}
                       alt={race.name}
                       style={{
-                        width: 100,
-                        height: "auto",
+                        width: "100%",
+                        height: 200,
                         objectFit: "cover",
-                        borderRadius: 4,
                       }}
                     />
                   </Box>
                 )}
                 <CardContent>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Race ID: {race.id}
+                  </Typography>
                   <Typography variant="h6">{race.name}</Typography>
                   {race.date && (
                     <Typography variant="body2" color="text.secondary">
@@ -245,7 +248,7 @@ const Races: React.FC = () => {
         <Typography>No upcoming races.</Typography>
       )}
 
-      {/* Admin form for creating new race */}
+      {/* Admin form for creating a new race */}
       {isAdmin && (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>

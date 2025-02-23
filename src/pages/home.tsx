@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Grid, Card, CardContent, Avatar } from "@mui/material";
-import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
+import { Box, Typography, Grid, Card, CardContent } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
@@ -93,18 +92,33 @@ const Home: React.FC = () => {
       <Grid container spacing={3}>
         {/* Total Active Racers */}
         <Grid item xs={12} md={4}>
-          <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2 }}>
+          <Card sx={{ boxShadow: 2, borderRadius: 3, p: 3 }}>
             <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <Box>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Total Active Racers
+                <Typography variant="subtitle2" sx={{ fontSize: 14, fontWeight: 500, color: "#555" }}>
+                  Total active users
                 </Typography>
-                <Typography variant="h3" fontWeight="bold">
-                  {totalRacers}
+                <Typography variant="h3" sx={{ fontWeight: "bold", fontSize: 32 }}>
+                  {totalRacers.toLocaleString()}
                 </Typography>
-                <Box sx={{ display: "flex", alignItems: "center", mt: 1, color: "success.main" }}>
-                  <TrendingUpIcon fontSize="small" sx={{ mr: 0.5 }} />
-                  <Typography variant="body2">+{growthPercentage}% last 30 days</Typography>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                  <Box
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      backgroundColor: "#E3FCEF",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      mr: 1,
+                    }}
+                  >
+                    <TrendingUpIcon sx={{ color: "#1CA44C", fontSize: 16 }} />
+                  </Box>
+                  <Typography variant="body2" sx={{ color: "#1CA44C", fontSize: 14, fontWeight: 500 }}>
+                    +{growthPercentage}% last 7 days
+                  </Typography>
                 </Box>
               </Box>
               {/* Гистограмма новых пользователей */}

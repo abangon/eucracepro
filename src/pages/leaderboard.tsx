@@ -14,24 +14,35 @@ import {
   MenuItem,
 } from "@mui/material";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../utils/firebase"; // проверьте корректность пути
+import { db } from "../utils/firebase";
 import CountryFlag from "../components/CountryFlag";
 
 // Иконки соцсетей
 import { FaFacebook, FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
 
-// Тип для пользователя
 interface UserData {
   nickname?: string;
   team?: string;
-  country?: string; // хранится полное название, например "Kazakhstan"
+  country?: string; // Полное название страны (напр. "Czechia")
   facebook?: string;
   instagram?: string;
   youtube?: string;
   tiktok?: string;
 }
 
-// Маппинг названий соцсетей
+// Для удобства — стиль соцсетей
+const socialIconStyle = {
+  width: "2em",
+  height: "2em",
+};
+
+// Официальные цвета
+const facebookColor = "#1877F2";
+const instagramColor = "#E1306C";
+const youtubeColor = "#FF0000";
+const tiktokColor = "#000000"; // или "#69C9D0", "#EE1D52" — на ваше усмотрение
+
+// Функции для формирования URL соцсетей
 const getFacebookUrl = (username: string) => `https://www.facebook.com/${username}`;
 const getInstagramUrl = (username: string) => `https://www.instagram.com/${username}`;
 const getYoutubeUrl = (username: string) => `https://www.youtube.com/@${username}`;
@@ -40,19 +51,18 @@ const getTiktokUrl = (username: string) => `https://www.tiktok.com/@${username}`
 const Leaderboard: React.FC = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
-
   const [nameFilter, setNameFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
 
-  // Храним маппинг "название страны" -> "двухбуквенный ISO-код"
+  // Маппинг "полное название" -> "ISO-код"
   const [countryMap, setCountryMap] = useState<Record<string, string>>({});
 
-  // 1) Загружаем данные из Firestore
+  // Загрузка данных из Firestore
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const usersSnapshot = await getDocs(collection(db, "users"));
-        const usersList: UserData[] = usersSnapshot.docs.map((doc) => doc.data() as UserData);
+        const usersList = usersSnapshot.docs.map((doc) => doc.data() as UserData);
         setUsers(usersList);
         setFilteredUsers(usersList);
       } catch (error) {
@@ -62,7 +72,7 @@ const Leaderboard: React.FC = () => {
     fetchUsers();
   }, []);
 
-  // 2) Загружаем список стран с restcountries.com, чтобы построить маппинг
+  // Загрузка маппинга стран (полное название -> ISO2)
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -71,14 +81,12 @@ const Leaderboard: React.FC = () => {
         const map: Record<string, string> = {};
 
         data.forEach((countryObj: any) => {
-          const commonName = countryObj.name?.common; // "Kazakhstan"
-          const code = countryObj.cca2;              // "KZ"
+          const commonName = countryObj?.name?.common; // например "Czechia"
+          const code = countryObj?.cca2;              // "CZ"
           if (commonName && code) {
-            // Записываем в map[полное название] = код
             map[commonName] = code;
           }
         });
-
         setCountryMap(map);
       } catch (error) {
         console.error("Error fetching countries:", error);
@@ -87,7 +95,7 @@ const Leaderboard: React.FC = () => {
     fetchCountries();
   }, []);
 
-  // 3) Фильтрация по имени и стране
+  // Фильтрация по имени и стране
   useEffect(() => {
     let filtered = [...users];
 
@@ -104,7 +112,7 @@ const Leaderboard: React.FC = () => {
     setFilteredUsers(filtered);
   }, [nameFilter, countryFilter, users]);
 
-  // Список уникальных полных названий стран (из user.country)
+  // Список уникальных полных названий стран (для выпадающего меню)
   const countries = Array.from(
     new Set(users.map((u) => u.country).filter((c): c is string => Boolean(c)))
   );
@@ -162,7 +170,6 @@ const Leaderboard: React.FC = () => {
           </TableHead>
           <TableBody>
             {filteredUsers.map((user, index) => {
-              // Получаем ISO-код страны по полному названию
               const isoCode = user.country ? countryMap[user.country] : undefined;
 
               return (
@@ -185,7 +192,7 @@ const Leaderboard: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <FaFacebook size={20} style={{ color: "#d287fe" }} />
+                        <FaFacebook style={{ ...socialIconStyle, color: facebookColor }} />
                       </a>
                     ) : (
                       "–"
@@ -200,14 +207,14 @@ const Leaderboard: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <FaInstagram size={20} style={{ color: "#d287fe" }} />
+                        <FaInstagram style={{ ...socialIconStyle, color: instagramColor }} />
                       </a>
                     ) : (
                       "–"
                     )}
                   </TableCell>
 
-                  {/* Youtube */}
+                  {/* YouTube */}
                   <TableCell>
                     {user.youtube ? (
                       <a
@@ -215,14 +222,14 @@ const Leaderboard: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <FaYoutube size={20} style={{ color: "#d287fe" }} />
+                        <FaYoutube style={{ ...socialIconStyle, color: youtubeColor }} />
                       </a>
                     ) : (
                       "–"
                     )}
                   </TableCell>
 
-                  {/* Tiktok */}
+                  {/* TikTok */}
                   <TableCell>
                     {user.tiktok ? (
                       <a
@@ -230,7 +237,7 @@ const Leaderboard: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <FaTiktok size={20} style={{ color: "#d287fe" }} />
+                        <FaTiktok style={{ ...socialIconStyle, color: tiktokColor }} />
                       </a>
                     ) : (
                       "–"

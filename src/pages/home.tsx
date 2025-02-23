@@ -85,20 +85,25 @@ const Home: React.FC = () => {
         {/* Total Active Racers */}
         <Grid item xs={12} md={4}>
           <Card sx={{ boxShadow: 2, borderRadius: 3, p: 3 }}>
-            <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: 14, fontWeight: 600 }}>
-                Total active users
-              </Typography>
-              <Typography variant="h3" fontWeight="bold" sx={{ fontSize: 32 }}>
-                {totalRacers.toLocaleString()}
-              </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", mt: 0.5, color: "success.main", gap: 0.5 }}>
-                <TrendingUpIcon fontSize="small" />
-                <Typography variant="body2" sx={{ fontSize: 14, fontWeight: 500 }}>
-                  +{growthPercentage}% last 7 days
+            <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              {/* Левая часть (текст) */}
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: 14, fontWeight: 600 }}>
+                  Total active users
                 </Typography>
+                <Typography variant="h3" fontWeight="bold" sx={{ fontSize: 32 }}>
+                  {totalRacers.toLocaleString()}
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 0.5, color: "success.main", gap: 0.5 }}>
+                  <TrendingUpIcon fontSize="small" />
+                  <Typography variant="body2" sx={{ fontSize: 14, fontWeight: 500 }}>
+                    +{growthPercentage}% last 7 days
+                  </Typography>
+                </Box>
               </Box>
-              <Box sx={{ width: "100%", height: 50, display: "flex", alignItems: "center" }}>
+
+              {/* Правая часть (гистограмма) */}
+              <Box sx={{ width: 80, height: 40, display: "flex", alignItems: "center" }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={weeklyData}>
                     <XAxis hide />
@@ -118,8 +123,8 @@ const Home: React.FC = () => {
                       dataKey="count"
                       fill="#7B61FF"
                       radius={[5, 5, 0, 0]}
-                      barSize={10}
-                      minPointSize={3}
+                      barSize={8}
+                      minPointSize={2}
                     />
                   </BarChart>
                 </ResponsiveContainer>

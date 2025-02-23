@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import {
   Box,
   Typography,
@@ -24,7 +24,7 @@ interface Race {
   track_name: string;
   status: string; // "registration", "active", "finished"
   participants: string[];
-  // Другие поля не используются в этой форме
+  imageData?: string; // Новое поле для хранения картинки (Data URL)
 }
 
 const Races: React.FC = () => {
@@ -37,6 +37,7 @@ const Races: React.FC = () => {
   const [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceTrackName, setNewRaceTrackName] = useState("");
   const [newRaceStatus, setNewRaceStatus] = useState("registration");
+  const [newRaceImage, setNewRaceImage] = useState<string>(""); // base64 строка изображения
   const [formMessage, setFormMessage] = useState("");
 
   // Функция для генерации случайного 4-значного идентификатора гонки
@@ -77,6 +78,20 @@ const Races: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  // Обработка выбора файла для изображения
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result && typeof reader.result === "string") {
+          setNewRaceImage(reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Функция создания гонки
   const handleCreateRace = async () => {
     if (!newRaceName.trim() || !newRaceDate.trim() || !newRaceTrackName.trim()) {
@@ -86,13 +101,14 @@ const Races: React.FC = () => {
     // Генерируем 4-значный идентификатор гонки
     const raceId = generateRaceId();
 
-    // Формируем объект новой гонки
+    // Формируем объект новой гонки, включая imageData если оно есть
     const newRace: Partial<Race> = {
       name: newRaceName,
       date: newRaceDate,
       track_name: newRaceTrackName,
       status: newRaceStatus,
       participants: [],
+      ...(newRaceImage && { imageData: newRaceImage }),
     };
 
     try {
@@ -103,6 +119,7 @@ const Races: React.FC = () => {
       setNewRaceDate("");
       setNewRaceTrackName("");
       setNewRaceStatus("registration");
+      setNewRaceImage("");
       // Обновляем список гонок
       const q = query(collection(db, "races"), orderBy("date", "asc"));
       const snapshot = await getDocs(q);
@@ -128,7 +145,16 @@ const Races: React.FC = () => {
         <List>
           {races.map((race) => (
             <ListItem key={race.id} sx={{ mb: 2 }}>
-              <Card sx={{ width: "100%", borderRadius: 2 }}>
+              <Card sx={{ width: "100%", borderRadius: 2, display: "flex", alignItems: "center" }}>
+                {race.imageData && (
+                  <Box sx={{ mr: 2 }}>
+                    <img
+                      src={race.imageData}
+                      alt={race.name}
+                      style={{ width: 100, height: "auto", objectFit: "cover", borderRadius: 4 }}
+                    />
+                  </Box>
+                )}
                 <CardContent>
                   <Typography variant="h6">{race.name}</Typography>
                   {race.date && (
@@ -205,6 +231,13 @@ const Races: React.FC = () => {
                 <MenuItem value="finished">finished</MenuItem>
               </Select>
             </FormControl>
+            {/* Поле для загрузки картинки */}
+            <Box>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                Upload Race Image:
+              </Typography>
+              <input type="file" accept="image/*" onChange={handleFileChange} />
+            </Box>
             <Button variant="contained" onClick={handleCreateRace}>
               Create Race
             </Button>

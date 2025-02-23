@@ -1,29 +1,9 @@
-import React, { useState } from "react";
-import { PieChart, Pie, Cell, Tooltip } from "recharts";
-import { Box, Typography, Card, CardContent, Stack } from "@mui/material";
-import PublicIcon from "@mui/icons-material/Public";
+import React from "react";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { Box, Typography, Card, CardContent } from "@mui/material";
 
-// Обновленная палитра цветов из картинки
-const colors = [
-  "#D81B60", // Красно-баклажановый
-  "#BA68C8", // Глициния
-  "#81D4FA", // Сиво-голубой
-  "#1E88E5", // Синяя пыль
-  "#EC407A", // Фуксия
-  "#8E24AA", // Пурпурный
-  "#FFB300", // Ранний
-  "#3949AB", // Синяя сталь
-  "#FF7043", // Персиковый
-  "#FFD54F", // Желто-оранжевый
-  "#CE93D8", // Бледный розовато-лиловый
-  "#5D4037", // Темно-коричневый
-  "#F8BBD0", // Бледно-розовый
-  "#D7CCC8", // Бледно-песочный
-  "#66BB6A", // Мятно-зеленый
-  "#616161", // Темно-серый
-];
-
-const getColor = (index: number) => colors[index % colors.length];
+// Цветовая палитра
+const COLORS = ["#D32F2F", "#7B1FA2", "#1976D2", "#F57C00", "#388E3C", "#FBC02D"];
 
 interface CountryData {
   country: string;
@@ -36,69 +16,56 @@ interface Props {
 }
 
 const MapChart: React.FC<Props> = ({ data, totalRacers }) => {
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
-
-  // Сортируем страны по количеству гонщиков
   const sortedData = [...data].sort((a, b) => b.count - a.count);
 
   return (
-    <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2 }}>
+    <Card sx={{ boxShadow: 2, borderRadius: 3, p: 3 }}>
       <CardContent sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         {/* Заголовок */}
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <PublicIcon sx={{ color: "#7B61FF", mr: 1 }} />
-          <Typography variant="subtitle2" sx={{ fontSize: 16, fontWeight: 600 }}>
-            Registered Racers by Country
-          </Typography>
-        </Box>
+        <Typography variant="subtitle2" sx={{ fontSize: 14, fontWeight: 600, mb: 2 }}>
+          Registered Racers by Country
+        </Typography>
 
         {/* Круговой график */}
-        <PieChart width={250} height={250}>
-          {/* Серые незаполненные круги */}
-          <Pie data={[{ value: 1 }]} dataKey="value" cx="50%" cy="50%" outerRadius={100} fill="#EAEAEA" />
+        <ResponsiveContainer width={250} height={250}>
+          <PieChart>
+            {/* Серые незаполненные круги */}
+            <Pie data={sortedData} dataKey="count" cx="50%" cy="50%" outerRadius={100} fill="#EAEAEA" />
 
-          {/* Основные цветные круги */}
-          <Pie
-            data={sortedData}
-            dataKey="count"
-            cx="50%"
-            cy="50%"
-            startAngle={90} // Начинаем с 12 часов
-            endAngle={-270}
-            innerRadius={30}
-            outerRadius={100}
-            cornerRadius={10} // Закругляем концы
-            paddingAngle={5}
-            onMouseLeave={() => setHoverIndex(null)}
-          >
-            {sortedData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={getColor(index)}
-                opacity={hoverIndex === index ? 0.7 : 1} // Затемнение при наведении
-                onMouseEnter={() => setHoverIndex(index)}
-                style={{ outline: "none" }} // Убираем рамку при клике
-              />
-            ))}
-          </Pie>
+            {/* Основные цветные круги */}
+            <Pie
+              data={sortedData}
+              dataKey="count"
+              cx="50%"
+              cy="50%"
+              startAngle={90}
+              endAngle={-270}
+              innerRadius={30}
+              outerRadius={100}
+              cornerRadius={10}
+              paddingAngle={5}
+            >
+              {sortedData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
 
-          <Tooltip
-            formatter={(value, name, props) => {
-              const countryCount = Number(value);
-              const percentage = totalRacers > 0 ? ((countryCount / totalRacers) * 100).toFixed(1) : "0";
+            <Tooltip
+              cursor={{ fill: "transparent" }}
+              formatter={(value) => `${value} racers`}
+            />
+          </PieChart>
+        </ResponsiveContainer>
 
-              return [`${percentage}%`, props.payload.country];
-            }}
-          />
-        </PieChart>
-
-        {/* Легенда со странами */}
-        <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center", mt: 2 }}>
+        {/* Легенда */}
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2, flexWrap: "wrap" }}>
           {sortedData.map((entry, index) => (
-            <Stack key={entry.country} direction="row" alignItems="center" spacing={1} sx={{ m: 1 }}>
-              <Box sx={{ width: 12, height: 12, borderRadius: "50%", backgroundColor: getColor(index) }} />
-              <Typography variant="body2">{entry.country}</Typography>
-            </Stack>
+            <Box key={entry.country} sx={{ display: "flex", alignItems: "center", mx: 1 }}>
+              <Box sx={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: COLORS[index % COLORS.length], mr: 1 }} />
+              <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 500 }}>
+                {entry.country}
+              </Typography>
+            </Box>
           ))}
         </Box>
       </CardContent>

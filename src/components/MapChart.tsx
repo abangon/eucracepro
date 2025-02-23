@@ -3,11 +3,27 @@ import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { Box, Typography, Card, CardContent, Stack } from "@mui/material";
 import PublicIcon from "@mui/icons-material/Public";
 
-// Функция для генерации цветов
-const getColor = (index: number) => {
-  const colors = ["#7B61FF", "#A084E8", "#C3A6F3", "#E5C7FF", "#FF69B4", "#32CD32", "#FFA500", "#00CED1"]; // Разнообразные цвета
-  return colors[index % colors.length];
-};
+// Обновленная палитра цветов из картинки
+const colors = [
+  "#D81B60", // Красно-баклажановый
+  "#BA68C8", // Глициния
+  "#81D4FA", // Сиво-голубой
+  "#1E88E5", // Синяя пыль
+  "#EC407A", // Фуксия
+  "#8E24AA", // Пурпурный
+  "#FFB300", // Ранний
+  "#3949AB", // Синяя сталь
+  "#FF7043", // Персиковый
+  "#FFD54F", // Желто-оранжевый
+  "#CE93D8", // Бледный розовато-лиловый
+  "#5D4037", // Темно-коричневый
+  "#F8BBD0", // Бледно-розовый
+  "#D7CCC8", // Бледно-песочный
+  "#66BB6A", // Мятно-зеленый
+  "#616161", // Темно-серый
+];
+
+const getColor = (index: number) => colors[index % colors.length];
 
 interface CountryData {
   country: string;

@@ -14,8 +14,10 @@ import {
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import InfoIcon from "@mui/icons-material/Info";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../images/logo/eucrace-logo.jpg";
+
 
 const drawerWidth = 240;
 
@@ -34,6 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
     { text: "Dashboard", icon: <DashboardIcon fontSize="small" />, path: "/" },
     { text: "Races", icon: <SportsEsportsIcon fontSize="small" />, path: "/races" },
     { text: "Leaderboard", icon: <LeaderboardIcon fontSize="small" />, path: "/leaderboard" },
+    { text: "About us", icon: <InfoIcon fontSize="small" />, path: "/about-us" },
   ];
 
   const drawerContent = (

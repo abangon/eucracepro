@@ -30,6 +30,7 @@ interface Race {
   date: string;
   track_name: string;
   status: string; // "Registration", "Active", "Finished"
+  race_type?: string; // Новое поле Race Type
   participants: string[];
   imageData?: string; // optional image as Data URL
 }
@@ -44,6 +45,7 @@ const Races: React.FC = () => {
   const [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceTrackName, setNewRaceTrackName] = useState("");
   const [newRaceStatus, setNewRaceStatus] = useState("Registration");
+  const [newRaceType, setNewRaceType] = useState("Race"); // новое состояние для Race Type
   const [newRaceImage, setNewRaceImage] = useState<string>(""); // base64 string of the image
   const [formMessage, setFormMessage] = useState("");
 
@@ -111,6 +113,7 @@ const Races: React.FC = () => {
       date: newRaceDate,
       track_name: newRaceTrackName,
       status: newRaceStatus,
+      race_type: newRaceType, // сохраняем Race Type
       participants: [],
       ...(newRaceImage && { imageData: newRaceImage }),
     };
@@ -123,6 +126,7 @@ const Races: React.FC = () => {
       setNewRaceDate("");
       setNewRaceTrackName("");
       setNewRaceStatus("Registration");
+      setNewRaceType("Race");
       setNewRaceImage("");
       // Refresh the list of races
       const q = query(collection(db, "races"), orderBy("date", "asc"));
@@ -164,7 +168,14 @@ const Races: React.FC = () => {
         <List>
           {races.map((race) => (
             <ListItem key={race.id} sx={{ mb: 2 }}>
-              <Card sx={{ width: "100%", borderRadius: 2, display: "flex", alignItems: "center" }}>
+              <Card
+                sx={{
+                  width: "100%",
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
                 {race.imageData && (
                   <Box sx={{ mr: 2 }}>
                     <img
@@ -189,6 +200,11 @@ const Races: React.FC = () => {
                   {race.status && (
                     <Typography variant="body2" color="text.secondary">
                       Status: {capitalizeStatus(race.status)}
+                    </Typography>
+                  )}
+                  {race.race_type && (
+                    <Typography variant="body2" color="text.secondary">
+                      Type: {race.race_type}
                     </Typography>
                   )}
                 </CardContent>
@@ -253,6 +269,20 @@ const Races: React.FC = () => {
                 <MenuItem value="Registration">Registration</MenuItem>
                 <MenuItem value="Active">Active</MenuItem>
                 <MenuItem value="Finished">Finished</MenuItem>
+              </Select>
+            </FormControl>
+            {/* Новое поле Race Type */}
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="race-type-select-label">Race Type</InputLabel>
+              <Select
+                labelId="race-type-select-label"
+                value={newRaceType}
+                label="Race Type"
+                onChange={(e) => setNewRaceType(e.target.value)}
+              >
+                <MenuItem value="Race">Race</MenuItem>
+                <MenuItem value="Training">Training</MenuItem>
+                <MenuItem value="Camp">Camp</MenuItem>
               </Select>
             </FormControl>
             {/* Field for uploading race image */}

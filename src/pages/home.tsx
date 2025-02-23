@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Grid, Card, CardContent } from "@mui/material";
+import { Box, Typography, Grid, Card, CardContent, Avatar } from "@mui/material";
+import SportsMotorsportsIcon from "@mui/icons-material/SportsMotorsports";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
@@ -19,9 +20,11 @@ const Home: React.FC = () => {
         const usersSnapshot = await getDocs(usersCollection);
         const users = usersSnapshot.docs.map(doc => doc.data());
 
+        // 1️⃣ Подсчет активных гонщиков
         const totalUsers = users.length;
         setTotalRacers(totalUsers);
 
+        // 2️⃣ Группируем пользователей по странам
         const countryCounts: { [key: string]: number } = {};
         users.forEach(user => {
           if (user.country) {
@@ -36,9 +39,11 @@ const Home: React.FC = () => {
 
         setCountryData(formattedData);
 
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        const pastUsers = users.filter(user => new Date(user.createdAt) < oneWeekAgo).length;
+        // 3️⃣ Определяем количество пользователей месяц назад
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+        const pastUsers = users.filter(user => new Date(user.createdAt) < oneMonthAgo).length;
 
         let growth = 0;
         if (pastUsers === 0) {
@@ -49,12 +54,13 @@ const Home: React.FC = () => {
 
         setGrowthPercentage(parseFloat(growth.toFixed(1)));
 
+        // 4️⃣ Статистика новых пользователей за последние 7 дней
         const today = new Date();
         const last7Days = Array.from({ length: 7 }, (_, i) => {
           const date = new Date();
           date.setDate(today.getDate() - i);
           return { date, count: 0 };
-        }).reverse();
+        }).reverse(); // Отображаем в хронологическом порядке
 
         users.forEach(user => {
           const createdAt = new Date(user.createdAt);
@@ -81,29 +87,28 @@ const Home: React.FC = () => {
 
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        📊 Dashboard
+      </Typography>
       <Grid container spacing={3}>
         {/* Total Active Racers */}
         <Grid item xs={12} md={4}>
-          <Card sx={{ boxShadow: 2, borderRadius: 3, p: 3 }}>
+          <Card sx={{ boxShadow: 2, borderRadius: 3, p: 2 }}>
             <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              {/* Левая часть (текст) */}
               <Box>
-                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: 14, fontWeight: 600 }}>
-                  Total active users
+                <Typography variant="subtitle2" color="text.secondary">
+                  Total Active Racers
                 </Typography>
-                <Typography variant="h3" fontWeight="bold" sx={{ fontSize: 32 }}>
-                  {totalRacers.toLocaleString()}
+                <Typography variant="h3" fontWeight="bold">
+                  {totalRacers}
                 </Typography>
-                <Box sx={{ display: "flex", alignItems: "center", mt: 0.5, color: "success.main", gap: 0.5 }}>
-                  <TrendingUpIcon fontSize="small" />
-                  <Typography variant="body2" sx={{ fontSize: 14, fontWeight: 500 }}>
-                    +{growthPercentage}% last 7 days
-                  </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 1, color: "success.main" }}>
+                  <TrendingUpIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  <Typography variant="body2">+{growthPercentage}% last 30 days</Typography>
                 </Box>
               </Box>
-
-              {/* Правая часть (гистограмма) */}
-              <Box sx={{ width: 80, height: 40, display: "flex", alignItems: "center" }}>
+              {/* Гистограмма новых пользователей */}
+              <Box sx={{ width: 90, height: 60, display: "flex", alignItems: "center" }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={weeklyData}>
                     <XAxis hide />
@@ -124,7 +129,7 @@ const Home: React.FC = () => {
                       fill="#7B61FF"
                       radius={[5, 5, 0, 0]}
                       barSize={8}
-                      minPointSize={2}
+                      minPointSize={3} // Минимальный размер 0-дней
                     />
                   </BarChart>
                 </ResponsiveContainer>

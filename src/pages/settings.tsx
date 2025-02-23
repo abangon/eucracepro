@@ -147,7 +147,7 @@ const Settings: React.FC = () => {
             label="YouTube"
             variant="outlined"
             fullWidth
-            placeholder="@YourYouTubeChannel"
+            placeholder="YourYouTubeChannel"
             value={youtube}
             onChange={(e) => setYoutube(e.target.value)}
           />
@@ -157,7 +157,7 @@ const Settings: React.FC = () => {
             label="Instagram"
             variant="outlined"
             fullWidth
-            placeholder="YourInstagramHandle"
+            placeholder="YourInstagramUsername"
             value={instagram}
             onChange={(e) => setInstagram(e.target.value)}
           />
@@ -177,7 +177,7 @@ const Settings: React.FC = () => {
             label="TikTok"
             variant="outlined"
             fullWidth
-            placeholder="@YourTikTokHandle"
+            placeholder="YourTikTokUsername"
             value={tiktok}
             onChange={(e) => setTiktok(e.target.value)}
           />

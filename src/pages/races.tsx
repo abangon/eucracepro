@@ -13,7 +13,14 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import { collection, getDocs, query, orderBy, setDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  setDoc,
+  doc,
+} from "firebase/firestore";
 import { db, auth } from "../utils/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -22,9 +29,9 @@ interface Race {
   name: string;
   date: string;
   track_name: string;
-  status: string; // "registration", "active", "finished"
+  status: string; // "Registration", "Active", "Finished"
   participants: string[];
-  imageData?: string; // Новое поле для хранения картинки (Data URL)
+  imageData?: string; // optional image as Data URL
 }
 
 const Races: React.FC = () => {
@@ -32,20 +39,20 @@ const Races: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
-  // Состояния для админской формы создания гонки
+  // Admin form states
   const [newRaceName, setNewRaceName] = useState("");
   const [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceTrackName, setNewRaceTrackName] = useState("");
-  const [newRaceStatus, setNewRaceStatus] = useState("registration");
-  const [newRaceImage, setNewRaceImage] = useState<string>(""); // base64 строка изображения
+  const [newRaceStatus, setNewRaceStatus] = useState("Registration");
+  const [newRaceImage, setNewRaceImage] = useState<string>(""); // base64 string of the image
   const [formMessage, setFormMessage] = useState("");
 
-  // Функция для генерации случайного 4-значного идентификатора гонки
+  // Function to generate a random 4-digit race ID as string
   const generateRaceId = () => {
     return (Math.floor(Math.random() * 9000) + 1000).toString();
   };
 
-  // Получаем список гонок
+  // Fetch races list
   useEffect(() => {
     const fetchRaces = async () => {
       try {
@@ -66,7 +73,7 @@ const Races: React.FC = () => {
     fetchRaces();
   }, []);
 
-  // Проверяем, авторизован ли пользователь как администратор
+  // Check if the user is admin (only UID "ztnWBUkh6dUcXLOH8D5nLBEYm2J2" is allowed to create races)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && user.uid === "ztnWBUkh6dUcXLOH8D5nLBEYm2J2") {
@@ -78,7 +85,7 @@ const Races: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Обработка выбора файла для изображения
+  // Handle file change for race image
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
@@ -92,16 +99,13 @@ const Races: React.FC = () => {
     }
   };
 
-  // Функция создания гонки
+  // Handle creating a new race
   const handleCreateRace = async () => {
     if (!newRaceName.trim() || !newRaceDate.trim() || !newRaceTrackName.trim()) {
       setFormMessage("Please fill all fields.");
       return;
     }
-    // Генерируем 4-значный идентификатор гонки
     const raceId = generateRaceId();
-
-    // Формируем объект новой гонки, включая imageData если оно есть
     const newRace: Partial<Race> = {
       name: newRaceName,
       date: newRaceDate,
@@ -114,13 +118,13 @@ const Races: React.FC = () => {
     try {
       await setDoc(doc(db, "races", raceId), newRace);
       setFormMessage(`Race created with ID: ${raceId}`);
-      // Очистка полей формы
+      // Clear form fields
       setNewRaceName("");
       setNewRaceDate("");
       setNewRaceTrackName("");
-      setNewRaceStatus("registration");
+      setNewRaceStatus("Registration");
       setNewRaceImage("");
-      // Обновляем список гонок
+      // Refresh the list of races
       const q = query(collection(db, "races"), orderBy("date", "asc"));
       const snapshot = await getDocs(q);
       const fetchedRaces: Race[] = snapshot.docs.map((doc) => ({
@@ -132,6 +136,21 @@ const Races: React.FC = () => {
       console.error("Error creating race:", error);
       setFormMessage("Error creating race: " + error.message);
     }
+  };
+
+  // Helper function to format date in English
+  const formatDate = (dateStr: string) => {
+    const dateObj = new Date(dateStr);
+    return dateObj.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Helper function to capitalize status (if needed)
+  const capitalizeStatus = (status: string) => {
+    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   };
 
   return (
@@ -151,7 +170,12 @@ const Races: React.FC = () => {
                     <img
                       src={race.imageData}
                       alt={race.name}
-                      style={{ width: 100, height: "auto", objectFit: "cover", borderRadius: 4 }}
+                      style={{
+                        width: 100,
+                        height: "auto",
+                        objectFit: "cover",
+                        borderRadius: 4,
+                      }}
                     />
                   </Box>
                 )}
@@ -159,12 +183,12 @@ const Races: React.FC = () => {
                   <Typography variant="h6">{race.name}</Typography>
                   {race.date && (
                     <Typography variant="body2" color="text.secondary">
-                      {race.date} {race.track_name && `- ${race.track_name}`}
+                      {formatDate(race.date)} {race.track_name && `- ${race.track_name}`}
                     </Typography>
                   )}
                   {race.status && (
                     <Typography variant="body2" color="text.secondary">
-                      Status: {race.status}
+                      Status: {capitalizeStatus(race.status)}
                     </Typography>
                   )}
                 </CardContent>
@@ -176,7 +200,7 @@ const Races: React.FC = () => {
         <Typography>No upcoming races.</Typography>
       )}
 
-      {/* Админская форма для создания новой гонки */}
+      {/* Admin form for creating new race */}
       {isAdmin && (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>
@@ -226,12 +250,12 @@ const Races: React.FC = () => {
                 label="Status"
                 onChange={(e) => setNewRaceStatus(e.target.value)}
               >
-                <MenuItem value="registration">registration</MenuItem>
-                <MenuItem value="active">active</MenuItem>
-                <MenuItem value="finished">finished</MenuItem>
+                <MenuItem value="Registration">Registration</MenuItem>
+                <MenuItem value="Active">Active</MenuItem>
+                <MenuItem value="Finished">Finished</MenuItem>
               </Select>
             </FormControl>
-            {/* Поле для загрузки картинки */}
+            {/* Field for uploading race image */}
             <Box>
               <Typography variant="body2" sx={{ mb: 1 }}>
                 Upload Race Image:

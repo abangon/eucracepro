@@ -1,9 +1,15 @@
-import React from "react";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import { Box, Typography, Card, CardContent } from "@mui/material";
+import React, { useState } from "react";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
+import { Box, Typography, Card, CardContent, Stack } from "@mui/material";
 
-// Цветовая палитра
-const COLORS = ["#D32F2F", "#7B1FA2", "#1976D2", "#F57C00", "#388E3C", "#FBC02D"];
+// Обновленная палитра цветов
+const colors = [
+  "#D81B60", "#BA68C8", "#81D4FA", "#1E88E5", "#EC407A", "#8E24AA", "#FFB300",
+  "#3949AB", "#FF7043", "#FFD54F", "#CE93D8", "#5D4037", "#F8BBD0", "#D7CCC8",
+  "#66BB6A", "#616161"
+];
+
+const getColor = (index: number) => colors[index % colors.length];
 
 interface CountryData {
   country: string;
@@ -16,56 +22,68 @@ interface Props {
 }
 
 const MapChart: React.FC<Props> = ({ data, totalRacers }) => {
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
+  // Сортируем страны по количеству гонщиков
   const sortedData = [...data].sort((a, b) => b.count - a.count);
 
   return (
     <Card sx={{ boxShadow: 2, borderRadius: 3, p: 3 }}>
       <CardContent sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         {/* Заголовок */}
-        <Typography variant="subtitle2" sx={{ fontSize: 14, fontWeight: 600, mb: 2 }}>
+        <Typography variant="subtitle2" sx={{ fontSize: 14, fontWeight: 500, color: "#555", mb: 2 }}>
           Registered Racers by Country
         </Typography>
 
         {/* Круговой график */}
-        <ResponsiveContainer width={250} height={250}>
-          <PieChart>
-            {/* Серые незаполненные круги */}
-            <Pie data={sortedData} dataKey="count" cx="50%" cy="50%" outerRadius={100} fill="#EAEAEA" />
+        <PieChart width={250} height={250}>
+          {/* Серый фон графика */}
+          <Pie data={[{ value: 1 }]} dataKey="value" cx="50%" cy="50%" outerRadius={100} fill="#EAEAEA" />
 
-            {/* Основные цветные круги */}
-            <Pie
-              data={sortedData}
-              dataKey="count"
-              cx="50%"
-              cy="50%"
-              startAngle={90}
-              endAngle={-270}
-              innerRadius={30}
-              outerRadius={100}
-              cornerRadius={10}
-              paddingAngle={5}
-            >
-              {sortedData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
+          {/* Основные цветные круги */}
+          <Pie
+            data={sortedData}
+            dataKey="count"
+            cx="50%"
+            cy="50%"
+            startAngle={90} // Начинаем с 12 часов
+            endAngle={-270}
+            innerRadius={30}
+            outerRadius={100}
+            cornerRadius={10} // Закругленные края
+            paddingAngle={5}
+            onMouseLeave={() => setHoverIndex(null)}
+          >
+            {sortedData.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={getColor(index)}
+                opacity={hoverIndex === index ? 0.7 : 1} // Затемнение при наведении
+                onMouseEnter={() => setHoverIndex(index)}
+                style={{ outline: "none" }} // Убираем рамку при клике
+              />
+            ))}
+          </Pie>
 
-            <Tooltip
-              cursor={{ fill: "transparent" }}
-              formatter={(value) => `${value} racers`}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+          <Tooltip
+            formatter={(value, name, props) => {
+              const countryCount = Number(value);
+              const percentage = totalRacers > 0 ? ((countryCount / totalRacers) * 100).toFixed(1) : "0";
 
-        {/* Легенда */}
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 2, flexWrap: "wrap" }}>
+              return [`${percentage}%`, props.payload.country];
+            }}
+          />
+        </PieChart>
+
+        {/* Легенда со странами */}
+        <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center", mt: 2 }}>
           {sortedData.map((entry, index) => (
-            <Box key={entry.country} sx={{ display: "flex", alignItems: "center", mx: 1 }}>
-              <Box sx={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: COLORS[index % COLORS.length], mr: 1 }} />
-              <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 500 }}>
+            <Stack key={entry.country} direction="row" alignItems="center" spacing={1} sx={{ m: 1 }}>
+              <Box sx={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: getColor(index) }} />
+              <Typography variant="body2" sx={{ fontSize: 12, color: "#333", fontWeight: 500 }}>
                 {entry.country}
               </Typography>
-            </Box>
+            </Stack>
           ))}
         </Box>
       </CardContent>

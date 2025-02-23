@@ -5,7 +5,7 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
 import MapChart from "../components/MapChart";
-import { BarChart, Bar, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, Tooltip, ResponsiveContainer, XAxis } from "recharts";
 
 const Home: React.FC = () => {
   const [totalRacers, setTotalRacers] = useState(0);
@@ -108,26 +108,28 @@ const Home: React.FC = () => {
                 </Box>
               </Box>
               {/* Гистограмма новых пользователей */}
-              <Box sx={{ width: 80, height: 50 }}>
+              <Box sx={{ width: 90, height: 60, display: "flex", alignItems: "center" }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={weeklyData}>
+                    <XAxis hide />
                     <Tooltip
                       cursor={{ fill: "transparent" }}
-                      content={({ active, payload }) => (active && payload && payload.length ? (
-                        <Box sx={{ background: "#fff", p: 1, borderRadius: 1, boxShadow: 2 }}>
-                          <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                            {payload[0].value}
-                          </Typography>
-                        </Box>
-                      ) : null)}
+                      content={({ active, payload }) =>
+                        active && payload && payload.length ? (
+                          <Box sx={{ background: "#fff", p: 1, borderRadius: 1, boxShadow: 2 }}>
+                            <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                              {payload[0].value}
+                            </Typography>
+                          </Box>
+                        ) : null
+                      }
                     />
                     <Bar
                       dataKey="count"
                       fill="#7B61FF"
                       radius={[5, 5, 0, 0]}
-                      barSize={10}
-                      minPointSize={2} // Маленькие столбцы для дней с 0
-                      background={{ fill: "#EAEAEA" }} // Серые незаполненные дни
+                      barSize={8}
+                      minPointSize={3} // Минимальный размер 0-дней
                     />
                   </BarChart>
                 </ResponsiveContainer>

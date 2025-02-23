@@ -13,6 +13,7 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import {
   collection,
   getDocs,
@@ -23,6 +24,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "../utils/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import ReactCountryFlag from "react-country-flag";
 
 interface Race {
   id: string;
@@ -31,7 +33,7 @@ interface Race {
   track_name: string;
   country: string;
   status: string; // "Registration", "Active", "Finished"
-  race_type?: string; // "Race", "Training", "Camp"
+  // race_type удалено для отображения
   participants: string[];
   imageData?: string; // Optional image as Data URL
 }
@@ -41,25 +43,25 @@ const Races: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
-  // Состояния для админской формы
+  // Admin form states
   const [newRaceName, setNewRaceName] = useState("");
   const [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceTrackName, setNewRaceTrackName] = useState("");
   const [newRaceCountry, setNewRaceCountry] = useState("");
   const [newRaceStatus, setNewRaceStatus] = useState("Registration");
-  const [newRaceType, setNewRaceType] = useState("Race");
+  const [newRaceType, setNewRaceType] = useState("Race"); // Всё ещё сохраняется в базе, но не отображается
   const [newRaceImage, setNewRaceImage] = useState<string>("");
   const [formMessage, setFormMessage] = useState("");
 
-  // Список стран для админской формы
+  // List of countries for admin form
   const [countries, setCountries] = useState<string[]>([]);
 
-  // Функция для генерации случайного 4-значного ID гонки (в виде строки)
+  // Function to generate a random 4-digit race ID as string
   const generateRaceId = () => {
     return (Math.floor(Math.random() * 9000) + 1000).toString();
   };
 
-  // Получение списка гонок из Firestore
+  // Fetch races list from Firestore
   useEffect(() => {
     const fetchRaces = async () => {
       try {
@@ -80,7 +82,7 @@ const Races: React.FC = () => {
     fetchRaces();
   }, []);
 
-  // Подгрузка списка стран (аналогично странице Settings)
+  // Load list of countries (аналогично странице Settings)
   useEffect(() => {
     fetch("https://restcountries.com/v3.1/all")
       .then((response) => response.json())
@@ -92,7 +94,7 @@ const Races: React.FC = () => {
       .catch((error) => console.error("Error fetching countries:", error));
   }, []);
 
-  // Проверка, является ли пользователь администратором (UID "ztnWBUkh6dUcXLOH8D5nLBEYm2J2")
+  // Check if the user is admin (только UID "ztnWBUkh6dUcXLOH8D5nLBEYm2J2" может создавать гонки)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && user.uid === "ztnWBUkh6dUcXLOH8D5nLBEYm2J2") {
@@ -144,7 +146,7 @@ const Races: React.FC = () => {
     try {
       await setDoc(doc(db, "races", raceId), newRace);
       setFormMessage(`Race created with ID: ${raceId}`);
-      // Очистка полей формы
+      // Clear form fields
       setNewRaceName("");
       setNewRaceDate("");
       setNewRaceTrackName("");
@@ -152,7 +154,7 @@ const Races: React.FC = () => {
       setNewRaceStatus("Registration");
       setNewRaceType("Race");
       setNewRaceImage("");
-      // Обновление списка гонок
+      // Refresh the list of races
       const q = query(collection(db, "races"), orderBy("date", "asc"));
       const snapshot = await getDocs(q);
       const fetchedRaces: Race[] = snapshot.docs.map((doc) => ({
@@ -166,7 +168,7 @@ const Races: React.FC = () => {
     }
   };
 
-  // Функция форматирования даты (на английском языке)
+  // Helper function to format date in English
   const formatDate = (dateStr: string) => {
     const dateObj = new Date(dateStr);
     return dateObj.toLocaleDateString("en-US", {
@@ -176,7 +178,7 @@ const Races: React.FC = () => {
     });
   };
 
-  // Функция для капитализации статуса
+  // Helper function to capitalize status
   const capitalizeStatus = (status: string) => {
     return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   };
@@ -199,6 +201,7 @@ const Races: React.FC = () => {
                   overflow: "hidden",
                   display: "flex",
                   flexDirection: "column",
+                  position: "relative",
                 }}
               >
                 {race.imageData && (
@@ -214,31 +217,48 @@ const Races: React.FC = () => {
                     />
                   </Box>
                 )}
+                {/* Race ID для администратора */}
+                {isAdmin && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      backgroundColor: "rgba(0, 0, 0, 0.5)",
+                      color: "white",
+                      px: 1,
+                      borderRadius: 1,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    ID: {race.id}
+                  </Box>
+                )}
                 <CardContent>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Race ID: {race.id}
-                  </Typography>
                   <Typography variant="h6">{race.name}</Typography>
-                  {race.date && (
+                  <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                    {/* Флаг страны */}
+                    <ReactCountryFlag
+                      countryCode={race.country} // Предполагаем, что в базе хранится ISO-код; если нет – можно реализовать маппинг
+                      svg
+                      style={{ width: "1.5em", height: "1.5em", marginRight: 4 }}
+                      title={race.country}
+                    />
                     <Typography variant="body2" color="text.secondary">
-                      {formatDate(race.date)} {race.track_name && `- ${race.track_name}`}
+                      {race.country}
                     </Typography>
-                  )}
-                  {race.country && (
+                  </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                    <CalendarTodayIcon sx={{ fontSize: 18, mr: 1 }} />
                     <Typography variant="body2" color="text.secondary">
-                      Country: {race.country}
+                      {formatDate(race.date)}
                     </Typography>
-                  )}
-                  {race.status && (
-                    <Typography variant="body2" color="text.secondary">
-                      Status: {capitalizeStatus(race.status)}
-                    </Typography>
-                  )}
-                  {race.race_type && (
-                    <Typography variant="body2" color="text.secondary">
-                      Type: {race.race_type}
-                    </Typography>
-                  )}
+                  </Box>
+                  <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
+                    <Button variant="contained" disabled sx={{ textTransform: "none" }}>
+                      {capitalizeStatus(race.status)}
+                    </Button>
+                  </Box>
                 </CardContent>
               </Card>
             </ListItem>

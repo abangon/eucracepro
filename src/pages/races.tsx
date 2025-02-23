@@ -22,7 +22,7 @@ import { db, auth } from "../utils/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import ReactCountryFlag from "react-country-flag";
 
-// Анимация мигающего кружка
+// Анимация мигающего кружка (для Registration / Active)
 const blinker = keyframes`
   50% { opacity: 0; }
 `;
@@ -36,7 +36,7 @@ interface Race {
   status: string; // "Registration", "Active", "Finished"
   participants: string[];
   imageData?: string; // Base64 Data URL
-  // race_type сохраняется, но не отображается
+  // race_type хранится, но не отображается
 }
 
 const Races: React.FC = () => {
@@ -44,21 +44,21 @@ const Races: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Поля для админской формы создания гонки
+  // Поля админской формы
   const [newRaceName, setNewRaceName] = useState("");
   const [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceTrackName, setNewRaceTrackName] = useState("");
   const [newRaceCountry, setNewRaceCountry] = useState("");
   const [newRaceStatus, setNewRaceStatus] = useState("Registration");
-  const [newRaceType, setNewRaceType] = useState("Race"); // хранится, но не показывается
+  const [newRaceType, setNewRaceType] = useState("Race");
   const [newRaceImage, setNewRaceImage] = useState("");
   const [formMessage, setFormMessage] = useState("");
 
-  // Список стран и маппинг полного названия → ISO-код (для флага)
+  // Список стран + маппинг полного названия → ISO-код
   const [countryMap, setCountryMap] = useState<Record<string, string>>({});
   const [countries, setCountries] = useState<string[]>([]);
 
-  // Генерация случайного 4-значного ID
+  // Генерация 4-значного ID
   const generateRaceId = () => {
     return (Math.floor(Math.random() * 9000) + 1000).toString();
   };
@@ -83,7 +83,7 @@ const Races: React.FC = () => {
     fetchRaces();
   }, []);
 
-  // Загрузка списка стран и построение маппинга (как на странице Settings)
+  // Загрузка списка стран (полное название → ISO-код) и формирование выпадающего списка
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -111,7 +111,7 @@ const Races: React.FC = () => {
     fetchCountries();
   }, []);
 
-  // Проверка, является ли пользователь администратором (только с UID "ztnWBUkh6dUcXLOH8D5nLBEYm2J2" могут создавать гонки)
+  // Проверка прав администратора (UID "ztnWBUkh6dUcXLOH8D5nLBEYm2J2")
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && user.uid === "ztnWBUkh6dUcXLOH8D5nLBEYm2J2") {
@@ -137,7 +137,7 @@ const Races: React.FC = () => {
     }
   };
 
-  // Функция создания новой гонки
+  // Создание новой гонки
   const handleCreateRace = async () => {
     if (!newRaceName || !newRaceDate || !newRaceTrackName || !newRaceCountry) {
       setFormMessage("Please fill all fields.");
@@ -158,7 +158,7 @@ const Races: React.FC = () => {
     try {
       await setDoc(doc(db, "races", raceId), newRaceData);
       setFormMessage(`Race created with ID: ${raceId}`);
-      // Сброс полей формы
+      // Сброс формы
       setNewRaceName("");
       setNewRaceDate("");
       setNewRaceTrackName("");
@@ -181,7 +181,7 @@ const Races: React.FC = () => {
     }
   };
 
-  // Форматирование даты на английском языке
+  // Форматирование даты (en-US)
   const formatDate = (dateStr: string) => {
     const dateObj = new Date(dateStr);
     return dateObj.toLocaleDateString("en-US", {
@@ -191,11 +191,11 @@ const Races: React.FC = () => {
     });
   };
 
-  // Функция капитализации статуса
+  // Капитализация статуса
   const capitalizeStatus = (status: string) =>
     status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 
-  // Функция для определения цвета статуса
+  // Цвет статуса
   const getStatusColor = (status: string) => {
     const lower = status.toLowerCase();
     if (lower === "registration") return "green";
@@ -214,7 +214,7 @@ const Races: React.FC = () => {
       ) : (
         <Grid container spacing={2} alignItems="stretch">
           {races.map((race) => {
-            // Преобразование полного названия страны в ISO-код (если есть)
+            // Преобразуем название страны → ISO-код (если есть)
             const isoCode = countryMap[race.country] || "";
             return (
               <Grid item xs={12} sm={6} md={4} lg={3} key={race.id}>
@@ -228,7 +228,7 @@ const Races: React.FC = () => {
                     height: "100%",
                   }}
                 >
-                  {/* Chip с Race ID */}
+                  {/* Race ID в правом верхнем углу */}
                   <Chip
                     label={race.id}
                     sx={{
@@ -240,7 +240,7 @@ const Races: React.FC = () => {
                       color: "white",
                     }}
                   />
-                  {/* Изображение */}
+                  {/* Изображение гонки */}
                   {race.imageData ? (
                     <CardMedia
                       component="img"
@@ -267,13 +267,14 @@ const Races: React.FC = () => {
                       </Typography>
                     </Box>
                   )}
-                  {/* Основной контент карточки */}
                   <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {/* Название гонки с отступом снизу */}
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
                       {race.name}
                     </Typography>
+
                     {/* Флаг и название страны */}
-                    <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                       {isoCode && (
                         <ReactCountryFlag
                           countryCode={isoCode}
@@ -290,24 +291,27 @@ const Races: React.FC = () => {
                         {race.country}
                       </Typography>
                     </Box>
+
                     {/* Дата проведения */}
-                    <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                       <CalendarTodayIcon sx={{ fontSize: 16, mr: 1 }} />
                       <Typography variant="body2" color="text.secondary">
                         {formatDate(race.date)}
                       </Typography>
                     </Box>
-                    {/* Место проведения */}
+
+                    {/* Место проведения + отступ снизу */}
                     {race.track_name && (
-                      <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                         <LocationOnIcon sx={{ fontSize: 16, mr: 1 }} />
                         <Typography variant="body2" color="text.secondary">
                           {race.track_name}
                         </Typography>
                       </Box>
                     )}
-                    {/* Статус */}
-                    <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+
+                    {/* Статус (убираем лишние отступы снизу) */}
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
                       <Typography
                         variant="body2"
                         sx={{
@@ -332,8 +336,6 @@ const Races: React.FC = () => {
                       )}
                     </Box>
                   </CardContent>
-                  {/* Статус-кнопка вынесена ниже, если требуется дополнительное оформление */}
-                  {/* Если нужно, можно добавить нижний блок с кнопкой, но здесь статус уже показан */}
                 </Card>
               </Grid>
             );
@@ -341,7 +343,7 @@ const Races: React.FC = () => {
         </Grid>
       )}
 
-      {/* Форма администратора для создания гонки */}
+      {/* Админская форма */}
       {isAdmin && (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>

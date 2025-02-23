@@ -9,6 +9,7 @@ import Navbar from './components/navbar';
 import Home from './pages/home';
 import Races from './pages/races';
 import Leaderboard from './pages/leaderboard';
+import AboutUs from "./pages/AboutUs";
 import SignIn from './pages/signIn';
 import Settings from './pages/settings';
 import Box from '@mui/material/Box';
@@ -45,6 +46,7 @@ const App: React.FC = () => {
                 <Route path="/races" element={<Races />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/sign-in" element={<SignIn />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </Box>

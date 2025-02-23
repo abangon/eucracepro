@@ -17,19 +17,12 @@ import {
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { keyframes } from "@mui/system";
-import {
-  collection,
-  getDocs,
-  query,
-  orderBy,
-  setDoc,
-  doc,
-} from "firebase/firestore";
+import { collection, getDocs, query, orderBy, setDoc, doc } from "firebase/firestore";
 import { db, auth } from "../utils/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import ReactCountryFlag from "react-country-flag";
 
-// Определяем анимацию мигающего кружка
+// Анимация мигающего кружка
 const blinker = keyframes`
   50% { opacity: 0; }
 `;
@@ -42,8 +35,8 @@ interface Race {
   country: string;
   status: string; // "Registration", "Active", "Finished"
   participants: string[];
-  imageData?: string; // Base64 Data URL (небольшие картинки)
-  // race_type хранится, но не отображается
+  imageData?: string; // Base64 Data URL
+  // race_type сохраняется, но не отображается
 }
 
 const Races: React.FC = () => {
@@ -51,21 +44,21 @@ const Races: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Поля админской формы
+  // Поля для админской формы создания гонки
   const [newRaceName, setNewRaceName] = useState("");
   const [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceTrackName, setNewRaceTrackName] = useState("");
   const [newRaceCountry, setNewRaceCountry] = useState("");
   const [newRaceStatus, setNewRaceStatus] = useState("Registration");
-  const [newRaceType, setNewRaceType] = useState("Race");
+  const [newRaceType, setNewRaceType] = useState("Race"); // хранится, но не показывается
   const [newRaceImage, setNewRaceImage] = useState("");
   const [formMessage, setFormMessage] = useState("");
 
-  // Список стран и маппинг полного названия → ISO-код
+  // Список стран и маппинг полного названия → ISO-код (для флага)
   const [countryMap, setCountryMap] = useState<Record<string, string>>({});
   const [countries, setCountries] = useState<string[]>([]);
 
-  // Функция для генерации случайного 4-значного ID гонки
+  // Генерация случайного 4-значного ID
   const generateRaceId = () => {
     return (Math.floor(Math.random() * 9000) + 1000).toString();
   };
@@ -90,7 +83,7 @@ const Races: React.FC = () => {
     fetchRaces();
   }, []);
 
-  // Загрузка списка стран (полное название и маппинг)
+  // Загрузка списка стран и построение маппинга (как на странице Settings)
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -118,7 +111,7 @@ const Races: React.FC = () => {
     fetchCountries();
   }, []);
 
-  // Проверка прав администратора
+  // Проверка, является ли пользователь администратором (только с UID "ztnWBUkh6dUcXLOH8D5nLBEYm2J2" могут создавать гонки)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && user.uid === "ztnWBUkh6dUcXLOH8D5nLBEYm2J2") {
@@ -130,7 +123,7 @@ const Races: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Обработка загрузки изображения гонки
+  // Обработка загрузки изображения
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -144,7 +137,7 @@ const Races: React.FC = () => {
     }
   };
 
-  // Создание новой гонки
+  // Функция создания новой гонки
   const handleCreateRace = async () => {
     if (!newRaceName || !newRaceDate || !newRaceTrackName || !newRaceCountry) {
       setFormMessage("Please fill all fields.");
@@ -157,7 +150,7 @@ const Races: React.FC = () => {
       track_name: newRaceTrackName,
       country: newRaceCountry,
       status: newRaceStatus,
-      race_type: newRaceType, // сохраняется, но не отображается
+      race_type: newRaceType,
       participants: [] as string[],
       ...(newRaceImage && { imageData: newRaceImage }),
     };
@@ -165,7 +158,7 @@ const Races: React.FC = () => {
     try {
       await setDoc(doc(db, "races", raceId), newRaceData);
       setFormMessage(`Race created with ID: ${raceId}`);
-      // Сброс формы
+      // Сброс полей формы
       setNewRaceName("");
       setNewRaceDate("");
       setNewRaceTrackName("");
@@ -219,9 +212,9 @@ const Races: React.FC = () => {
       {loading ? (
         <Typography>Loading...</Typography>
       ) : (
-        <Grid container spacing={2}>
+        <Grid container spacing={2} alignItems="stretch">
           {races.map((race) => {
-            // Получаем ISO-код для флага (если есть)
+            // Преобразование полного названия страны в ISO-код (если есть)
             const isoCode = countryMap[race.country] || "";
             return (
               <Grid item xs={12} sm={6} md={4} lg={3} key={race.id}>
@@ -230,9 +223,9 @@ const Races: React.FC = () => {
                     position: "relative",
                     borderRadius: 2,
                     overflow: "hidden",
-                    height: 400, // фиксированная высота карточки
                     display: "flex",
                     flexDirection: "column",
+                    height: "100%",
                   }}
                 >
                   {/* Chip с Race ID */}
@@ -247,7 +240,7 @@ const Races: React.FC = () => {
                       color: "white",
                     }}
                   />
-                  {/* Изображение гонки */}
+                  {/* Изображение */}
                   {race.imageData ? (
                     <CardMedia
                       component="img"
@@ -274,7 +267,8 @@ const Races: React.FC = () => {
                       </Typography>
                     </Box>
                   )}
-                  <CardContent sx={{ flex: "1 1 auto" }}>
+                  {/* Основной контент карточки */}
+                  <CardContent sx={{ flexGrow: 1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       {race.name}
                     </Typography>
@@ -303,7 +297,7 @@ const Races: React.FC = () => {
                         {formatDate(race.date)}
                       </Typography>
                     </Box>
-                    {/* Место проведения с иконкой */}
+                    {/* Место проведения */}
                     {race.track_name && (
                       <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
                         <LocationOnIcon sx={{ fontSize: 16, mr: 1 }} />
@@ -338,6 +332,8 @@ const Races: React.FC = () => {
                       )}
                     </Box>
                   </CardContent>
+                  {/* Статус-кнопка вынесена ниже, если требуется дополнительное оформление */}
+                  {/* Если нужно, можно добавить нижний блок с кнопкой, но здесь статус уже показан */}
                 </Card>
               </Grid>
             );
@@ -345,7 +341,7 @@ const Races: React.FC = () => {
         </Grid>
       )}
 
-      {/* Форма для администратора */}
+      {/* Форма администратора для создания гонки */}
       {isAdmin && (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>

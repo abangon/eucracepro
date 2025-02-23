@@ -1,4 +1,3 @@
-// src/components/sidebar.tsx
 import React from "react";
 import {
   Drawer,
@@ -38,7 +37,15 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
   ];
 
   const drawerContent = (
-    <Box sx={{ width: drawerWidth, height: "100vh", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        width: drawerWidth,
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        overflowX: "hidden", // 🔥 Убираем горизонтальный скролл
+      }}
+    >
       <Toolbar sx={{ display: "flex", justifyContent: "center", p: 2 }}>
         <Box
           sx={{
@@ -108,12 +115,13 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: "block", md: "none" },
-          zIndex: 1301, // Теперь Sidebar ОТКРЫВАЕТСЯ НАД Navbar
+          zIndex: 1301, // Sidebar открывается НАД Navbar
           "& .MuiDrawer-paper": {
             width: drawerWidth,
             height: "100vh",
             position: "fixed",
             top: 0,
+            overflowX: "hidden", // 🔥 Убираем горизонтальный скролл в мобильной версии
           },
         }}
       >
@@ -130,6 +138,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
             height: "100vh",
             position: "fixed",
             zIndex: 1300,
+            overflowX: "hidden", // 🔥 Убираем горизонтальный скролл на ПК
           },
         }}
         open

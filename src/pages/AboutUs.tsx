@@ -1,5 +1,4 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Grid,
@@ -8,8 +7,7 @@ import {
   Typography,
   Avatar,
   IconButton,
-  Snackbar,
-  Alert,
+  Popover,
 } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import PhoneIcon from "@mui/icons-material/Phone";
@@ -20,23 +18,26 @@ import OnealLogo from "../assets/oneal_logo1.jpg";
 import EkolkaLogo from "../assets/ekolka_logo1.jpg";
 
 const AboutUs: React.FC = () => {
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [popoverMessage, setPopoverMessage] = useState("");
 
-  const handleEmailClick = (email: string) => {
-    setSnackbarMessage(email);
-    setSnackbarOpen(true);
-  };
-
-  const handleCloseSnackbar = (
-    event?: React.SyntheticEvent | Event,
-    reason?: string
+  const handleEmailClick = (
+    event: React.MouseEvent<HTMLElement>,
+    email: string
   ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setSnackbarOpen(false);
+    setAnchorEl(event.currentTarget);
+    setPopoverMessage(email);
+    // Автоматически закрываем через 3 секунды
+    setTimeout(() => {
+      setAnchorEl(null);
+    }, 3000);
   };
+
+  const handleClosePopover = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -107,7 +108,9 @@ const AboutUs: React.FC = () => {
                     <FaTelegramPlane />
                   </IconButton>
                   <IconButton
-                    onClick={() => handleEmailClick("info@eucrace.pro")}
+                    onClick={(e) =>
+                      handleEmailClick(e, "info@eucrace.pro")
+                    }
                     aria-label="email"
                     color="primary"
                   >
@@ -159,7 +162,9 @@ const AboutUs: React.FC = () => {
                     <FaTelegramPlane />
                   </IconButton>
                   <IconButton
-                    onClick={() => handleEmailClick("info@eucrace.pro")}
+                    onClick={(e) =>
+                      handleEmailClick(e, "info@eucrace.pro")
+                    }
                     aria-label="email"
                     color="primary"
                   >
@@ -203,7 +208,9 @@ const AboutUs: React.FC = () => {
                   </IconButton>
                   {/* У Jiří нет Telegram, поэтому иконка не отображается */}
                   <IconButton
-                    onClick={() => handleEmailClick("info@eucrace.pro")}
+                    onClick={(e) =>
+                      handleEmailClick(e, "info@eucrace.pro")
+                    }
                     aria-label="email"
                     color="primary"
                   >
@@ -262,17 +269,24 @@ const AboutUs: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Snackbar для отображения email */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      {/* Popover для отображения email у места клика */}
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClosePopover}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
       >
-        <Alert onClose={handleCloseSnackbar} severity="info" sx={{ width: "100%" }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+        <Box sx={{ p: 1 }}>
+          <Typography variant="body2">{popoverMessage}</Typography>
+        </Box>
+      </Popover>
     </Box>
   );
 };

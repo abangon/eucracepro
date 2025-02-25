@@ -7,17 +7,17 @@ interface RegistrationFormProps {
 }
 
 const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
-  // Здесь можно добавить логику регистрации, обработку формы и т.д.
+  // Add your registration logic and form handling here.
   return (
     <Box sx={{ mt: 3 }}>
       <Typography variant="h6" gutterBottom>
-        Регистрация на гонку {raceId}
+        Registration for Race {raceId}
       </Typography>
       <form>
-        <TextField label="Имя" variant="outlined" fullWidth sx={{ mb: 2 }} />
+        <TextField label="Name" variant="outlined" fullWidth sx={{ mb: 2 }} />
         <TextField label="Email" variant="outlined" fullWidth sx={{ mb: 2 }} />
         <Button variant="contained" color="primary">
-          Зарегистрироваться
+          Register
         </Button>
       </form>
     </Box>

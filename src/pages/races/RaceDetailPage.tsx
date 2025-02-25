@@ -34,7 +34,6 @@ const RaceDetailPage: React.FC = () => {
       try {
         console.log(`Fetching telemetry data for race: ${raceId}`);
 
-        // Получаем сам документ гонки
         const raceRef = doc(db, "races", raceId);
         const raceSnapshot = await getDoc(raceRef);
 
@@ -57,16 +56,20 @@ const RaceDetailPage: React.FC = () => {
 
         Object.keys(raceData.telemetry).forEach((chipNumber) => {
           const lapEntries = Object.values(raceData.telemetry[chipNumber]);
+
+          // 🔥 Фильтруем только корректные времена
           const lapTimes = lapEntries
             .map((lap: any) => lap.lap_time)
-            .filter((lap: number | null) => lap !== null);
+            .filter((lap: number | null) => lap !== null && lap >= 3.000); // Исключаем отрицательные и <3 сек
+
+          if (lapTimes.length === 0) return; // Пропускаем чипы без валидных кругов
 
           telemetryData.push({
             id: chipNumber,
-            chipNumber: parseInt(chipNumber),
+            chipNumber: isNaN(parseInt(chipNumber)) ? "Unknown" : parseInt(chipNumber),
             lapTimes,
-            bestLap: lapTimes.length > 0 ? Math.min(...lapTimes) : null,
-            lastLap: lapTimes.length > 0 ? lapTimes[lapTimes.length - 1] : null,
+            bestLap: Math.min(...lapTimes),
+            lastLap: lapTimes[lapTimes.length - 1],
             totalLaps: lapTimes.length,
           });
         });
@@ -99,7 +102,7 @@ const RaceDetailPage: React.FC = () => {
       {loading ? (
         <Typography>Loading telemetry data...</Typography>
       ) : telemetryData.length === 0 ? (
-        <Typography>No telemetry data available</Typography>
+        <Typography>No valid telemetry data available</Typography>
       ) : (
         <TableContainer component={Paper}>
           <Table>

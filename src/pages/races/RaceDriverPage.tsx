@@ -58,25 +58,21 @@ const RaceDriverPage: React.FC = () => {
         console.log("📌 Available chipNumbers:", Object.keys(raceData.telemetry));
 
         let formattedChipNumber = chipNumber;
+        let altChipNumber = chipNumber.replace(/^0+/, ""); // Убираем ведущие нули
 
-        // Проверяем, есть ли чип в базе без ведущих нулей
-        if (!raceData.telemetry[formattedChipNumber]) {
-          console.warn(`⚠️ Chip ${chipNumber} not found. Checking without leading zeros...`);
-          formattedChipNumber = chipNumber.replace(/^0+/, ""); // Убираем ведущие нули
-        }
+        console.log(`🔍 Checking chipNumber: ${formattedChipNumber} OR ${altChipNumber}`);
 
-        console.log(`🔍 Searching for chip: ${formattedChipNumber}`);
+        let lapEntries = raceData.telemetry[formattedChipNumber] || raceData.telemetry[altChipNumber];
 
-        if (!raceData.telemetry[formattedChipNumber]) {
-          console.warn(`❌ Chip ${formattedChipNumber} still not found in telemetry.`);
+        if (!lapEntries) {
+          console.warn(`❌ Chip ${formattedChipNumber} / ${altChipNumber} not found.`);
           setLoading(false);
           return;
         }
 
-        const lapEntries = Object.values(raceData.telemetry[formattedChipNumber]);
         console.log(`✅ Found telemetry for chip ${formattedChipNumber}:`, lapEntries);
 
-        const lapTimes = lapEntries
+        const lapTimes = Object.values(lapEntries)
           .map((lap: any) => lap.lap_time)
           .filter((time: number | null) => time !== null && time >= 3.000);
 

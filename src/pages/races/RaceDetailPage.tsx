@@ -32,7 +32,7 @@ const RaceDetailPage: React.FC = () => {
     const fetchTelemetry = async () => {
       if (!raceId) return;
       try {
-        console.log(`Fetching data from path: races/${raceId}/telemetry`);
+        console.log(`Fetching telemetry data for race: ${raceId}`);
 
         const telemetryRef = collection(db, "races", raceId, "telemetry");
         const telemetrySnapshot = await getDocs(telemetryRef);
@@ -41,9 +41,9 @@ const RaceDetailPage: React.FC = () => {
 
         for (const chipDoc of telemetrySnapshot.docs) {
           const chipNumber = chipDoc.id;
-          console.log(`Found chipNumber: ${chipNumber}`);
+          console.log(`Found chip: ${chipNumber}`);
 
-          // Получаем все lap_time для этого чипа
+          // 🔥 Запрашиваем круги внутри конкретного чипа
           const lapsRef = collection(db, "races", raceId, "telemetry", chipNumber);
           const lapsSnapshot = await getDocs(lapsRef);
 

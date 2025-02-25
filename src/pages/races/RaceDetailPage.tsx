@@ -11,7 +11,7 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
-import { collection, getDocs } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 
 interface TelemetryRecord {
@@ -34,40 +34,42 @@ const RaceDetailPage: React.FC = () => {
       try {
         console.log(`Fetching telemetry data for race: ${raceId}`);
 
-        const telemetryRef = collection(db, "races", raceId, "telemetry");
-        const telemetrySnapshot = await getDocs(telemetryRef);
+        // Получаем сам документ гонки
+        const raceRef = doc(db, "races", raceId);
+        const raceSnapshot = await getDoc(raceRef);
+
+        if (!raceSnapshot.exists()) {
+          console.log(`Race ${raceId} not found.`);
+          setLoading(false);
+          return;
+        }
+
+        const raceData = raceSnapshot.data();
+        console.log("Race data:", raceData);
+
+        if (!raceData.telemetry) {
+          console.log("No telemetry data found.");
+          setLoading(false);
+          return;
+        }
 
         const telemetryData: TelemetryRecord[] = [];
 
-        for (const chipDoc of telemetrySnapshot.docs) {
-          const chipNumber = chipDoc.id;
-          console.log(`Found chip: ${chipNumber}`);
-
-          // 🔥 Запрашиваем круги внутри конкретного чипа
-          const lapsRef = collection(db, "races", raceId, "telemetry", chipNumber);
-          const lapsSnapshot = await getDocs(lapsRef);
-
-          const lapTimes: number[] = [];
-          lapsSnapshot.docs.forEach((lapDoc) => {
-            const lapData = lapDoc.data();
-            if (lapData.lap_time !== null && lapData.lap_time !== undefined) {
-              lapTimes.push(lapData.lap_time);
-            }
-          });
-
-          const bestLap = lapTimes.length > 0 ? Math.min(...lapTimes) : null;
-          const lastLap = lapTimes.length > 0 ? lapTimes[lapTimes.length - 1] : null;
-          const totalLaps = lapTimes.length;
+        Object.keys(raceData.telemetry).forEach((chipNumber) => {
+          const lapEntries = Object.values(raceData.telemetry[chipNumber]);
+          const lapTimes = lapEntries
+            .map((lap: any) => lap.lap_time)
+            .filter((lap: number | null) => lap !== null);
 
           telemetryData.push({
             id: chipNumber,
             chipNumber: parseInt(chipNumber),
             lapTimes,
-            bestLap,
-            lastLap,
-            totalLaps,
+            bestLap: lapTimes.length > 0 ? Math.min(...lapTimes) : null,
+            lastLap: lapTimes.length > 0 ? lapTimes[lapTimes.length - 1] : null,
+            totalLaps: lapTimes.length,
           });
-        }
+        });
 
         console.log("Final telemetry data:", telemetryData);
         setTelemetryData(telemetryData);
@@ -81,7 +83,7 @@ const RaceDetailPage: React.FC = () => {
     fetchTelemetry();
   }, [raceId]);
 
-  // Форматирование времени круга (например, 10.893 -> 0:10.893)
+  // Форматирование времени круга
   const formatLapTime = (time: number | null) => {
     if (time === null) return "-";
     const minutes = Math.floor(time / 60);
@@ -96,6 +98,8 @@ const RaceDetailPage: React.FC = () => {
       </Typography>
       {loading ? (
         <Typography>Loading telemetry data...</Typography>
+      ) : telemetryData.length === 0 ? (
+        <Typography>No telemetry data available</Typography>
       ) : (
         <TableContainer component={Paper}>
           <Table>

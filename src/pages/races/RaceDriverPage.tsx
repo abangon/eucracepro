@@ -13,92 +13,64 @@ import {
   IconButton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 
-interface DriverData {
-  raceName: string;
-  driverName: string;
-  chipNumber: string;
+interface DriverTelemetry {
   lapTimes: number[];
 }
 
 const RaceDriverPage: React.FC = () => {
   const { raceId, chipNumber } = useParams<{ raceId: string; chipNumber: string }>();
-  const [driverData, setDriverData] = useState<DriverData | null>(null);
+  const [driverTelemetry, setDriverTelemetry] = useState<DriverTelemetry | null>(null);
+  const [raceName, setRaceName] = useState<string>("");
+  const [driverName, setDriverName] = useState<string>("-");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchDriverData = async () => {
-      if (!raceId || !chipNumber) return;
+    if (!raceId || !chipNumber) return;
 
-      console.log(`🚀 Fetching driver data for race: ${raceId}, chip: ${chipNumber}`);
+    const raceRef = doc(db, "races", raceId);
 
-      try {
-        const raceRef = doc(db, "races", raceId);
-        const raceSnapshot = await getDoc(raceRef);
-
-        if (!raceSnapshot.exists()) {
-          console.warn(`⚠️ Race ${raceId} not found.`);
-          setLoading(false);
-          return;
-        }
-
-        const raceData = raceSnapshot.data();
-        console.log("✅ Live Race data:", raceData);
-
-        if (!raceData.telemetry) {
-          console.warn("⚠️ No telemetry data found.");
-          setLoading(false);
-          return;
-        }
-
-        // Логируем все доступные номера чипов
-        console.log("📌 Available chipNumbers:", Object.keys(raceData.telemetry));
-
-        let formattedChipNumber = chipNumber;
-        let altChipNumber = chipNumber.replace(/^0+/, ""); // Убираем ведущие нули
-
-        console.log(`🔍 Checking chipNumber: ${formattedChipNumber} OR ${altChipNumber}`);
-
-        let lapEntries = raceData.telemetry[formattedChipNumber] || raceData.telemetry[altChipNumber];
-
-        if (!lapEntries) {
-          console.warn(`❌ Chip ${formattedChipNumber} / ${altChipNumber} not found.`);
-          setLoading(false);
-          return;
-        }
-
-        console.log(`✅ Found telemetry for chip ${formattedChipNumber}:`, lapEntries);
-
-        const lapTimes = Object.values(lapEntries)
-          .map((lap: any) => lap.lap_time)
-          .filter((time: number | null) => time !== null && time >= 3.000);
-
-        if (lapTimes.length === 0) {
-          console.warn(`⚠️ No valid lap times found for chip: ${formattedChipNumber}`);
-          setLoading(false);
-          return;
-        }
-
-        setDriverData({
-          raceName: raceData.name || `Race ${raceId}`,
-          driverName: raceData.participants?.[formattedChipNumber]?.name || "-",
-          chipNumber: formattedChipNumber,
-          lapTimes,
-        });
-      } catch (error) {
-        console.error("❌ Error fetching driver data:", error);
-      } finally {
+    const unsubscribe = onSnapshot(raceRef, (raceSnapshot) => {
+      if (!raceSnapshot.exists()) {
+        console.log(`Race ${raceId} not found.`);
+        setDriverTelemetry(null);
         setLoading(false);
+        return;
       }
-    };
 
-    fetchDriverData();
+      const raceData = raceSnapshot.data();
+      console.log("Live Race data:", raceData);
+
+      setRaceName(raceData.name || `Race ${raceId}`);
+
+      if (!raceData.telemetry || !raceData.telemetry[chipNumber]) {
+        setDriverTelemetry(null);
+        setLoading(false);
+        return;
+      }
+
+      const lapEntries = Object.values(raceData.telemetry[chipNumber]);
+
+      const lapTimes = lapEntries
+        .map((lap: any) => lap.lap_time)
+        .filter((time: number | null) => time !== null && time >= 3.000);
+
+      if (raceData.participants && raceData.participants[chipNumber]) {
+        setDriverName(raceData.participants[chipNumber].name || "-");
+      }
+
+      setDriverTelemetry({ lapTimes });
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [raceId, chipNumber]);
 
-  const formatLapTime = (time: number) => {
+  const formatLapTime = (time: number | null) => {
+    if (time === null) return "-";
     const minutes = Math.floor(time / 60);
     const seconds = (time % 60).toFixed(3);
     return `${minutes}:${seconds.padStart(6, "0")}`;
@@ -108,22 +80,22 @@ const RaceDriverPage: React.FC = () => {
     return <Typography sx={{ p: 3 }}>Loading driver data...</Typography>;
   }
 
-  if (!driverData) {
-    return <Typography sx={{ p: 3 }}>No valid data available for this driver.</Typography>;
+  if (!driverTelemetry || driverTelemetry.lapTimes.length === 0) {
+    return <Typography sx={{ p: 3 }}>No valid lap data available for this driver.</Typography>;
   }
 
-  const bestLap = Math.min(...driverData.lapTimes);
+  const bestLap = Math.min(...driverTelemetry.lapTimes);
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Кнопка "Назад" */}
+      {/* Кнопка Назад */}
       <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
         <ArrowBackIcon />
       </IconButton>
 
-      {/* Заголовок */}
+      {/* Заголовок с именем гонки и ID */}
       <Typography variant="h4" gutterBottom sx={{ mt: 2, mb: 4 }}>
-        {driverData.raceName} ({raceId}) - {driverData.driverName} ({driverData.chipNumber})
+        {raceName} ({raceId}) - {driverName} ({chipNumber})
       </Typography>
 
       {/* Таблица с кругами */}
@@ -140,7 +112,7 @@ const RaceDriverPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {driverData.lapTimes.map((time, index) => (
+            {driverTelemetry.lapTimes.map((time, index) => (
               <TableRow key={index}>
                 <TableCell sx={{ textAlign: "center" }}>{index + 1}</TableCell>
                 <TableCell

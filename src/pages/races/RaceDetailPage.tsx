@@ -17,7 +17,7 @@ import { db } from "../../utils/firebase";
 
 interface Telemetry {
   chipNumber: number;
-  lapTimes: number[]; // Время круга в секундах
+  lapTimes: number[]; // Lap times in seconds
 }
 
 interface TelemetryRecord extends Telemetry {
@@ -69,13 +69,25 @@ const RaceDetailPage: React.FC = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Race Number</TableCell>
-                <TableCell>Chip Number</TableCell>
-                <TableCell>Best Lap</TableCell>
-                <TableCell>Last Lap</TableCell>
-                <TableCell>Total Laps</TableCell>
+              <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                <TableCell>
+                  <strong>Name</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Racer Number</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Chip Number</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Best Lap</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Last Lap</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Total Laps</strong>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -97,8 +109,8 @@ const RaceDetailPage: React.FC = () => {
                     to={`/races/${raceId}/driver/${record.chipNumber}`}
                     style={{ textDecoration: "none", color: "inherit" }}
                   >
-                    <TableCell>{/* Name (пока пустое) */}</TableCell>
-                    <TableCell>{/* Race Number (пока пустое) */}</TableCell>
+                    <TableCell>{/* Name - пока пусто */}</TableCell>
+                    <TableCell>{/* Racer Number - пока пусто */}</TableCell>
                     <TableCell>{record.chipNumber}</TableCell>
                     <TableCell>
                       {bestLap !== null ? formatLapTime(bestLap) : "-"}

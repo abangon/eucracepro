@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -10,7 +10,9 @@ import {
   TableHead,
   TableRow,
   Paper,
+  IconButton,
 } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 
@@ -26,7 +28,9 @@ interface TelemetryRecord {
 const RaceDetailPage: React.FC = () => {
   const { raceId } = useParams<{ raceId: string }>();
   const [telemetryData, setTelemetryData] = useState<TelemetryRecord[]>([]);
+  const [raceName, setRaceName] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTelemetry = async () => {
@@ -52,17 +56,18 @@ const RaceDetailPage: React.FC = () => {
           return;
         }
 
+        setRaceName(raceData.name || `Race ${raceId}`); // Имя гонки или дефолтный текст
+
         const telemetryData: TelemetryRecord[] = [];
 
         Object.keys(raceData.telemetry).forEach((chipNumber) => {
           const lapEntries = Object.values(raceData.telemetry[chipNumber]);
 
-          // 🔥 Фильтруем только корректные времена
           const lapTimes = lapEntries
             .map((lap: any) => lap.lap_time)
-            .filter((lap: number | null) => lap !== null && lap >= 3.000); // Исключаем отрицательные и <3 сек
+            .filter((lap: number | null) => lap !== null && lap >= 3.000);
 
-          if (lapTimes.length === 0) return; // Пропускаем чипы без валидных кругов
+          if (lapTimes.length === 0) return;
 
           telemetryData.push({
             id: chipNumber,
@@ -86,7 +91,6 @@ const RaceDetailPage: React.FC = () => {
     fetchTelemetry();
   }, [raceId]);
 
-  // Форматирование времени круга
   const formatLapTime = (time: number | null) => {
     if (time === null) return "-";
     const minutes = Math.floor(time / 60);
@@ -96,34 +100,41 @@ const RaceDetailPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Race Results
+      {/* Кнопка Назад */}
+      <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
+        <ArrowBackIcon />
+      </IconButton>
+
+      {/* Заголовок с именем гонки и ID */}
+      <Typography variant="h4" gutterBottom sx={{ mt: 2, mb: 4 }}>
+        {raceName} ({raceId})
       </Typography>
+
       {loading ? (
         <Typography>Loading telemetry data...</Typography>
       ) : telemetryData.length === 0 ? (
         <Typography>No valid telemetry data available</Typography>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                <TableCell>
+                <TableCell sx={{ textAlign: "left" }}>
                   <strong>Name</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ textAlign: "center" }}>
                   <strong>Racer Number</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ textAlign: "center" }}>
                   <strong>Chip Number</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ textAlign: "center" }}>
                   <strong>Best Lap</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ textAlign: "center" }}>
                   <strong>Last Lap</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ textAlign: "center" }}>
                   <strong>Total Laps</strong>
                 </TableCell>
               </TableRow>
@@ -137,12 +148,12 @@ const RaceDetailPage: React.FC = () => {
                   to={`/races/${raceId}/driver/${record.chipNumber}`}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
-                  <TableCell>{/* Name - пока пусто */}</TableCell>
-                  <TableCell>{/* Racer Number - пока пусто */}</TableCell>
-                  <TableCell>{record.chipNumber}</TableCell>
-                  <TableCell>{formatLapTime(record.bestLap)}</TableCell>
-                  <TableCell>{formatLapTime(record.lastLap)}</TableCell>
-                  <TableCell>{record.totalLaps}</TableCell>
+                  <TableCell sx={{ textAlign: "left" }}>{/* Name - пока пусто */}</TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>{/* Racer Number - пока пусто */}</TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>{record.chipNumber}</TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>{formatLapTime(record.bestLap)}</TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>{formatLapTime(record.lastLap)}</TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>{record.totalLaps}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -30,23 +30,42 @@ const RaceDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTelemetry = async () => {
-      if (!raceId) return;
-      try {
-        // Предполагается, что данные телеметрии хранятся в подколлекции "telemetry" документа гонки
-        const telemetryRef = collection(db, "races", raceId, "telemetry");
-        const snapshot = await getDocs(telemetryRef);
-        const data: TelemetryRecord[] = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as TelemetryRecord[];
-        setTelemetryData(data);
-      } catch (error) {
-        console.error("Error fetching telemetry data: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+   const fetchTelemetry = async () => {
+  if (!raceId) return;
+  try {
+    const telemetryRef = collection(db, "races", raceId, "telemetry");
+    const snapshot = await getDocs(telemetryRef);
+
+    const telemetryData: TelemetryRecord[] = [];
+
+    for (const doc of snapshot.docs) {
+      const chipNumber = doc.id; // Получаем номер чипа
+      const lapsRef = collection(db, "races", raceId, "telemetry", chipNumber);
+      const lapsSnapshot = await getDocs(lapsRef);
+
+      const lapTimes: number[] = lapsSnapshot.docs
+        .map((lapDoc) => lapDoc.data().lap_time)
+        .filter((lap) => lap !== null); // Убираем null
+
+      telemetryData.push({
+        id: chipNumber,
+        chipNumber: parseInt(chipNumber), // Преобразуем строку в число
+        lapTimes,
+      });
+    }
+
+    // 🚀 Проверяем, какие данные пришли
+    console.log("Raw Firestore snapshot:", snapshot.docs);
+    console.log("Processed telemetry data:", telemetryData);
+
+    setTelemetryData(telemetryData);
+  } catch (error) {
+    console.error("Error fetching telemetry data:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     fetchTelemetry();
   }, [raceId]);

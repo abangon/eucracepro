@@ -54,12 +54,18 @@ const RaceDriverPage: React.FC = () => {
           return;
         }
 
-        // Проверяем, есть ли точное совпадение `chipNumber`
+        // Логируем все доступные номера чипов
+        console.log("📌 Available chipNumbers:", Object.keys(raceData.telemetry));
+
         let formattedChipNumber = chipNumber;
+
+        // Проверяем, есть ли чип в базе без ведущих нулей
         if (!raceData.telemetry[formattedChipNumber]) {
           console.warn(`⚠️ Chip ${chipNumber} not found. Checking without leading zeros...`);
           formattedChipNumber = chipNumber.replace(/^0+/, ""); // Убираем ведущие нули
         }
+
+        console.log(`🔍 Searching for chip: ${formattedChipNumber}`);
 
         if (!raceData.telemetry[formattedChipNumber]) {
           console.warn(`❌ Chip ${formattedChipNumber} still not found in telemetry.`);

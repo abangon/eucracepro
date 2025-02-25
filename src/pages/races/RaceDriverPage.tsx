@@ -33,46 +33,61 @@ const RaceDriverPage: React.FC = () => {
     const fetchDriverData = async () => {
       if (!raceId || !chipNumber) return;
 
-      try {
-        console.log(`Fetching driver data for race: ${raceId}, chip: ${chipNumber}`);
+      console.log(`🚀 Fetching driver data for race: ${raceId}, chip: ${chipNumber}`);
 
+      try {
         const raceRef = doc(db, "races", raceId);
         const raceSnapshot = await getDoc(raceRef);
 
         if (!raceSnapshot.exists()) {
-          console.log(`Race ${raceId} not found.`);
+          console.warn(`⚠️ Race ${raceId} not found.`);
           setLoading(false);
           return;
         }
 
         const raceData = raceSnapshot.data();
-        console.log("Race data:", raceData);
+        console.log("✅ Live Race data:", raceData);
 
-        if (!raceData.telemetry || !raceData.telemetry[chipNumber]) {
-          console.log(`No telemetry data found for chip: ${chipNumber}`);
+        if (!raceData.telemetry) {
+          console.warn("⚠️ No telemetry data found.");
           setLoading(false);
           return;
         }
 
-        const lapEntries = Object.values(raceData.telemetry[chipNumber]);
+        // Проверяем, есть ли точное совпадение `chipNumber`
+        let formattedChipNumber = chipNumber;
+        if (!raceData.telemetry[formattedChipNumber]) {
+          console.warn(`⚠️ Chip ${chipNumber} not found. Checking without leading zeros...`);
+          formattedChipNumber = chipNumber.replace(/^0+/, ""); // Убираем ведущие нули
+        }
+
+        if (!raceData.telemetry[formattedChipNumber]) {
+          console.warn(`❌ Chip ${formattedChipNumber} still not found in telemetry.`);
+          setLoading(false);
+          return;
+        }
+
+        const lapEntries = Object.values(raceData.telemetry[formattedChipNumber]);
+        console.log(`✅ Found telemetry for chip ${formattedChipNumber}:`, lapEntries);
+
         const lapTimes = lapEntries
           .map((lap: any) => lap.lap_time)
           .filter((time: number | null) => time !== null && time >= 3.000);
 
         if (lapTimes.length === 0) {
-          console.log(`No valid lap times found for chip: ${chipNumber}`);
+          console.warn(`⚠️ No valid lap times found for chip: ${formattedChipNumber}`);
           setLoading(false);
           return;
         }
 
         setDriverData({
           raceName: raceData.name || `Race ${raceId}`,
-          driverName: raceData.participants?.[chipNumber]?.name || "-",
-          chipNumber,
+          driverName: raceData.participants?.[formattedChipNumber]?.name || "-",
+          chipNumber: formattedChipNumber,
           lapTimes,
         });
       } catch (error) {
-        console.error("Error fetching driver data:", error);
+        console.error("❌ Error fetching driver data:", error);
       } finally {
         setLoading(false);
       }

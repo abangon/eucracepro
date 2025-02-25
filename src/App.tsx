@@ -14,6 +14,7 @@ import SignIn from './pages/signIn';
 import Settings from './pages/settings';
 import Box from '@mui/material/Box';
 import useMediaQuery from "@mui/material/useMediaQuery";
+import RaceDetailPage from './pages/races/RaceDetailPage';
 
 const App: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -44,6 +45,7 @@ const App: React.FC = () => {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/races" element={<Races />} />
+                <Route path="/races/:raceId" element={<RaceDetailPage />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/sign-in" element={<SignIn />} />
                 <Route path="/settings" element={<Settings />} />

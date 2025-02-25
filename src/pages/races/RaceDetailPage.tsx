@@ -18,7 +18,7 @@ import { db } from "../../utils/firebase";
 
 interface TelemetryRecord {
   id: string;
-  chipNumber: number;
+  chipNumber: string; // Теперь чип-номер всегда строка, поддерживает любые символы
   lapTimes: number[];
   bestLap: number | null;
   lastLap: number | null;
@@ -56,7 +56,7 @@ const RaceDetailPage: React.FC = () => {
           return;
         }
 
-        setRaceName(raceData.name || `Race ${raceId}`); // Имя гонки или дефолтный текст
+        setRaceName(raceData.name || `Race ${raceId}`);
 
         const telemetryData: TelemetryRecord[] = [];
 
@@ -71,7 +71,7 @@ const RaceDetailPage: React.FC = () => {
 
           telemetryData.push({
             id: chipNumber,
-            chipNumber: isNaN(parseInt(chipNumber)) ? "Unknown" : parseInt(chipNumber),
+            chipNumber, // Оставляем чип в оригинальном виде, поддерживает буквы и длинные строки
             lapTimes,
             bestLap: Math.min(...lapTimes),
             lastLap: lapTimes[lapTimes.length - 1],
@@ -150,7 +150,9 @@ const RaceDetailPage: React.FC = () => {
                 >
                   <TableCell sx={{ textAlign: "left" }}>{/* Name - пока пусто */}</TableCell>
                   <TableCell sx={{ textAlign: "center" }}>{/* Racer Number - пока пусто */}</TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>{record.chipNumber}</TableCell>
+                  <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
+                    {record.chipNumber}
+                  </TableCell>
                   <TableCell sx={{ textAlign: "center" }}>{formatLapTime(record.bestLap)}</TableCell>
                   <TableCell sx={{ textAlign: "center" }}>{formatLapTime(record.lastLap)}</TableCell>
                   <TableCell sx={{ textAlign: "center" }}>{record.totalLaps}</TableCell>
@@ -164,4 +166,4 @@ const RaceDetailPage: React.FC = () => {
   );
 };
 
-export default RaceDetailPage;
+export d

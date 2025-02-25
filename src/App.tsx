@@ -44,9 +44,10 @@ const App: React.FC = () => {
             <Navbar onMenuClick={handleDrawerToggle} isSidebarOpen={sidebarOpen} />
             <Box sx={{ mt: 10, p: 3 }}>
               <Routes>
-                <Route path="/" element={<Home />} />
+                 <Route path="/" element={<Home />} />
                 <Route path="/races" element={<Races />} />
                 <Route path="/races/:raceId" element={<RaceDetailPage />} />
+                <Route path="/races/:raceId/driver/:chipNumber" element={<RaceDriverPage />} /> {/* <-- Добавили маршрут для гонщика */}
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/sign-in" element={<SignIn />} />
                 <Route path="/settings" element={<Settings />} />

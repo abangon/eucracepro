@@ -13,12 +13,12 @@ import {
   IconButton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 
 interface TelemetryRecord {
   id: string;
-  chipNumber: string; // Теперь чип-номер всегда строка, поддерживает любые символы
+  chipNumber: string;
   lapTimes: number[];
   bestLap: number | null;
   lastLap: number | null;
@@ -33,62 +33,55 @@ const RaceDetailPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchTelemetry = async () => {
-      if (!raceId) return;
-      try {
-        console.log(`Fetching telemetry data for race: ${raceId}`);
+    if (!raceId) return;
 
-        const raceRef = doc(db, "races", raceId);
-        const raceSnapshot = await getDoc(raceRef);
+    const raceRef = doc(db, "races", raceId);
 
-        if (!raceSnapshot.exists()) {
-          console.log(`Race ${raceId} not found.`);
-          setLoading(false);
-          return;
-        }
-
-        const raceData = raceSnapshot.data();
-        console.log("Race data:", raceData);
-
-        if (!raceData.telemetry) {
-          console.log("No telemetry data found.");
-          setLoading(false);
-          return;
-        }
-
-        setRaceName(raceData.name || `Race ${raceId}`);
-
-        const telemetryData: TelemetryRecord[] = [];
-
-        Object.keys(raceData.telemetry).forEach((chipNumber) => {
-          const lapEntries = Object.values(raceData.telemetry[chipNumber]);
-
-          const lapTimes = lapEntries
-            .map((lap: any) => lap.lap_time)
-            .filter((lap: number | null) => lap !== null && lap >= 3.000);
-
-          if (lapTimes.length === 0) return;
-
-          telemetryData.push({
-            id: chipNumber,
-            chipNumber, // Оставляем чип в оригинальном виде, поддерживает буквы и длинные строки
-            lapTimes,
-            bestLap: Math.min(...lapTimes),
-            lastLap: lapTimes[lapTimes.length - 1],
-            totalLaps: lapTimes.length,
-          });
-        });
-
-        console.log("Final telemetry data:", telemetryData);
-        setTelemetryData(telemetryData);
-      } catch (error) {
-        console.error("Error fetching telemetry data:", error);
-      } finally {
+    const unsubscribe = onSnapshot(raceRef, (raceSnapshot) => {
+      if (!raceSnapshot.exists()) {
+        console.log(`Race ${raceId} not found.`);
+        setTelemetryData([]);
         setLoading(false);
+        return;
       }
-    };
 
-    fetchTelemetry();
+      const raceData = raceSnapshot.data();
+      console.log("Live Race data:", raceData);
+
+      setRaceName(raceData.name || `Race ${raceId}`);
+
+      if (!raceData.telemetry) {
+        setTelemetryData([]);
+        setLoading(false);
+        return;
+      }
+
+      const telemetryArray: TelemetryRecord[] = Object.keys(raceData.telemetry).map((chipNumber) => {
+        const lapEntries = Object.values(raceData.telemetry[chipNumber]);
+
+        const lapTimes = lapEntries
+          .map((lap: any) => lap.lap_time)
+          .filter((time: number | null) => time !== null && time >= 3.000);
+
+        return {
+          id: chipNumber,
+          chipNumber,
+          lapTimes,
+          bestLap: lapTimes.length > 0 ? Math.min(...lapTimes) : null,
+          lastLap: lapTimes.length > 0 ? lapTimes[lapTimes.length - 1] : null,
+          totalLaps: lapTimes.length,
+        };
+      });
+
+      // Сортируем гонщиков по Best Lap (меньше - выше в списке)
+      const sortedTelemetry = telemetryArray.filter((r) => r.bestLap !== null);
+      sortedTelemetry.sort((a, b) => (a.bestLap ?? Infinity) - (b.bestLap ?? Infinity));
+
+      setTelemetryData(sortedTelemetry);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [raceId]);
 
   const formatLapTime = (time: number | null) => {
@@ -119,6 +112,9 @@ const RaceDetailPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                <TableCell sx={{ textAlign: "center" }}>
+                  <strong>Position</strong>
+                </TableCell>
                 <TableCell sx={{ textAlign: "left" }}>
                   <strong>Name</strong>
                 </TableCell>
@@ -140,7 +136,7 @@ const RaceDetailPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {telemetryData.map((record) => (
+              {telemetryData.map((record, index) => (
                 <TableRow
                   key={record.id}
                   hover
@@ -148,12 +144,17 @@ const RaceDetailPage: React.FC = () => {
                   to={`/races/${raceId}/driver/${record.chipNumber}`}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
+                  <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
+                    {index + 1}
+                  </TableCell>
                   <TableCell sx={{ textAlign: "left" }}>{/* Name - пока пусто */}</TableCell>
                   <TableCell sx={{ textAlign: "center" }}>{/* Racer Number - пока пусто */}</TableCell>
                   <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
                     {record.chipNumber}
                   </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>{formatLapTime(record.bestLap)}</TableCell>
+                  <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
+                    {formatLapTime(record.bestLap)}
+                  </TableCell>
                   <TableCell sx={{ textAlign: "center" }}>{formatLapTime(record.lastLap)}</TableCell>
                   <TableCell sx={{ textAlign: "center" }}>{record.totalLaps}</TableCell>
                 </TableRow>
@@ -166,4 +167,4 @@ const RaceDetailPage: React.FC = () => {
   );
 };
 
-export d
+export default RaceDetailPage;

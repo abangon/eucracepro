@@ -30,34 +30,43 @@ const RaceDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-   const fetchTelemetry = async () => {
+  const fetchTelemetry = async () => {
   if (!raceId) return;
   try {
+    console.log(`Fetching data from path: races/${raceId}/telemetry`);
+
     const telemetryRef = collection(db, "races", raceId, "telemetry");
-    const snapshot = await getDocs(telemetryRef);
+    const telemetrySnapshot = await getDocs(telemetryRef);
 
     const telemetryData: TelemetryRecord[] = [];
 
-    for (const doc of snapshot.docs) {
-      const chipNumber = doc.id; // Получаем номер чипа
-      const lapsRef = collection(db, "races", raceId, "telemetry", chipNumber);
-      const lapsSnapshot = await getDocs(lapsRef);
+    for (const chipDoc of telemetrySnapshot.docs) {
+      const chipNumber = chipDoc.id;
+      console.log(`Found chipNumber: ${chipNumber}`); // Проверяем, какие чипы найдены
 
-      const lapTimes: number[] = lapsSnapshot.docs
+      const lapRecordsRef = collection(db, "races", raceId, "telemetry", chipNumber);
+      const lapRecordsSnapshot = await getDocs(lapRecordsRef);
+
+      const lapTimes: number[] = lapRecordsSnapshot.docs
         .map((lapDoc) => lapDoc.data().lap_time)
-        .filter((lap) => lap !== null); // Убираем null
+        .filter((lap) => lap !== null); // Убираем null значения
+
+      // Проверяем, есть ли круги
+      const bestLap = lapTimes.length > 0 ? Math.min(...lapTimes) : null;
+      const lastLap = lapTimes.length > 0 ? lapTimes[lapTimes.length - 1] : null;
+      const totalLaps = lapTimes.length;
 
       telemetryData.push({
         id: chipNumber,
-        chipNumber: parseInt(chipNumber), // Преобразуем строку в число
+        chipNumber: parseInt(chipNumber),
         lapTimes,
+        bestLap,
+        lastLap,
+        totalLaps,
       });
     }
 
-    // 🚀 Проверяем, какие данные пришли
-    console.log("Raw Firestore snapshot:", snapshot.docs);
-    console.log("Processed telemetry data:", telemetryData);
-
+    console.log("Final telemetry data:", telemetryData);
     setTelemetryData(telemetryData);
   } catch (error) {
     console.error("Error fetching telemetry data:", error);
@@ -65,8 +74,6 @@ const RaceDetailPage: React.FC = () => {
     setLoading(false);
   }
 };
-
-
     fetchTelemetry();
   }, [raceId]);
 

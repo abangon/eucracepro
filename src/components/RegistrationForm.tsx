@@ -1,31 +1,8 @@
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-} from "@mui/material";
-import { doc, getDoc, setDoc, collection, addDoc, onSnapshot } from "firebase/firestore";
-import { auth, db } from "../utils/firebase";
+import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useNavigate } from "react-router-dom";
-
-interface Participant {
-  id: string;
-  nickname: string;
-  country: string;
-  team: string;
-  facebook?: string;
-  instagram?: string;
-  youtube?: string;
-  tiktok?: string;
-}
+import { auth, db } from "../utils/firebase";
+import { Box, Button, Typography, Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from "@mui/material";
 
 interface RegistrationFormProps {
   raceId: string;
@@ -33,75 +10,69 @@ interface RegistrationFormProps {
 
 const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [user] = useAuthState(auth);
-  const [participants, setParticipants] = useState<Participant[]>([]);
-  const navigate = useNavigate();
-
+  const [registeredUser, setRegisteredUser] = useState<any | null>(null);
+  
   useEffect(() => {
-    if (!raceId) return;
+    if (!user) return;
 
-    const participantsRef = collection(db, "races", raceId, "participants");
+    const checkRegistration = async () => {
+      const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
+      const participantSnap = await getDoc(participantRef);
 
-    const unsubscribe = onSnapshot(participantsRef, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Participant[];
+      if (participantSnap.exists()) {
+        setRegisteredUser(participantSnap.data());
+      }
+    };
 
-      setParticipants(data);
-    });
-
-    return () => unsubscribe();
-  }, [raceId]);
+    checkRegistration();
+  }, [user, raceId]);
 
   const handleRegister = async () => {
-    if (!user) {
-      navigate("/sign-in");
-      return;
-    }
+    if (!user) return;
 
-    try {
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
+    const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
+    const newParticipant = {
+      nickname: user.displayName || "Anonymous",
+      team: "Ekolka Racing", // Можно расширить, если добавится настройка команды
+      country: "Czechia", // Данные можно получать из профиля
+      facebook: "https://facebook.com",
+      instagram: "https://instagram.com",
+      youtube: "https://youtube.com",
+      tiktok: "",
+    };
 
-      if (!userSnap.exists()) {
-        console.error("User data not found.");
-        return;
-      }
+    await setDoc(participantRef, newParticipant);
+    setRegisteredUser(newParticipant);
+  };
 
-      const userData = userSnap.data() as Participant;
+  const handleCancelRegistration = async () => {
+    if (!user) return;
 
-      const participantRef = doc(db, "races", raceId, "participants", user.uid);
-      await setDoc(participantRef, {
-        nickname: userData.nickname || "Unknown",
-        country: userData.country || "Unknown",
-        team: userData.team || "Unknown",
-        facebook: userData.facebook || "",
-        instagram: userData.instagram || "",
-        youtube: userData.youtube || "",
-        tiktok: userData.tiktok || "",
-      });
-
-      console.log("User registered successfully!");
-    } catch (error) {
-      console.error("Error registering user:", error);
-    }
+    const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
+    await deleteDoc(participantRef);
+    setRegisteredUser(null);
   };
 
   return (
-    <Box sx={{ mt: 4 }}>
-      <Typography variant="h5" gutterBottom>
-        Participants
-      </Typography>
-
-      {user ? (
-        <Button variant="contained" color="primary" onClick={handleRegister} sx={{ mb: 2 }}>
-          Register
-        </Button>
-      ) : (
-        <Button variant="contained" color="secondary" onClick={() => navigate("/sign-in")} sx={{ mb: 2 }}>
-          Please log in to register
-        </Button>
-      )}
+    <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h6" fontWeight="bold">Participants</Typography>
+        {user ? (
+          registeredUser ? (
+            <Button variant="contained" color="error" onClick={handleCancelRegistration}>
+              Cancel Registration
+            </Button>
+          ) : (
+            <Button variant="contained" color="primary" onClick={handleRegister}>
+              Register
+            </Button>
+          )
+        ) : (
+          <Button variant="contained" color="error" href="/sign-in">
+            Please log in to register
+          </Button>
+        )}
+      </Box>
 
       <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
         <Table>
@@ -112,50 +83,26 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
               <TableCell><strong>Country</strong></TableCell>
               <TableCell><strong>Facebook</strong></TableCell>
               <TableCell><strong>Instagram</strong></TableCell>
-              <TableCell><strong>Youtube</strong></TableCell>
-              <TableCell><strong>Tiktok</strong></TableCell>
+              <TableCell><strong>YouTube</strong></TableCell>
+              <TableCell><strong>TikTok</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {participants.map((participant) => (
-              <TableRow key={participant.id} sx={{ borderBottom: "1px solid #eee" }}>
-                <TableCell>{participant.nickname}</TableCell>
-                <TableCell>{participant.team}</TableCell>
-                <TableCell>{participant.country}</TableCell>
-                <TableCell>
-                  {participant.facebook && (
-                    <a href={`https://www.facebook.com/${participant.facebook}`} target="_blank" rel="noopener noreferrer">
-                      Facebook
-                    </a>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {participant.instagram && (
-                    <a href={`https://www.instagram.com/${participant.instagram}`} target="_blank" rel="noopener noreferrer">
-                      Instagram
-                    </a>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {participant.youtube && (
-                    <a href={`https://www.youtube.com/@${participant.youtube}`} target="_blank" rel="noopener noreferrer">
-                      YouTube
-                    </a>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {participant.tiktok && (
-                    <a href={`https://www.tiktok.com/@${participant.tiktok}`} target="_blank" rel="noopener noreferrer">
-                      TikTok
-                    </a>
-                  )}
-                </TableCell>
+            {registeredUser && (
+              <TableRow>
+                <TableCell>{registeredUser.nickname}</TableCell>
+                <TableCell>{registeredUser.team}</TableCell>
+                <TableCell>{registeredUser.country}</TableCell>
+                <TableCell><a href={registeredUser.facebook} target="_blank" rel="noopener noreferrer">Facebook</a></TableCell>
+                <TableCell><a href={registeredUser.instagram} target="_blank" rel="noopener noreferrer">Instagram</a></TableCell>
+                <TableCell><a href={registeredUser.youtube} target="_blank" rel="noopener noreferrer">YouTube</a></TableCell>
+                <TableCell>{registeredUser.tiktok || "-"}</TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
-    </Box>
+    </Paper>
   );
 };
 

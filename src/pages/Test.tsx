@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { db } from "../utils/firebase";
 import { collection, getDocs } from "firebase/firestore";
 
 const TestPage: React.FC = () => {
-  const { raceId } = useParams<{ raceId: string }>(); // Получаем raceId из URL
+  console.log("🔥 TestPage loaded!"); // Проверяем, загружается ли компонент
+
+  const { raceId } = useParams<{ raceId: string }>();
+  console.log("🏁 raceId from URL:", raceId); // Проверяем, получаем ли raceId
+
   const [participants, setParticipants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("🔄 useEffect запущен!"); // Проверяем, запускается ли useEffect
+
     const fetchParticipants = async () => {
       try {
         if (!raceId) {
@@ -50,35 +56,7 @@ const TestPage: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         Participants for Race {raceId}
       </Typography>
-
-      {loading ? (
-        <Typography>Loading...</Typography>
-      ) : participants.length === 0 ? (
-        <Typography>No participants found</Typography>
-      ) : (
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell><strong>Participant ID</strong></TableCell>
-                <TableCell><strong>Chip Number</strong></TableCell>
-                <TableCell><strong>Nickname</strong></TableCell>
-                <TableCell><strong>Race Number</strong></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {participants.map((participant) => (
-                <TableRow key={participant.id}>
-                  <TableCell>{participant.id}</TableCell>
-                  <TableCell>{participant.chipNumber}</TableCell>
-                  <TableCell>{participant.nickname || "Unknown"}</TableCell>
-                  <TableCell>{participant.raceNumber || "Not assigned"}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      <Typography>Loading...</Typography>
     </Box>
   );
 };

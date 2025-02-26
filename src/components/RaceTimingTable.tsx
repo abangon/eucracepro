@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
-import { db } from "@/utils/firebase"; // ✅ Используем правильный импорт
+import { db } from "@/utils/firebase"; // ✅ Правильный импорт Firebase
 import {
   Box,
   Typography,
@@ -12,6 +12,7 @@ import {
   TableHead,
   TableRow,
   Paper,
+  CircularProgress,
 } from "@mui/material";
 
 const RaceTimingTable: React.FC = () => {
@@ -21,6 +22,8 @@ const RaceTimingTable: React.FC = () => {
   const [participants, setParticipants] = useState<any[]>([]);
   const [telemetry, setTelemetry] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const [loadingParticipants, setLoadingParticipants] = useState(true);
+  const [loadingTelemetry, setLoadingTelemetry] = useState(true);
 
   useEffect(() => {
     if (!raceId) {
@@ -31,31 +34,33 @@ const RaceTimingTable: React.FC = () => {
     const fetchParticipants = async () => {
       try {
         console.log(`🚀 Загружаем участников для гонки: ${raceId}`);
+        setLoadingParticipants(true);
+
         const participantsCollection = collection(db, "races", raceId, "participants");
         const querySnapshot = await getDocs(participantsCollection);
 
         if (querySnapshot.empty) {
           console.warn("⚠️ Нет участников!");
           setParticipants([]);
-          setLoading(false);
-          return;
+        } else {
+          const participantsList = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          console.log("✅ Участники загружены:", participantsList);
+          setParticipants(participantsList);
         }
-
-        const participantsList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        console.log("✅ Участники загружены:", participantsList);
-        setParticipants(participantsList);
       } catch (error) {
         console.error("❌ Ошибка загрузки участников:", error);
+      } finally {
+        setLoadingParticipants(false);
       }
     };
 
     const fetchTelemetry = async () => {
       try {
         console.log(`📡 Загружаем телеметрию для гонки: ${raceId}`);
+        setLoadingTelemetry(true);
 
         const raceRef = doc(db, "races", raceId);
         const raceSnap = await getDoc(raceRef);
@@ -63,37 +68,51 @@ const RaceTimingTable: React.FC = () => {
         if (!raceSnap.exists()) {
           console.warn("⚠️ Документ гонки не найден!");
           setTelemetry({});
-          setLoading(false);
-          return;
+        } else {
+          const raceData = raceSnap.data();
+          const telemetryData = raceData.telemetry || {};
+          console.log("✅ Телеметрия загружена:", telemetryData);
+
+          // Фильтруем некорректные времена
+          const filteredTelemetry = Object.keys(telemetryData).reduce((acc, chip) => {
+            const laps = telemetryData[chip].filter(
+              (lap: any) => lap.lap_time > 3 && lap.lap_time >= 0
+            );
+            acc[chip] = laps;
+            return acc;
+          }, {} as any);
+
+          console.log("✅ Фильтрованная телеметрия:", filteredTelemetry);
+          setTelemetry(filteredTelemetry);
         }
-
-        const raceData = raceSnap.data();
-        const telemetryData = raceData.telemetry || {};
-        console.log("✅ Телеметрия загружена:", telemetryData);
-
-        // Фильтруем некорректные времена
-        const filteredTelemetry = Object.keys(telemetryData).reduce((acc, chip) => {
-          const laps = telemetryData[chip].filter((lap: any) => lap.lap_time > 3 && lap.lap_time >= 0);
-          acc[chip] = laps;
-          return acc;
-        }, {} as any);
-
-        console.log("✅ Фильтрованная телеметрия:", filteredTelemetry);
-        setTelemetry(filteredTelemetry);
       } catch (error) {
         console.error("❌ Ошибка загрузки телеметрии:", error);
+      } finally {
+        setLoadingTelemetry(false);
       }
     };
 
+    setLoading(true);
     fetchParticipants();
     fetchTelemetry();
-    setLoading(false);
   }, [raceId]);
+
+  useEffect(() => {
+    if (!loadingParticipants && !loadingTelemetry) {
+      setLoading(false);
+    }
+  }, [loadingParticipants, loadingTelemetry]);
 
   return (
     <Box sx={{ p: 3 }}>
       {loading ? (
-        <Typography>Loading...</Typography>
+        <Box sx={{ textAlign: "center", my: 4 }}>
+          <CircularProgress />
+          <Typography variant="body1" sx={{ mt: 2 }}>
+            {loadingParticipants ? "Загружаем участников..." : ""}
+            {loadingTelemetry ? " Загружаем данные телеметрии..." : ""}
+          </Typography>
+        </Box>
       ) : (
         <Paper elevation={3} sx={{ p: 2 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>

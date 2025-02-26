@@ -43,10 +43,16 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
           return;
         }
 
-        // 📌 1️⃣ Собираем chipNumber из telemetry и приводим к строке без ведущих нулей
+        // 📌 1️⃣ Собираем chipNumber из telemetry и нормализуем
         let telemetryData: Record<string, string> = {};
         Object.keys(raceData.telemetry).forEach(chip => {
-          const normalizedChip = chip.toString().replace(/^0+/, ""); // Убираем ведущие нули
+          let normalizedChip = chip.toLowerCase().trim();
+
+          // Если chipNumber состоит только из цифр, удаляем ведущие нули
+          if (/^\d+$/.test(normalizedChip)) {
+            normalizedChip = normalizedChip.replace(/^0+/, "");
+          }
+
           telemetryData[normalizedChip] = chip;
         });
 
@@ -67,7 +73,12 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
             return;
           }
 
-          let formattedChip = data.chipNumber.toString().trim().replace(/^0+/, ""); // Убираем ведущие нули
+          let formattedChip = data.chipNumber.toLowerCase().trim();
+
+          // Если chipNumber состоит только из цифр, удаляем ведущие нули
+          if (/^\d+$/.test(formattedChip)) {
+            formattedChip = formattedChip.replace(/^0+/, "");
+          }
 
           // 📌 3️⃣ Проверяем, есть ли этот чип в `telemetry`
           if (telemetryData[formattedChip]) {
@@ -110,7 +121,13 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
         </TableHead>
         <TableBody>
           {lapTimes.map((lapTime, index) => {
-            const chipNumber = lapTime.chipNumber.toString().trim().replace(/^0+/, ""); // Убираем ведущие нули
+            let chipNumber = lapTime.chipNumber.toString().toLowerCase().trim();
+
+            // Если chipNumber состоит только из цифр, удаляем ведущие нули
+            if (/^\d+$/.test(chipNumber)) {
+              chipNumber = chipNumber.replace(/^0+/, "");
+            }
+
             const racer = racers[chipNumber] || { nickname: "Unknown", raceNumber: "N/A" };
 
             console.log(`🔍 Processing lapTime[${index}]:`, lapTime);

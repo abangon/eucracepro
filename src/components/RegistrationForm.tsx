@@ -18,9 +18,9 @@ import { FaFacebook, FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
 
 // Функции формирования URL соцсетей
 const getFacebookUrl = (username: string) => `https://www.facebook.com/${username}`;
-const getInstagramUrl = (username: string) => `https://www.instagram.com/${username}`;
-const getYoutubeUrl = (username: string) => `https://www.youtube.com/@${username}`;
-const getTiktokUrl = (username: string) => `https://www.tiktok.com/@${username}`;
+const getInstagramUrl = (username: string) => `https://www.instagram.com/${username.startsWith("@") ? username : "@" + username}`;
+const getYoutubeUrl = (username: string) => `https://www.youtube.com/@${username.startsWith("@") ? username.slice(1) : username}`;
+const getTiktokUrl = (username: string) => `https://www.tiktok.com/@${username.startsWith("@") ? username : "@" + username}`;
 
 // Стили иконок
 const socialIconStyle = { width: "1.5em", height: "1.5em" };

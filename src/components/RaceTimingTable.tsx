@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { collection, getDocs } from "firebase/firestore";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/utils/firebase"; // ✅ Используем правильный импорт
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { db } from "@/utils/firebase";
 import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
 
 const RaceTimingTable: React.FC = () => {
@@ -35,6 +34,7 @@ const RaceTimingTable: React.FC = () => {
         const participantsList = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
+          chipNumber: doc.data().chipNumber?.toString() || "", // Преобразуем chipNumber в строку
         }));
 
         console.log("✅ Участники загружены:", participantsList);
@@ -44,29 +44,28 @@ const RaceTimingTable: React.FC = () => {
       }
     };
 
-   // ✅ Загружаем документ гонки и достаем поле telemetry
-const fetchTelemetry = async () => {
-  try {
-    console.log(`📡 Загружаем телеметрию для гонки: ${raceId}`);
-    
-    const raceRef = doc(db, "races", raceId); // 🔥 Правильный путь к документу
-    const raceSnap = await getDoc(raceRef);
+    const fetchTelemetry = async () => {
+      try {
+        console.log(`📡 Загружаем телеметрию для гонки: ${raceId}`);
+        const raceRef = doc(db, "races", raceId);
+        const raceSnap = await getDoc(raceRef);
 
-    if (!raceSnap.exists()) {
-      console.warn("⚠️ Документ гонки не найден!");
-      setTelemetry({});
-      setLoading(false);
-      return;
-    }
+        if (!raceSnap.exists()) {
+          console.warn("⚠️ Документ гонки не найден!");
+          setTelemetry({});
+          setLoading(false);
+          return;
+        }
 
-    const raceData = raceSnap.data();
-    const telemetryData = raceData.telemetry || {}; // ✅ Берем поле telemetry
-    console.log("✅ Телеметрия загружена:", telemetryData);
-    setTelemetry(telemetryData);
-  } catch (error) {
-    console.error("❌ Ошибка загрузки телеметрии:", error);
-  }
-};
+        const raceData = raceSnap.data();
+        const telemetryData = raceData.telemetry || {};
+        console.log("✅ Телеметрия загружена:", telemetryData);
+        setTelemetry(telemetryData);
+      } catch (error) {
+        console.error("❌ Ошибка загрузки телеметрии:", error);
+      }
+    };
+
     fetchParticipants();
     fetchTelemetry();
     setLoading(false);
@@ -96,16 +95,24 @@ const fetchTelemetry = async () => {
             </TableHead>
             <TableBody>
               {Object.keys(telemetry).map((chip, index) => {
-                const participant = participants.find(p => p.chipNumber === chip) || {};
+                const chipString = chip.toString(); // Приводим ключи к строке
+                const participant = participants.find(p => p.chipNumber === chipString) || {};
+
+                // ⚡️ Находим лучший круг (минимальный lap_time)
+                const laps = telemetry[chipString] || [];
+                const bestLap = laps.length > 0 ? Math.min(...laps.map(lap => lap.lap_time || Infinity)) : "-";
+                const lastLap = laps.length > 0 ? laps[laps.length - 1].lap_time || "-" : "-";
+                const totalLaps = laps.length || "-";
+
                 return (
-                  <TableRow key={chip}>
+                  <TableRow key={chipString}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{participant.nickname || "-"}</TableCell>
                     <TableCell>{participant.raceNumber || "-"}</TableCell>
-                    <TableCell>{chip}</TableCell>
-                    <TableCell>{telemetry[chip]?.bestLap || "-"}</TableCell>
-                    <TableCell>{telemetry[chip]?.lastLap || "-"}</TableCell>
-                    <TableCell>{telemetry[chip]?.totalLaps || "-"}</TableCell>
+                    <TableCell>{chipString}</TableCell>
+                    <TableCell>{bestLap !== Infinity ? bestLap.toFixed(3) : "-"}</TableCell>
+                    <TableCell>{lastLap !== "-" ? lastLap.toFixed(3) : "-"}</TableCell>
+                    <TableCell>{totalLaps}</TableCell>
                   </TableRow>
                 );
               })}

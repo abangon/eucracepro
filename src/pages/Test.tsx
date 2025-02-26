@@ -1,41 +1,49 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
-import { db } from "../utils/firebase"; // Относительный путь
+import { db } from "../utils/firebase";
 import { collection, getDocs } from "firebase/firestore";
 
 const TestPage: React.FC = () => {
   const { raceId } = useParams<{ raceId: string }>(); // Получаем raceId из URL
-  const [participants, setParticipants] = useState<any[]>([]); // Состояние для хранения участников
+  const [participants, setParticipants] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchParticipants = async () => {
       try {
-        if (!raceId) return; // Проверка, что raceId существует
+        if (!raceId) {
+          console.error("❌ Ошибка: raceId не найден!");
+          return;
+        }
 
-        console.log(`Fetching participants for race ID: ${raceId}`);
+        console.log(`🚀 Загружаем участников для гонки: ${raceId}`);
         const participantsCollection = collection(db, "races", raceId, "participants");
         const querySnapshot = await getDocs(participantsCollection);
 
         if (querySnapshot.empty) {
-          console.warn("No participants found!");
+          console.warn("⚠️ Нет участников!");
+          setParticipants([]);
+          setLoading(false);
           return;
         }
 
         const participantsList = querySnapshot.docs.map(doc => ({
-          id: doc.id, // Получаем ID участника
-          ...doc.data(), // Получаем данные участника
+          id: doc.id,
+          ...doc.data(),
         }));
 
-        console.log("Participants data:", participantsList);
-        setParticipants(participantsList); // Сохраняем участников в состояние
+        console.log("✅ Участники загружены:", participantsList);
+        setParticipants(participantsList);
+        setLoading(false);
       } catch (error) {
-        console.error("Error fetching participants:", error);
+        console.error("❌ Ошибка загрузки участников:", error);
+        setLoading(false);
       }
     };
 
-    fetchParticipants(); // Загружаем участников
-  }, [raceId]); // Зависимость от raceId, чтобы загружать данные при его изменении
+    fetchParticipants();
+  }, [raceId]);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -43,7 +51,9 @@ const TestPage: React.FC = () => {
         Participants for Race {raceId}
       </Typography>
 
-      {participants.length === 0 ? (
+      {loading ? (
+        <Typography>Loading...</Typography>
+      ) : participants.length === 0 ? (
         <Typography>No participants found</Typography>
       ) : (
         <TableContainer>

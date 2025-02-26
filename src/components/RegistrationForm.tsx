@@ -1,99 +1,102 @@
 import React, { useEffect, useState } from "react";
-import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../utils/firebase";
-import { Box, Button, Typography, Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  Paper,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+} from "@mui/material";
+import { FaFacebook, FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
 
-interface Participant {
-  id: string;
-  nickname: string;
-  team: string;
-  country: string;
-  facebook: string;
-  instagram: string;
-  youtube: string;
-  tiktok: string;
+// Функции формирования URL соцсетей
+const getFacebookUrl = (username: string) => `https://www.facebook.com/${username}`;
+const getInstagramUrl = (username: string) => `https://www.instagram.com/${username}`;
+const getYoutubeUrl = (username: string) => `https://www.youtube.com/@${username}`;
+const getTiktokUrl = (username: string) => `https://www.tiktok.com/@${username}`;
+
+// Стили и цвета иконок соцсетей
+const socialIconStyle = { width: "1.5em", height: "1.5em" };
+const facebookColor = "#1877F2";
+const instagramColor = "#E1306C";
+const youtubeColor = "#FF0000";
+const tiktokColor = "#000000";
+
+interface RegistrationFormProps {
+  raceId: string;
 }
 
-const RegistrationForm: React.FC<{ raceId: string }> = ({ raceId }) => {
+const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [user] = useAuthState(auth);
-  const [registeredUser, setRegisteredUser] = useState<Participant | null>(null);
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [registeredUser, setRegisteredUser] = useState<any | null>(null);
+  const [userData, setUserData] = useState<any | null>(null);
 
   useEffect(() => {
     if (!user) return;
 
-    const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
+    // Загружаем актуальные данные пользователя
+    const fetchUserData = async () => {
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
 
-    const checkRegistration = async () => {
-      try {
-        const participantSnap = await getDoc(participantRef);
-        if (participantSnap.exists()) {
-          setRegisteredUser(participantSnap.data() as Participant);
-        } else {
-          setRegisteredUser(null);
-        }
-      } catch (error) {
-        console.error("Error fetching registration:", error);
+      if (userSnap.exists()) {
+        setUserData(userSnap.data());
       }
     };
 
+    // Проверяем регистрацию пользователя в гонке
+    const checkRegistration = async () => {
+      const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
+      const participantSnap = await getDoc(participantRef);
+
+      if (participantSnap.exists()) {
+        setRegisteredUser(participantSnap.data());
+      }
+    };
+
+    fetchUserData();
     checkRegistration();
   }, [user, raceId]);
 
-  // Live-обновление списка участников
-  useEffect(() => {
-    const participantsRef = collection(db, `races/${raceId}/participants`);
-    const unsubscribe = onSnapshot(participantsRef, (snapshot) => {
-      const participantsList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Participant),
-      }));
-      setParticipants(participantsList);
-    });
-
-    return () => unsubscribe();
-  }, [raceId]);
-
   const handleRegister = async () => {
-    if (!user) return;
+    if (!user || !userData) return;
 
-    try {
-      const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
-      const newParticipant: Participant = {
-        id: user.uid,
-        nickname: user.displayName || "Anonymous",
-        team: "Ekolka Racing",
-        country: "Czechia",
-        facebook: "https://facebook.com",
-        instagram: "https://instagram.com",
-        youtube: "https://youtube.com",
-        tiktok: "",
-      };
+    const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
+    const newParticipant = {
+      nickname: userData.nickname || "Anonymous",
+      team: userData.team || "-",
+      country: userData.country || "-",
+      facebook: userData.facebook || "",
+      instagram: userData.instagram || "",
+      youtube: userData.youtube || "",
+      tiktok: userData.tiktok || "",
+    };
 
-      await setDoc(participantRef, newParticipant);
-      setRegisteredUser(newParticipant);
-    } catch (error) {
-      console.error("Error registering:", error);
-    }
+    await setDoc(participantRef, newParticipant);
+    setRegisteredUser(newParticipant);
   };
 
   const handleCancelRegistration = async () => {
     if (!user) return;
 
-    try {
-      const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
-      await deleteDoc(participantRef);
-      setRegisteredUser(null);
-    } catch (error) {
-      console.error("Error canceling registration:", error);
-    }
+    const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
+    await deleteDoc(participantRef);
+    setRegisteredUser(null);
   };
 
   return (
     <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6" fontWeight="bold">Participants</Typography>
+        <Typography variant="h6" fontWeight="bold">
+          Participants
+        </Typography>
         {user ? (
           registeredUser ? (
             <Button variant="contained" color="error" onClick={handleCancelRegistration}>
@@ -112,7 +115,7 @@ const RegistrationForm: React.FC<{ raceId: string }> = ({ raceId }) => {
       </Box>
 
       {/* Таблица участников */}
-      <TableContainer sx={{ borderRadius: 2, overflow: "hidden" }}>
+      <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
         <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
@@ -126,17 +129,73 @@ const RegistrationForm: React.FC<{ raceId: string }> = ({ raceId }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {participants.map((participant) => (
-              <TableRow key={participant.id}>
-                <TableCell>{participant.nickname}</TableCell>
-                <TableCell>{participant.team}</TableCell>
-                <TableCell>{participant.country}</TableCell>
-                <TableCell><a href={participant.facebook} target="_blank" rel="noopener noreferrer">Facebook</a></TableCell>
-                <TableCell><a href={participant.instagram} target="_blank" rel="noopener noreferrer">Instagram</a></TableCell>
-                <TableCell><a href={participant.youtube} target="_blank" rel="noopener noreferrer">YouTube</a></TableCell>
-                <TableCell>{participant.tiktok || "-"}</TableCell>
+            {registeredUser && (
+              <TableRow>
+                <TableCell>{registeredUser.nickname}</TableCell>
+                <TableCell>{registeredUser.team}</TableCell>
+                <TableCell>{registeredUser.country}</TableCell>
+
+                {/* Facebook */}
+                <TableCell>
+                  {registeredUser.facebook ? (
+                    <a
+                      href={getFacebookUrl(registeredUser.facebook)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <FaFacebook style={{ ...socialIconStyle, color: facebookColor }} />
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+
+                {/* Instagram */}
+                <TableCell>
+                  {registeredUser.instagram ? (
+                    <a
+                      href={getInstagramUrl(registeredUser.instagram)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <FaInstagram style={{ ...socialIconStyle, color: instagramColor }} />
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+
+                {/* YouTube */}
+                <TableCell>
+                  {registeredUser.youtube ? (
+                    <a
+                      href={getYoutubeUrl(registeredUser.youtube)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <FaYoutube style={{ ...socialIconStyle, color: youtubeColor }} />
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+
+                {/* TikTok */}
+                <TableCell>
+                  {registeredUser.tiktok ? (
+                    <a
+                      href={getTiktokUrl(registeredUser.tiktok)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <FaTiktok style={{ ...socialIconStyle, color: tiktokColor }} />
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>

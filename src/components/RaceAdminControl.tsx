@@ -100,24 +100,39 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
     }));
   };
 
-  const saveChanges = async () => {
+const saveChanges = async () => {
     try {
-      console.log("Starting saveChanges...");
-      const updates = Object.entries(updatedParticipants);
-      console.log("Updates to save:", updates);
-      for (const [id, data] of updates) {
-        console.log("Updating participant:", id, "with data:", data);
-        const participantRef = doc(db, "races", raceId, "participants", id);
-        await updateDoc(participantRef, { chipNumber: data.chipNumber, raceNumber: data.raceNumber });
-      }
-      setUpdatedParticipants({});
-      console.log("Changes saved successfully!");
-      setNotification({ message: "Changes saved successfully!", type: "success" });
+        console.log("Starting saveChanges...");
+        const updates = Object.entries(updatedParticipants);
+        console.log("Updates to save:", updates);
+
+        for (const [id, data] of updates) {
+            console.log("Updating participant:", id, "with data:", data);
+
+            const participantRef = doc(db, "races", raceId, "participants", id);
+
+            // Создаем объект только с существующими полями
+            let updateData: any = {};
+            if (data.chipNumber !== undefined) updateData.chipNumber = data.chipNumber;
+            if (data.raceNumber !== undefined) updateData.raceNumber = data.raceNumber;
+
+            console.log("Final update data:", updateData);
+
+            // Только если есть данные для обновления
+            if (Object.keys(updateData).length > 0) {
+                await updateDoc(participantRef, updateData);
+            }
+        }
+
+        setUpdatedParticipants({});
+        console.log("Changes saved successfully!");
+        setNotification({ message: "Changes saved successfully!", type: "success" });
     } catch (error) {
-      console.error("Error saving changes:", error);
-      setNotification({ message: "Error saving changes!", type: "error" });
+        console.error("Error saving changes:", error);
+        setNotification({ message: "Error saving changes!", type: "error" });
     }
-  };
+};
+
 
   if (!user || user.uid !== ADMIN_UID) return null;
 

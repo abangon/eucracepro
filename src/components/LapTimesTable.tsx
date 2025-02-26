@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material';
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "../firebaseConfig"; // Импорт Firestore
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../firebaseConfig"; // Убедись, что путь верный!
 
 interface LapTime {
   lap: number;
@@ -24,16 +24,25 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
   useEffect(() => {
     const fetchRacers = async () => {
-      const racersCollection = collection(db, "races", "8915", "participants");
-      const querySnapshot = await getDocs(racersCollection);
-      const racersData: Record<string, Racer> = {};
+      try {
+        console.log("Fetching racers from Firestore...");
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data() as Racer;
-        racersData[data.chipNumber] = data;
-      });
+        const racersCollection = collection(db, "races", "8915", "participants");
+        const querySnapshot = await getDocs(racersCollection);
 
-      setRacers(racersData);
+        const racersData: Record<string, Racer> = {};
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data() as Racer;
+          console.log("Fetched racer:", data);
+          racersData[data.chipNumber] = data;
+        });
+
+        console.log("Final racersData object:", racersData);
+        setRacers(racersData);
+      } catch (error) {
+        console.error("Error fetching racers:", error);
+      }
     };
 
     fetchRacers();
@@ -56,6 +65,10 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
         <TableBody>
           {lapTimes.map((lapTime, index) => {
             const racer = racers[lapTime.chipNumber] || { nickname: "Unknown", raceNumber: "N/A" };
+
+            console.log(`Processing lapTime[${index}]:`, lapTime);
+            console.log(`Matched racer for chipNumber ${lapTime.chipNumber}:`, racer);
+
             return (
               <TableRow key={index}>
                 <TableCell>{lapTime.lap}</TableCell>

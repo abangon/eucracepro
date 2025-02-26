@@ -43,14 +43,13 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      console.log("Auth state changed. Current user UID:", currentUser?.uid);
+     
       setUser(currentUser);
     });
     return () => unsubscribeAuth();
   }, []);
 
-  console.log("Current user UID:", user?.uid);
-  console.log("Admin UID:", ADMIN_UID);
+ 
 
   const fetchParticipants = async () => {
     try {

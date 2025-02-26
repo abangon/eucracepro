@@ -12,22 +12,22 @@ import {
 } from "@mui/material";
 
 interface RaceTimingTableProps {
-  telemetryData: any[];
+  telemetryData?: any[]; // <-- Добавил `?` (опциональный параметр)
   raceId: string;
   loading: boolean;
-  participants: any[]; // Добавляем массив участников
+  participants?: any[]; // <-- Добавил `?` (опциональный параметр)
 }
 
 const formatLapTime = (time: number | null) => {
-  if (time === null) return "-";
+  if (time === null || time === undefined) return "-";
   const minutes = Math.floor(time / 60);
   const seconds = (time % 60).toFixed(3);
   return `${minutes}:${seconds.padStart(6, "0")}`;
 };
 
-const RaceTimingTable: React.FC<RaceTimingTableProps> = ({ telemetryData, raceId, loading, participants }) => {
-  // 🔄 Создаём объект для быстрого поиска участников по chipNumber
-  const participantsMap = Object.fromEntries(participants.map(p => [p.chipNumber, p]));
+const RaceTimingTable: React.FC<RaceTimingTableProps> = ({ telemetryData = [], raceId, loading, participants = [] }) => {
+  // Если `participants` пустой или `undefined`, создаём пустой объект
+  const participantsMap = participants ? Object.fromEntries(participants.map(p => [p.chipNumber, p])) : {};
 
   return (
     <Paper sx={{ p: 3, borderRadius: 2, mt: 4 }}>
@@ -54,7 +54,7 @@ const RaceTimingTable: React.FC<RaceTimingTableProps> = ({ telemetryData, raceId
               </TableRow>
             </TableHead>
             <TableBody>
-              {telemetryData.map((record, index) => {
+              {telemetryData?.map((record, index) => {
                 const participant = participantsMap[record.chipNumber]; // 🏎 Ищем участника по чипу
                 return (
                   <TableRow

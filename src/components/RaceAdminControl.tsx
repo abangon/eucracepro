@@ -65,21 +65,33 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
       setParticipants(participantList);
     };
 
-    const fetchAvailableChips = async () => {
-  console.log("Fetching available chips...");
-  const raceRef = doc(db, "races", raceId);
-  const raceSnap = await getDoc(raceRef);
+    const fetchParticipants = async () => {
+  try {
+    console.log("Fetching participants...");
+    const participantsRef = collection(db, "races", raceId, "participants");
+    const snapshot = await getDocs(participantsRef);
 
-  if (raceSnap.exists()) {
-    const raceData = raceSnap.data();
-    if (raceData.telemetry) {
-      const chipNumbers = Object.keys(raceData.telemetry); // Достаем ключи из объекта telemetry
-      console.log("Available Chips:", chipNumbers);
-      setAvailableChips(chipNumbers);
-    } else {
-      console.log("No telemetry data found.");
-      setAvailableChips([]);
-    }
+    let participantList: Participant[] = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      userId: doc.id,
+      ...doc.data(),
+    })) as Participant[];
+
+    // Загружаем имена пользователей из коллекции users
+    const userPromises = participantList.map(async (participant) => {
+      const userRef = doc(db, "users", participant.userId);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        participant.nickname = userSnap.data().nickname;
+      }
+    });
+
+    await Promise.all(userPromises);
+
+    console.log("Loaded participants:", participantList);
+    setParticipants(participantList);
+  } catch (error) {
+    console.error("Error fetching participants:", error);
   }
 };
 
@@ -101,41 +113,39 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   };
 
 const saveChanges = async () => {
-    try {
-        console.log("Starting saveChanges...");
-        const updates = Object.entries(updatedParticipants);
-        console.log("Updates to save:", updates);
+  try {
+    console.log("Starting saveChanges...");
+    const updates = Object.entries(updatedParticipants);
+    console.log("Updates to save:", updates);
 
-        for (const [id, data] of updates) {
-            console.log("Updating participant:", id, "with data:", data);
+    for (const [id, data] of updates) {
+      console.log("Updating participant:", id, "with data:", data);
 
-            const participantRef = doc(db, "races", raceId, "participants", id);
+      const participantRef = doc(db, "races", raceId, "participants", id);
 
-            // Создаем объект только с существующими полями
-            let updateData: any = {};
-            if (data.chipNumber !== undefined) updateData.chipNumber = data.chipNumber;
-            if (data.raceNumber !== undefined) updateData.raceNumber = data.raceNumber;
+      let updateData: any = {};
+      if (data.chipNumber !== undefined) updateData.chipNumber = data.chipNumber;
+      if (data.raceNumber !== undefined) updateData.raceNumber = data.raceNumber;
 
-            console.log("Final update data:", updateData);
+      console.log("Final update data:", updateData);
 
-            // Только если есть данные для обновления
-            if (Object.keys(updateData).length > 0) {
-                await updateDoc(participantRef, updateData);
-            }
-        }
-
-        setUpdatedParticipants({});
-        console.log("Changes saved successfully!");
-        setNotification({ message: "Changes saved successfully!", type: "success" });
-
-        // 🔄 Автоматически загружаем обновленные данные
-        fetchParticipants();
-        
-    } catch (error) {
-        console.error("Error saving changes:", error);
-        setNotification({ message: "Error saving changes!", type: "error" });
+      if (Object.keys(updateData).length > 0) {
+        await updateDoc(participantRef, updateData);
+      }
     }
+
+    setUpdatedParticipants({});
+    console.log("Changes saved successfully!");
+    setNotification({ message: "Changes saved successfully!", type: "success" });
+
+    // 🔄 Автоматически загружаем обновленные данные после сохранения
+    await fetchParticipants();
+  } catch (error) {
+    console.error("Error saving changes:", error);
+    setNotification({ message: "Error saving changes!", type: "error" });
+  }
 };
+
 
 
   if (!user || user.uid !== ADMIN_UID) return null;

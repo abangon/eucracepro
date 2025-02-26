@@ -16,6 +16,8 @@ import {
   Select,
   MenuItem,
   Box,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 
 const ADMIN_UID = "ztnWBUkh6dUcXLOH8D5nLBEYm2J2";
@@ -37,6 +39,7 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   const [availableChips, setAvailableChips] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
   const [updatedParticipants, setUpdatedParticipants] = useState<Record<string, Participant>>({});
+  const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" | "warning" | undefined } | null>(null);
 
   useEffect(() => {
     const fetchParticipants = async () => {
@@ -44,16 +47,15 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
       const snapshot = await getDocs(participantsRef);
       let participantList: Participant[] = snapshot.docs.map((doc) => ({
         id: doc.id,
-        userId: doc.id, // userId = id участника
+        userId: doc.id,
         ...doc.data(),
       })) as Participant[];
 
-      // Получаем настоящие никнеймы из users/{userId}
       const userPromises = participantList.map(async (participant) => {
         const userRef = doc(db, "users", participant.userId);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
-          participant.nickname = userSnap.data().nickname; // Настоящий никнейм
+          participant.nickname = userSnap.data().nickname;
         }
       });
 
@@ -85,12 +87,17 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   };
 
   const saveChanges = async () => {
-    const updates = Object.entries(updatedParticipants);
-    for (const [id, data] of updates) {
-      const participantRef = doc(db, "races", raceId, "participants", id);
-      await updateDoc(participantRef, { chipNumber: data.chipNumber, raceNumber: data.raceNumber });
+    try {
+      const updates = Object.entries(updatedParticipants);
+      for (const [id, data] of updates) {
+        const participantRef = doc(db, "races", raceId, "participants", id);
+        await updateDoc(participantRef, { chipNumber: data.chipNumber, raceNumber: data.raceNumber });
+      }
+      setUpdatedParticipants({});
+      setNotification({ message: "Changes saved successfully!", type: "success" });
+    } catch (error) {
+      setNotification({ message: "Error saving changes!", type: "error" });
     }
-    setUpdatedParticipants({});
   };
 
   if (!user || user.uid !== ADMIN_UID) return null;
@@ -144,6 +151,11 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
           </TableBody>
         </Table>
       </TableContainer>
+      <Snackbar open={!!notification} autoHideDuration={3000} onClose={() => setNotification(null)}>
+        <Alert onClose={() => setNotification(null)} severity={notification?.type} sx={{ width: "100%" }}>
+          {notification?.message}
+        </Alert>
+      </Snackbar>
     </Paper>
   );
 };

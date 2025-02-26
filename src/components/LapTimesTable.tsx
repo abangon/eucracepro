@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material';
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
-import { db } from "../firebaseConfig"; // Проверь путь к Firebase
+import { db } from "../firebaseConfig"; // Убедись, что путь к Firebase верный
 
 interface LapTime {
   lap: number;
@@ -43,10 +43,11 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
           return;
         }
 
-        // 📌 1️⃣ Собираем chipNumber из telemetry
+        // 📌 1️⃣ Собираем chipNumber из telemetry и приводим к строке без ведущих нулей
         let telemetryData: Record<string, string> = {};
         Object.keys(raceData.telemetry).forEach(chip => {
-          telemetryData[chip] = chip;
+          const normalizedChip = chip.toString().replace(/^0+/, ""); // Убираем ведущие нули
+          telemetryData[normalizedChip] = chip;
         });
 
         console.log("Extracted telemetry chipNumbers:", telemetryData);
@@ -66,17 +67,10 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
             return;
           }
 
-          let formattedChip = data.chipNumber.toString().trim();
-
-          // 🔥 Если chipNumber числовой и короче 8 символов – дополняем нулями
-          if (!isNaN(Number(formattedChip)) && formattedChip.length < 8) {
-            formattedChip = formattedChip.padStart(8, "0");
-          }
+          let formattedChip = data.chipNumber.toString().trim().replace(/^0+/, ""); // Убираем ведущие нули
 
           // 📌 3️⃣ Проверяем, есть ли этот чип в `telemetry`
-          const foundChip = Object.keys(telemetryData).find(chip => chip === formattedChip);
-
-          if (foundChip) {
+          if (telemetryData[formattedChip]) {
             console.log(`✅ Found matching chipNumber: ${formattedChip}`);
 
             racersData[formattedChip] = {
@@ -116,7 +110,7 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
         </TableHead>
         <TableBody>
           {lapTimes.map((lapTime, index) => {
-            const chipNumber = lapTime.chipNumber.toString().trim();
+            const chipNumber = lapTime.chipNumber.toString().trim().replace(/^0+/, ""); // Убираем ведущие нули
             const racer = racers[chipNumber] || { nickname: "Unknown", raceNumber: "N/A" };
 
             console.log(`🔍 Processing lapTime[${index}]:`, lapTime);

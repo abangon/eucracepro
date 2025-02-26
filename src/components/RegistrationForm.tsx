@@ -15,19 +15,19 @@ import {
   TableBody,
   Select,
   MenuItem,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { FaFacebook, FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
 
-// Константа администратора
 const ADMIN_UID = "ztnWBUkh6dUcXLOH8D5nLBEYm2J2";
 
-// Функции генерации URL соцсетей
 const getFacebookUrl = (username: string) => `https://www.facebook.com/${username}`;
 const getInstagramUrl = (username: string) => `https://www.instagram.com/${username}`;
 const getYoutubeUrl = (username: string) => `https://www.youtube.com/@${username}`;
 const getTiktokUrl = (username: string) => `https://www.tiktok.com/@${username}`;
 
-const socialIconStyle = { width: "1.5em", height: "1.5em" };
+const socialIconStyle = { width: "1.5em", height: "1.5em", marginRight: 5 };
 
 interface RegistrationFormProps {
   raceId: string;
@@ -39,43 +39,34 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [userData, setUserData] = useState<any | null>(null);
   const [chipNumber, setChipNumber] = useState<string>("");
   const [availableChips, setAvailableChips] = useState<string[]>([]);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const isAdmin = user?.uid === ADMIN_UID;
 
   useEffect(() => {
     if (!user) return;
 
-    // Загружаем актуальные данные пользователя
     const fetchUserData = async () => {
       const userRef = doc(db, `users/${user.uid}`);
       const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        setUserData(userSnap.data());
-      }
+      if (userSnap.exists()) setUserData(userSnap.data());
     };
 
-    // Проверяем регистрацию в гонке
     const checkRegistration = async () => {
       const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
       const participantSnap = await getDoc(participantRef);
-
       if (participantSnap.exists()) {
         setRegisteredUser(participantSnap.data());
         setChipNumber(participantSnap.data().chipNumber || "");
       }
     };
 
-    // Загружаем доступные чипы из telemetry
     const fetchChips = async () => {
       const raceRef = doc(db, `races/${raceId}`);
       const raceSnap = await getDoc(raceRef);
-
-      if (raceSnap.exists()) {
-        const raceData = raceSnap.data();
-        if (raceData.telemetry) {
-          const chips = Object.keys(raceData.telemetry);
-          setAvailableChips(chips);
-        }
+      if (raceSnap.exists() && raceSnap.data().telemetry) {
+        const chips = Object.keys(raceSnap.data().telemetry);
+        setAvailableChips(chips);
       }
     };
 
@@ -116,8 +107,14 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     if (!user || !isAdmin || !registeredUser) return;
 
     const participantRef = doc(db, `races/${raceId}/participants/${registeredUser.uid}`);
-    await updateDoc(participantRef, { chipNumber });
-    setRegisteredUser({ ...registeredUser, chipNumber });
+
+    try {
+      await updateDoc(participantRef, { chipNumber });
+      setRegisteredUser({ ...registeredUser, chipNumber });
+      setMessage("Chip Number saved successfully.");
+    } catch (err) {
+      setError("Failed to save Chip Number.");
+    }
   };
 
   return (
@@ -152,7 +149,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
         <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-              <TableCell sx={{ textAlign: "left" }}><strong>Nickname</strong></TableCell>
+              <TableCell><strong>Nickname</strong></TableCell>
               <TableCell sx={{ textAlign: "center" }}><strong>Team</strong></TableCell>
               <TableCell sx={{ textAlign: "center" }}><strong>Country</strong></TableCell>
               <TableCell sx={{ textAlign: "center" }}><strong>Chip Number</strong></TableCell>
@@ -165,7 +162,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
           <TableBody>
             {registeredUser && (
               <TableRow>
-                <TableCell sx={{ textAlign: "left" }}>{registeredUser.nickname || registeredUser.uid}</TableCell>
+                <TableCell>{registeredUser.nickname || registeredUser.uid}</TableCell>
                 <TableCell sx={{ textAlign: "center" }}>{registeredUser.team || "-"}</TableCell>
                 <TableCell sx={{ textAlign: "center" }}>{registeredUser.country || "-"}</TableCell>
 
@@ -181,11 +178,24 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
                   )}
                 </TableCell>
 
+                <TableCell sx={{ textAlign: "center" }}>
+                  <a href={getFacebookUrl(registeredUser.facebook)} target="_blank" rel="noopener noreferrer">
+                    <FaFacebook style={socialIconStyle} />
+                  </a>
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Уведомления */}
+      <Snackbar open={!!message} autoHideDuration={3000} onClose={() => setMessage(null)}>
+        <Alert severity="success">{message}</Alert>
+      </Snackbar>
+      <Snackbar open={!!error} autoHideDuration={3000} onClose={() => setError(null)}>
+        <Alert severity="error">{error}</Alert>
+      </Snackbar>
     </Paper>
   );
 };

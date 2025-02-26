@@ -16,6 +16,7 @@ import Box from '@mui/material/Box';
 import useMediaQuery from "@mui/material/useMediaQuery";
 import RaceDetailPage from './pages/races/RaceDetailPage';
 import RaceDriverPage from './pages/races/RaceDriverPage';
+import RaceTimingTable from "../../components/RaceTimingTable";
 
 const App: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);

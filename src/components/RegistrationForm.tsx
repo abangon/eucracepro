@@ -22,7 +22,7 @@ const getInstagramUrl = (username: string) => `https://www.instagram.com/${usern
 const getYoutubeUrl = (username: string) => `https://www.youtube.com/@${username}`;
 const getTiktokUrl = (username: string) => `https://www.tiktok.com/@${username}`;
 
-// Стили и цвета иконок соцсетей
+// Стили иконок
 const socialIconStyle = { width: "1.5em", height: "1.5em" };
 const facebookColor = "#1877F2";
 const instagramColor = "#E1306C";
@@ -41,7 +41,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   useEffect(() => {
     if (!user) return;
 
-    // Загружаем актуальные данные пользователя
+    // Загружаем актуальные данные пользователя из Firestore
     const fetchUserData = async () => {
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
@@ -120,23 +120,23 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
               <TableCell><strong>Nickname</strong></TableCell>
-              <TableCell><strong>Team</strong></TableCell>
-              <TableCell><strong>Country</strong></TableCell>
-              <TableCell><strong>Facebook</strong></TableCell>
-              <TableCell><strong>Instagram</strong></TableCell>
-              <TableCell><strong>YouTube</strong></TableCell>
-              <TableCell><strong>TikTok</strong></TableCell>
+              <TableCell sx={{ textAlign: "center" }}><strong>Team</strong></TableCell>
+              <TableCell sx={{ textAlign: "center" }}><strong>Country</strong></TableCell>
+              <TableCell sx={{ textAlign: "center" }}><strong>Facebook</strong></TableCell>
+              <TableCell sx={{ textAlign: "center" }}><strong>Instagram</strong></TableCell>
+              <TableCell sx={{ textAlign: "center" }}><strong>YouTube</strong></TableCell>
+              <TableCell sx={{ textAlign: "center" }}><strong>TikTok</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {registeredUser && (
               <TableRow>
                 <TableCell>{registeredUser.nickname}</TableCell>
-                <TableCell>{registeredUser.team}</TableCell>
-                <TableCell>{registeredUser.country}</TableCell>
+                <TableCell sx={{ textAlign: "center" }}>{registeredUser.team}</TableCell>
+                <TableCell sx={{ textAlign: "center" }}>{registeredUser.country}</TableCell>
 
                 {/* Facebook */}
-                <TableCell>
+                <TableCell sx={{ textAlign: "center" }}>
                   {registeredUser.facebook ? (
                     <a
                       href={getFacebookUrl(registeredUser.facebook)}
@@ -151,7 +151,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
                 </TableCell>
 
                 {/* Instagram */}
-                <TableCell>
+                <TableCell sx={{ textAlign: "center" }}>
                   {registeredUser.instagram ? (
                     <a
                       href={getInstagramUrl(registeredUser.instagram)}
@@ -166,7 +166,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
                 </TableCell>
 
                 {/* YouTube */}
-                <TableCell>
+                <TableCell sx={{ textAlign: "center" }}>
                   {registeredUser.youtube ? (
                     <a
                       href={getYoutubeUrl(registeredUser.youtube)}
@@ -181,7 +181,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
                 </TableCell>
 
                 {/* TikTok */}
-                <TableCell>
+                <TableCell sx={{ textAlign: "center" }}>
                   {registeredUser.tiktok ? (
                     <a
                       href={getTiktokUrl(registeredUser.tiktok)}

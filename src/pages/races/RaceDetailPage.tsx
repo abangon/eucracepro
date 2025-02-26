@@ -82,10 +82,13 @@ const RaceDetailPage: React.FC = () => {
 
       {/* Блок Race Timing */}
       <RaceTimingTable telemetryData={telemetryData} raceId={raceId} loading={loading} />
+
+      {/* Блок Админ Управления */}
+      <RaceAdminControl raceId={raceId} />
     </Box>
   );
 };
 
-<RaceAdminControl raceId={raceId} />
+
 
 export default RaceDetailPage;

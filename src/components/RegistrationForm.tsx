@@ -13,6 +13,8 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { FaFacebook, FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
 
@@ -28,11 +30,15 @@ interface RegistrationFormProps {
   raceId: string;
 }
 
+const ADMIN_UID = "ztnWBUkh6dUcXLOH8D5nLBEYm2J2";
+
 const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [user] = useAuthState(auth);
   const [participants, setParticipants] = useState<any[]>([]);
   const [userData, setUserData] = useState<any | null>(null);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [availableChips, setAvailableChips] = useState<string[]>([]);
+  const [selectedChips, setSelectedChips] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     // Загружаем всех участников гонки
@@ -57,8 +63,20 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
       }
     };
 
+    // Загружаем доступные номера чипов из telemetry
+    const fetchChipNumbers = async () => {
+      const raceRef = doc(db, `races/${raceId}`);
+      const raceSnap = await getDoc(raceRef);
+
+      if (raceSnap.exists() && raceSnap.data().telemetry) {
+        const chipNumbers = Object.keys(raceSnap.data().telemetry);
+        setAvailableChips(chipNumbers);
+      }
+    };
+
     fetchParticipants();
     fetchUserData();
+    fetchChipNumbers();
   }, [user, raceId]);
 
   const handleRegister = async () => {
@@ -67,12 +85,13 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
     const newParticipant = {
       nickname: userData.nickname || user.uid,
-      team: userData.team || "",
-      country: userData.country || "",
+      team: userData.team || "-",
+      country: userData.country || "-",
       facebook: userData.facebook || "",
       instagram: userData.instagram || "",
       youtube: userData.youtube || "",
       tiktok: userData.tiktok || "",
+      chipNumber: "",
     };
 
     await setDoc(participantRef, newParticipant);
@@ -93,34 +112,58 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     setParticipants(updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
+  const handleChipChange = (userId: string, chipNumber: string) => {
+    setSelectedChips(prev => ({ ...prev, [userId]: chipNumber }));
+  };
+
+  const handleSaveChips = async () => {
+    if (!user || user.uid !== ADMIN_UID) return;
+
+    const updates = Object.entries(selectedChips).map(async ([userId, chipNumber]) => {
+      const participantRef = doc(db, `races/${raceId}/participants/${userId}`);
+      await setDoc(participantRef, { chipNumber }, { merge: true });
+    });
+
+    await Promise.all(updates);
+    alert("Chip numbers saved!");
+  };
+
   return (
     <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h6" fontWeight="bold">Participants</Typography>
-        {user ? (
-          isRegistered ? (
-            <Button variant="contained" color="error" onClick={handleCancelRegistration}>
-              Cancel Registration
+        <Box>
+          {user?.uid === ADMIN_UID && (
+            <Button variant="contained" color="secondary" onClick={handleSaveChips} sx={{ mr: 2 }}>
+              Save
             </Button>
+          )}
+          {user ? (
+            isRegistered ? (
+              <Button variant="contained" color="error" onClick={handleCancelRegistration}>
+                Cancel Registration
+              </Button>
+            ) : (
+              <Button variant="contained" color="primary" onClick={handleRegister}>
+                Register
+              </Button>
+            )
           ) : (
-            <Button variant="contained" color="primary" onClick={handleRegister}>
-              Register
+            <Button variant="contained" color="error" href="/sign-in">
+              Please log in to register
             </Button>
-          )
-        ) : (
-          <Button variant="contained" color="error" href="/sign-in">
-            Please log in to register
-          </Button>
-        )}
+          )}
+        </Box>
       </Box>
 
       <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
         <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-              <TableCell sx={{ textAlign: "left" }}><strong>Nickname</strong></TableCell>
+              <TableCell><strong>Nickname</strong></TableCell>
               <TableCell sx={{ textAlign: "center" }}><strong>Team</strong></TableCell>
               <TableCell sx={{ textAlign: "center" }}><strong>Country</strong></TableCell>
+              {user?.uid === ADMIN_UID && <TableCell sx={{ textAlign: "center" }}><strong>Chip Number</strong></TableCell>}
               <TableCell sx={{ textAlign: "center" }}><strong>Facebook</strong></TableCell>
               <TableCell sx={{ textAlign: "center" }}><strong>Instagram</strong></TableCell>
               <TableCell sx={{ textAlign: "center" }}><strong>YouTube</strong></TableCell>
@@ -128,49 +171,25 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {participants.map((participant) => (
+            {participants.map(participant => (
               <TableRow key={participant.id}>
-                <TableCell sx={{ textAlign: "left" }}>
-                  {participant.nickname || participant.id}
-                </TableCell>
+                <TableCell>{participant.nickname || participant.id}</TableCell>
                 <TableCell sx={{ textAlign: "center" }}>{participant.team || "-"}</TableCell>
                 <TableCell sx={{ textAlign: "center" }}>{participant.country || "-"}</TableCell>
-
-                {/* Facebook */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {participant.facebook ? (
-                    <a href={getFacebookUrl(participant.facebook)} target="_blank" rel="noopener noreferrer">
-                      <FaFacebook style={{ ...socialIconStyle, color: "#1877F2" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
-
-                {/* Instagram */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {participant.instagram ? (
-                    <a href={getInstagramUrl(participant.instagram)} target="_blank" rel="noopener noreferrer">
-                      <FaInstagram style={{ ...socialIconStyle, color: "#E1306C" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
-
-                {/* YouTube */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {participant.youtube ? (
-                    <a href={getYoutubeUrl(participant.youtube)} target="_blank" rel="noopener noreferrer">
-                      <FaYoutube style={{ ...socialIconStyle, color: "#FF0000" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
-
-                {/* TikTok */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {participant.tiktok ? (
-                    <a href={getTiktokUrl(participant.tiktok)} target="_blank" rel="noopener noreferrer">
-                      <FaTiktok style={{ ...socialIconStyle, color: "#000000" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
+                {user?.uid === ADMIN_UID && (
+                  <TableCell sx={{ textAlign: "center" }}>
+                    <Select
+                      value={selectedChips[participant.id] || participant.chipNumber || ""}
+                      onChange={(e) => handleChipChange(participant.id, e.target.value)}
+                      displayEmpty
+                    >
+                      <MenuItem value="">None</MenuItem>
+                      {availableChips.map(chip => (
+                        <MenuItem key={chip} value={chip}>{chip}</MenuItem>
+                      ))}
+                    </Select>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

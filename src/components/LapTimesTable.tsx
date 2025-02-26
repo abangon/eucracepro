@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Table, TableHead, TableRow, TableCell, TableBody, CircularProgress } from '@mui/material';
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
-import { db } from "../firebaseConfig"; // Проверь путь к Firebase
 
 interface LapTime {
   lap: number;

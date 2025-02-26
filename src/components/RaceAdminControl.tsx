@@ -127,6 +127,10 @@ const saveChanges = async () => {
         setUpdatedParticipants({});
         console.log("Changes saved successfully!");
         setNotification({ message: "Changes saved successfully!", type: "success" });
+
+        // 🔄 Автоматически загружаем обновленные данные
+        fetchParticipants();
+        
     } catch (error) {
         console.error("Error saving changes:", error);
         setNotification({ message: "Error saving changes!", type: "error" });

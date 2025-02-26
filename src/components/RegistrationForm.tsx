@@ -41,7 +41,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [selectedChips, setSelectedChips] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
-    // Загружаем всех участников гонки
     const fetchParticipants = async () => {
       const participantsRef = collection(db, `races/${raceId}/participants`);
       const snapshot = await getDocs(participantsRef);
@@ -53,7 +52,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
       }
     };
 
-    // Загружаем актуальные данные пользователя
     const fetchUserData = async () => {
       if (!user) return;
       const userRef = doc(db, `users/${user.uid}`);
@@ -63,7 +61,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
       }
     };
 
-    // Загружаем доступные номера чипов из telemetry
     const fetchChipNumbers = async () => {
       const raceRef = doc(db, `races/${raceId}`);
       const raceSnap = await getDoc(raceRef);
@@ -178,11 +175,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
                 <TableCell sx={{ textAlign: "center" }}>{participant.country || "-"}</TableCell>
                 {user?.uid === ADMIN_UID && (
                   <TableCell sx={{ textAlign: "center" }}>
-                    <Select
-                      value={selectedChips[participant.id] || participant.chipNumber || ""}
-                      onChange={(e) => handleChipChange(participant.id, e.target.value)}
-                      displayEmpty
-                    >
+                    <Select value={participant.chipNumber || ""} onChange={(e) => handleChipChange(participant.id, e.target.value)}>
                       <MenuItem value="">None</MenuItem>
                       {availableChips.map(chip => (
                         <MenuItem key={chip} value={chip}>{chip}</MenuItem>
@@ -190,6 +183,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
                     </Select>
                   </TableCell>
                 )}
+                <TableCell sx={{ textAlign: "center" }}>
+                  {participant.facebook ? (
+                    <a href={getFacebookUrl(participant.facebook)} target="_blank"><FaFacebook /></a>
+                  ) : "-"}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

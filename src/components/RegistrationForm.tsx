@@ -30,7 +30,7 @@ interface RegistrationFormProps {
 
 const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [user] = useAuthState(auth);
-  const [participants, setParticipants] = useState<any[]>([]); // Хранение всех участников
+  const [participants, setParticipants] = useState<any[]>([]);
   const [userData, setUserData] = useState<any | null>(null);
   const [isRegistered, setIsRegistered] = useState(false);
 
@@ -42,7 +42,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
       const usersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setParticipants(usersList);
 
-      // Проверяем, зарегистрирован ли текущий пользователь
       if (user) {
         setIsRegistered(usersList.some(p => p.id === user.uid));
       }
@@ -79,7 +78,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     await setDoc(participantRef, newParticipant);
     setIsRegistered(true);
 
-    // Перезагружаем список участников
     const updatedSnapshot = await getDocs(collection(db, `races/${raceId}/participants`));
     setParticipants(updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
@@ -91,7 +89,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     await deleteDoc(participantRef);
     setIsRegistered(false);
 
-    // Перезагружаем список участников
     const updatedSnapshot = await getDocs(collection(db, `races/${raceId}/participants`));
     setParticipants(updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };

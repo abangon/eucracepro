@@ -31,10 +31,10 @@ interface RegistrationFormProps {
 const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [user] = useAuthState(auth);
   const [participants, setParticipants] = useState<any[]>([]);
+  const [usersData, setUsersData] = useState<{ [key: string]: any }>({});
   const [isRegistered, setIsRegistered] = useState(false);
 
   useEffect(() => {
-    // Загружаем всех участников гонки
     const fetchParticipants = async () => {
       const participantsRef = collection(db, `races/${raceId}/participants`);
       const snapshot = await getDocs(participantsRef);
@@ -44,6 +44,16 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
       if (user) {
         setIsRegistered(usersList.some(p => p.id === user.uid));
       }
+
+      // Загрузка данных всех пользователей
+      const usersRef = collection(db, "users");
+      const usersSnap = await getDocs(usersRef);
+      const usersMap: { [key: string]: any } = {};
+      usersSnap.docs.forEach((doc) => {
+        usersMap[doc.id] = doc.data();
+      });
+
+      setUsersData(usersMap);
     };
 
     fetchParticipants();
@@ -52,15 +62,16 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const handleRegister = async () => {
     if (!user) return;
 
+    const userInfo = usersData[user.uid] || {};
     const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
     const newParticipant = {
-      nickname: user.displayName || user.uid,
-      team: "-",
-      country: "-",
-      facebook: "",
-      instagram: "",
-      youtube: "",
-      tiktok: "",
+      nickname: userInfo.nickname || user.uid,
+      team: userInfo.team || "-",
+      country: userInfo.country || "-",
+      facebook: userInfo.facebook || "",
+      instagram: userInfo.instagram || "",
+      youtube: userInfo.youtube || "",
+      tiktok: userInfo.tiktok || "",
     };
 
     await setDoc(participantRef, newParticipant);
@@ -116,49 +127,52 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {participants.map(participant => (
-              <TableRow key={participant.id}>
-                <TableCell>{participant.nickname || participant.id}</TableCell>
-                <TableCell sx={{ textAlign: "center" }}>{participant.team || "-"}</TableCell>
-                <TableCell sx={{ textAlign: "center" }}>{participant.country || "-"}</TableCell>
+            {participants.map(participant => {
+              const userInfo = usersData[participant.id] || {}; // Данные из users
+              return (
+                <TableRow key={participant.id}>
+                  <TableCell>{userInfo.nickname || participant.nickname || participant.id}</TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>{userInfo.team || participant.team || "-"}</TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>{userInfo.country || participant.country || "-"}</TableCell>
 
-                {/* Facebook */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {participant.facebook ? (
-                    <a href={getFacebookUrl(participant.facebook)} target="_blank" rel="noopener noreferrer">
-                      <FaFacebook style={{ ...socialIconStyle, color: "#1877F2" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
+                  {/* Facebook */}
+                  <TableCell sx={{ textAlign: "center" }}>
+                    {userInfo.facebook || participant.facebook ? (
+                      <a href={getFacebookUrl(userInfo.facebook || participant.facebook)} target="_blank" rel="noopener noreferrer">
+                        <FaFacebook style={{ ...socialIconStyle, color: "#1877F2" }} />
+                      </a>
+                    ) : "-"}
+                  </TableCell>
 
-                {/* Instagram */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {participant.instagram ? (
-                    <a href={getInstagramUrl(participant.instagram)} target="_blank" rel="noopener noreferrer">
-                      <FaInstagram style={{ ...socialIconStyle, color: "#E1306C" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
+                  {/* Instagram */}
+                  <TableCell sx={{ textAlign: "center" }}>
+                    {userInfo.instagram || participant.instagram ? (
+                      <a href={getInstagramUrl(userInfo.instagram || participant.instagram)} target="_blank" rel="noopener noreferrer">
+                        <FaInstagram style={{ ...socialIconStyle, color: "#E1306C" }} />
+                      </a>
+                    ) : "-"}
+                  </TableCell>
 
-                {/* YouTube */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {participant.youtube ? (
-                    <a href={getYoutubeUrl(participant.youtube)} target="_blank" rel="noopener noreferrer">
-                      <FaYoutube style={{ ...socialIconStyle, color: "#FF0000" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
+                  {/* YouTube */}
+                  <TableCell sx={{ textAlign: "center" }}>
+                    {userInfo.youtube || participant.youtube ? (
+                      <a href={getYoutubeUrl(userInfo.youtube || participant.youtube)} target="_blank" rel="noopener noreferrer">
+                        <FaYoutube style={{ ...socialIconStyle, color: "#FF0000" }} />
+                      </a>
+                    ) : "-"}
+                  </TableCell>
 
-                {/* TikTok */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {participant.tiktok ? (
-                    <a href={getTiktokUrl(participant.tiktok)} target="_blank" rel="noopener noreferrer">
-                      <FaTiktok style={{ ...socialIconStyle, color: "#000000" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
-              </TableRow>
-            ))}
+                  {/* TikTok */}
+                  <TableCell sx={{ textAlign: "center" }}>
+                    {userInfo.tiktok || participant.tiktok ? (
+                      <a href={getTiktokUrl(userInfo.tiktok || participant.tiktok)} target="_blank" rel="noopener noreferrer">
+                        <FaTiktok style={{ ...socialIconStyle, color: "#000000" }} />
+                      </a>
+                    ) : "-"}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>

@@ -42,27 +42,26 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" | "warning" | undefined } | null>(null);
 
   const fetchAvailableChips = async () => {
-  console.log("Fetching available chips...");
-  const raceRef = doc(db, "races", raceId);
-  const raceSnap = await getDoc(raceRef);
-
-  if (raceSnap.exists()) {
-    const raceData = raceSnap.data();
-    if (raceData.telemetry) {
-      const chipNumbers = Object.keys(raceData.telemetry); // Достаем ключи из объекта telemetry
-      console.log("Available Chips:", chipNumbers);
-      setAvailableChips(chipNumbers);
-    } else {
-      console.log("No telemetry data found.");
-      setAvailableChips([]);
+    console.log("Fetching available chips...");
+    const raceRef = doc(db, "races", raceId);
+    const raceSnap = await getDoc(raceRef);
+  
+    if (raceSnap.exists()) {
+      const raceData = raceSnap.data();
+      if (raceData.telemetry) {
+        const chipNumbers = Object.keys(raceData.telemetry);
+        console.log("Available Chips:", chipNumbers);
+        setAvailableChips(chipNumbers);
+      } else {
+        console.log("No telemetry data found.");
+        setAvailableChips([]);
+      }
     }
-  }
-};
-
+  };
 
   useEffect(() => {
-    fetchParticipants();
-  }, [fetchParticipants]);
+    fetchAvailableChips();
+  }, [raceId]);
 
   const updateParticipant = (id: string, field: "chipNumber" | "raceNumber", value: string) => {
     setUpdatedParticipants((prev) => ({
@@ -72,41 +71,35 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   };
 
   const saveChanges = async () => {
-  try {
-    console.log("Starting saveChanges...");
-    const updates = Object.entries(updatedParticipants);
-    console.log("Updates to save:", updates);
+    try {
+        console.log("Starting saveChanges...");
+        const updates = Object.entries(updatedParticipants);
+        console.log("Updates to save:", updates);
 
-    for (const [id, data] of updates) {
-      console.log("Updating participant:", id, "with data:", data);
-      const participantRef = doc(db, "races", raceId, "participants", id);
+        for (const [id, data] of updates) {
+            console.log("Updating participant:", id, "with data:", data);
 
-      let updateData: any = {};
-      if (data.chipNumber !== undefined) updateData.chipNumber = data.chipNumber;
-      if (data.raceNumber !== undefined) updateData.raceNumber = data.raceNumber;
+            const participantRef = doc(db, "races", raceId, "participants", id);
 
-      console.log("Final update data:", updateData);
+            let updateData: any = {};
+            if (data.chipNumber !== undefined) updateData.chipNumber = data.chipNumber;
+            if (data.raceNumber !== undefined) updateData.raceNumber = data.raceNumber;
 
-      if (Object.keys(updateData).length > 0) {
-        await updateDoc(participantRef, updateData);
-      }
+            console.log("Final update data:", updateData);
+
+            if (Object.keys(updateData).length > 0) {
+                await updateDoc(participantRef, updateData);
+            }
+        }
+
+        setUpdatedParticipants({});
+        console.log("Changes saved successfully!");
+        setNotification({ message: "Changes saved successfully!", type: "success" });
+    } catch (error) {
+        console.error("Error saving changes:", error);
+        setNotification({ message: "Error saving changes!", type: "error" });
     }
-
-    setUpdatedParticipants({});
-    console.log("Changes saved successfully!");
-    setNotification({ message: "Changes saved successfully!", type: "success" });
-
-    // 🔄 Подождем 500 мс перед обновлением данных, чтобы избежать конфликта с Firestore
-    setTimeout(async () => {
-      console.log("Refreshing participants after save...");
-      await fetchParticipants();
-    }, 500);
-  } catch (error) {
-    console.error("Error saving changes:", error);
-    setNotification({ message: "Error saving changes!", type: "error" });
-  }
-};
-
+  };
 
   if (!user || user.uid !== ADMIN_UID) return null;
 

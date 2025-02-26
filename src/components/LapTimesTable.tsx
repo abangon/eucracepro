@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, Table, TableHead, TableRow, TableCell, TableBody, CircularProgress } from '@mui/material';
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig"; // Проверь путь к Firebase
+import { useParams } from "react-router-dom"; // ✅ Для получения race_id из URL
 
 interface LapTime {
   lap: number;
@@ -26,9 +27,16 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
   useEffect(() => {
     const fetchRaceData = async () => {
   try {
-    console.log("Fetching race data from Firestore...");
+    const { raceId } = useParams(); // ✅ Получаем race_id из URL
+    if (!raceId) {
+      console.error("❌ No race ID found in URL!");
+      setLoading(false);
+      return;
+    }
 
-    const raceDocRef = doc(db, "races", "8915");
+    console.log(`📌 Fetching race data for race ID: ${raceId}...`);
+
+    const raceDocRef = doc(db, "races", raceId);
     const raceSnapshot = await getDoc(raceDocRef);
 
     if (!raceSnapshot.exists()) {
@@ -45,22 +53,22 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
       return;
     }
 
-    // 📌 1️⃣ Заполняем `racersData` чипами из `telemetry`
+    // 📌 1️⃣ Загружаем все чипы из telemetry
     let racersData: Record<string, Racer> = {};
     Object.keys(raceData.telemetry).forEach(chip => {
       let normalizedChip = chip.trim();
       racersData[normalizedChip] = {
         chipNumber: normalizedChip,
-        nickname: "Error: missing",
-        raceNumber: "Error: missing",
+        nickname: "Unknown Racer",
+        raceNumber: "-",
       };
     });
 
     console.log("✅ Initial racersData with empty participants:", racersData);
 
-    // 📌 2️⃣ Загружаем `participants`
-    console.log("📌 Fetching participants from Firestore...");
-    const racersCollection = collection(db, "races", "8915", "participants");
+    // 📌 2️⃣ Загружаем всех участников (из `participants/{participant_id}`)
+    console.log(`📌 Fetching participants from Firestore for race ID: ${raceId}...`);
+    const racersCollection = collection(db, "races", raceId, "participants");
     const querySnapshot = await getDocs(racersCollection);
 
     if (querySnapshot.empty) {
@@ -71,7 +79,7 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      console.log("📌 Participant document:", doc.id, "=>", data);
+      console.log("📌 Found participant document:", doc.id, "=>", data);
 
       if (!data.chipNumber) {
         console.warn(`⚠️ Participant ${doc.id} has no chipNumber!`);
@@ -83,7 +91,6 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
       if (racersData.hasOwnProperty(formattedChip)) {
         console.log(`✅ Found matching chipNumber in telemetry: ${formattedChip}`);
-
         racersData[formattedChip].nickname = data.nickname || "Error: missing";
         racersData[formattedChip].raceNumber = data.raceNumber || "Error: missing";
       } else {
@@ -99,7 +106,6 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
     setLoading(false);
   }
 };
-
 
 
     fetchRaceData();

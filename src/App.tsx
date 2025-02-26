@@ -17,6 +17,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import RaceDetailPage from './pages/races/RaceDetailPage';
 import RaceDriverPage from './pages/races/RaceDriverPage';
 import RaceTimingTable from "../../components/RaceTimingTable";
+import TestPage from "./pages/Test"; // Путь к файлу Test.tsx
 
 const App: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);

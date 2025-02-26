@@ -13,7 +13,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../utils/firebase";
+import { db } from "@/utils/firebase";
 
 interface RaceTimingTableProps {
   telemetryData: any[];

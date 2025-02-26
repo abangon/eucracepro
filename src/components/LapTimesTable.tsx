@@ -47,8 +47,6 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
     let racersData: Record<string, Racer> = {};
     Object.keys(raceData.telemetry).forEach(chip => {
       let normalizedChip = chip.trim();
-
-      // Чип есть в telemetry, но пока без участника
       racersData[normalizedChip] = {
         chipNumber: normalizedChip,
         nickname: "-",
@@ -58,7 +56,7 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
     console.log("✅ Initial racersData with empty participants:", racersData);
 
-    // 📌 2️⃣ Загружаем `participants` и добавляем имена
+    // 📌 2️⃣ Загружаем `participants` и обновляем данные
     console.log("Fetching participants...");
     const racersCollection = collection(db, "races", "8915", "participants");
     const querySnapshot = await getDocs(racersCollection);
@@ -75,15 +73,12 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
       let formattedChip = data.chipNumber.trim();
       console.log(`🔄 Checking participant chipNumber: ${formattedChip}`);
 
-      // Если чип уже есть в telemetry (он должен там быть), обновляем nickname и raceNumber
-      if (racersData[formattedChip]) {
+      // 📌 Исправленный код для обновления данных участников
+      if (racersData.hasOwnProperty(formattedChip)) {
         console.log(`✅ Found matching chipNumber in telemetry: ${formattedChip}`);
 
-        racersData[formattedChip] = {
-          chipNumber: formattedChip,
-          nickname: data.nickname || "-",
-          raceNumber: data.raceNumber || "-",
-        };
+        racersData[formattedChip].nickname = data.nickname || "-";
+        racersData[formattedChip].raceNumber = data.raceNumber || "-";
 
         console.log(`✅ Updated racer:`, racersData[formattedChip]);
       } else {
@@ -93,7 +88,10 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
     console.log("✅ Final racersData object:", racersData);
     setRacers(racersData);
-  } catch (error
+  } catch (error) {
+    console.error("❌ Error fetching race data:", error);
+  }
+};
 
 
 

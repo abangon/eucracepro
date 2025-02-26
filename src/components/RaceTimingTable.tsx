@@ -1,84 +1,91 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import {
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
+import { db } from "../../utils/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
-interface RaceTimingTableProps {
-  telemetryData?: any[]; // <-- Добавил `?` (опциональный параметр)
-  raceId: string;
-  loading: boolean;
-  participants?: any[]; // <-- Добавил `?` (опциональный параметр)
-}
+const RaceTimingTable = ({ raceId }) => {
+  const [timingData, setTimingData] = useState([]);
+  const [participants, setParticipants] = useState({});
+  const [loading, setLoading] = useState(true);
 
-const formatLapTime = (time: number | null) => {
-  if (time === null || time === undefined) return "-";
-  const minutes = Math.floor(time / 60);
-  const seconds = (time % 60).toFixed(3);
-  return `${minutes}:${seconds.padStart(6, "0")}`;
-};
+  useEffect(() => {
+    const fetchRaceData = async () => {
+      try {
+        console.log("Fetching telemetry data...");
+        const telemetryRef = collection(db, "races", raceId, "telemetry");
+        const telemetrySnap = await getDocs(telemetryRef);
+        
+        let telemetryData = [];
+        telemetrySnap.forEach((doc) => {
+          telemetryData.push({ chipNumber: doc.id, laps: doc.data() });
+        });
+        console.log("Loaded telemetry data:", telemetryData);
 
-const RaceTimingTable: React.FC<RaceTimingTableProps> = ({ telemetryData = [], raceId, loading, participants = [] }) => {
-  // Если `participants` пустой или `undefined`, создаём пустой объект
-  const participantsMap = participants ? Object.fromEntries(participants.map(p => [p.chipNumber, p])) : {};
+        console.log("Fetching participants...");
+        const participantsRef = collection(db, "races", raceId, "participants");
+        const participantsSnap = await getDocs(participantsRef);
+        
+        let participantsMap = {};
+        participantsSnap.forEach((doc) => {
+          let data = doc.data();
+          participantsMap[data.chipNumber] = {
+            nickname: data.nickname || "-",
+            raceNumber: data.raceNumber || "-",
+          };
+        });
+        console.log("Loaded participants:", participantsMap);
+
+        const finalData = telemetryData.map((item, index) => ({
+          position: index + 1,
+          chipNumber: item.chipNumber,
+          nickname: participantsMap[item.chipNumber]?.nickname || "-",
+          raceNumber: participantsMap[item.chipNumber]?.raceNumber || "-",
+          bestLap: item.laps[1]?.lap_time || "-",
+          lastLap: item.laps[item.laps.length - 1]?.lap_time || "-",
+          totalLaps: item.laps.length || "-",
+        }));
+
+        setTimingData(finalData);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching race data:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchRaceData();
+  }, [raceId]);
 
   return (
-    <Paper sx={{ p: 3, borderRadius: 2, mt: 4 }}>
-      <Typography variant="h6" fontWeight="bold" gutterBottom>
-        Race Timing
-      </Typography>
-
-      {loading ? (
-        <Typography>Loading telemetry data...</Typography>
-      ) : telemetryData.length === 0 ? (
-        <Typography>No valid telemetry data available</Typography>
-      ) : (
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                <TableCell sx={{ textAlign: "center" }}><strong>Position</strong></TableCell>
-                <TableCell sx={{ textAlign: "left" }}><strong>Nickname</strong></TableCell>
-                <TableCell sx={{ textAlign: "center" }}><strong>Racer Number</strong></TableCell>
-                <TableCell sx={{ textAlign: "center" }}><strong>Chip Number</strong></TableCell>
-                <TableCell sx={{ textAlign: "center" }}><strong>Best Lap</strong></TableCell>
-                <TableCell sx={{ textAlign: "center" }}><strong>Last Lap</strong></TableCell>
-                <TableCell sx={{ textAlign: "center" }}><strong>Total Laps</strong></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {telemetryData?.map((record, index) => {
-                const participant = participantsMap[record.chipNumber]; // 🏎 Ищем участника по чипу
-                return (
-                  <TableRow
-                    key={record.id}
-                    hover
-                    component={Link}
-                    to={`/races/${raceId}/driver/${record.chipNumber}`}
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
-                    <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>{index + 1}</TableCell>
-                    <TableCell sx={{ textAlign: "left" }}>{participant?.nickname || "-"}</TableCell>
-                    <TableCell sx={{ textAlign: "center" }}>{participant?.raceNumber || "-"}</TableCell>
-                    <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>{record.chipNumber}</TableCell>
-                    <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>{formatLapTime(record.bestLap)}</TableCell>
-                    <TableCell sx={{ textAlign: "center" }}>{formatLapTime(record.lastLap)}</TableCell>
-                    <TableCell sx={{ textAlign: "center" }}>{record.totalLaps}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-    </Paper>
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Position</TableCell>
+            <TableCell>Nickname</TableCell>
+            <TableCell>Racer Number</TableCell>
+            <TableCell>Chip Number</TableCell>
+            <TableCell>Best Lap</TableCell>
+            <TableCell>Last Lap</TableCell>
+            <TableCell>Total Laps</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {timingData.map((row) => (
+            <TableRow key={row.chipNumber}>
+              <TableCell>{row.position}</TableCell>
+              <TableCell>{row.nickname}</TableCell>
+              <TableCell>{row.raceNumber}</TableCell>
+              <TableCell>{row.chipNumber}</TableCell>
+              <TableCell>{row.bestLap}</TableCell>
+              <TableCell>{row.lastLap}</TableCell>
+              <TableCell>{row.totalLaps}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      {loading && <p>Loading...</p>}
+    </TableContainer>
   );
 };
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material';
+import { Box, Typography, Table, TableHead, TableRow, TableCell, TableBody, CircularProgress } from '@mui/material';
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig"; // Проверь путь к Firebase
 
@@ -21,6 +21,7 @@ interface LapTimesTableProps {
 
 const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
   const [racers, setRacers] = useState<Record<string, Racer>>({});
+  const [loading, setLoading] = useState(true); // 👈 Добавляем состояние загрузки
 
   useEffect(() => {
     const fetchRaceData = async () => {
@@ -32,6 +33,7 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
         if (!raceSnapshot.exists()) {
           console.warn("No race data found!");
+          setLoading(false); // 👈 Останавливаем загрузку
           return;
         }
 
@@ -39,6 +41,7 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
         if (!raceData?.telemetry) {
           console.warn("No telemetry data found in race!");
+          setLoading(false); // 👈 Останавливаем загрузку
           return;
         }
 
@@ -81,20 +84,12 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
           }
         });
 
-        console.log("✅ Final racersData object before updating state:", racersData);
-
-        // 📌 3️⃣ Временная отладка: если никнейм не найден, ставим "Debug: {chipNumber}"
-        Object.keys(racersData).forEach(chip => {
-          if (racersData[chip].nickname === "-") {
-            racersData[chip].nickname = `Debug: ${chip}`;
-            racersData[chip].raceNumber = "Debug";
-          }
-        });
-
-        console.log("✅ Final racersData after debug update:", racersData);
+        console.log("✅ Final racersData object:", racersData);
         setRacers(racersData);
+        setLoading(false); // 👈 Останавливаем загрузку после обновления данных
       } catch (error) {
         console.error("❌ Error fetching race data:", error);
+        setLoading(false); // 👈 Останавливаем загрузку в случае ошибки
       }
     };
 
@@ -106,37 +101,44 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
       <Typography variant="h6" gutterBottom>
         Lap Times
       </Typography>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Lap</TableCell>
-            <TableCell>Time</TableCell>
-            <TableCell>Chip Number</TableCell>
-            <TableCell>Nickname</TableCell>
-            <TableCell>Race Number</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {lapTimes.map((lapTime, index) => {
-            let chipNumber = lapTime.chipNumber.toString().trim();
-            const racer = racers[chipNumber] || {
-              chipNumber,
-              nickname: "Error: missing",
-              raceNumber: "Error: missing",
-            };
 
-            return (
-              <TableRow key={index}>
-                <TableCell>{lapTime.lap}</TableCell>
-                <TableCell>{lapTime.time}</TableCell>
-                <TableCell>{chipNumber}</TableCell>
-                <TableCell>{racer.nickname}</TableCell>
-                <TableCell>{racer.raceNumber}</TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+      {loading ? ( // 👈 Показываем загрузку, пока данные не загружены
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Lap</TableCell>
+              <TableCell>Time</TableCell>
+              <TableCell>Chip Number</TableCell>
+              <TableCell>Nickname</TableCell>
+              <TableCell>Race Number</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {lapTimes.map((lapTime, index) => {
+              let chipNumber = lapTime.chipNumber.toString().trim();
+              const racer = racers[chipNumber] || {
+                chipNumber,
+                nickname: "Error: missing",
+                raceNumber: "Error: missing",
+              };
+
+              return (
+                <TableRow key={index}>
+                  <TableCell>{lapTime.lap}</TableCell>
+                  <TableCell>{lapTime.time}</TableCell>
+                  <TableCell>{chipNumber}</TableCell>
+                  <TableCell>{racer.nickname}</TableCell>
+                  <TableCell>{racer.raceNumber}</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      )}
     </Box>
   );
 };

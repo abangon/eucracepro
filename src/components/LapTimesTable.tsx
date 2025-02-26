@@ -13,7 +13,6 @@ interface Racer {
   chipNumber: string;
   nickname: string;
   raceNumber: string;
-  error?: string;
 }
 
 interface LapTimesTableProps {
@@ -49,8 +48,8 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
           let normalizedChip = chip.trim();
           racersData[normalizedChip] = {
             chipNumber: normalizedChip,
-            nickname: "Error: telemetry",
-            raceNumber: "Error: telemetry",
+            nickname: "-",
+            raceNumber: "-",
           };
         });
 
@@ -82,6 +81,17 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
           }
         });
 
+        console.log("✅ Final racersData object before updating state:", racersData);
+
+        // 📌 3️⃣ Временная отладка: если никнейм не найден, ставим "Debug: {chipNumber}"
+        Object.keys(racersData).forEach(chip => {
+          if (racersData[chip].nickname === "-") {
+            racersData[chip].nickname = `Debug: ${chip}`;
+            racersData[chip].raceNumber = "Debug";
+          }
+        });
+
+        console.log("✅ Final racersData after debug update:", racersData);
         setRacers(racersData);
       } catch (error) {
         console.error("❌ Error fetching race data:", error);

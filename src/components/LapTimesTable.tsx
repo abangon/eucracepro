@@ -25,73 +25,85 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
   useEffect(() => {
     const fetchRaceData = async () => {
-      try {
-        console.log("Fetching race data from Firestore...");
+  try {
+    console.log("Fetching race data from Firestore...");
 
-        const raceDocRef = doc(db, "races", "8915");
-        const raceSnapshot = await getDoc(raceDocRef);
+    const raceDocRef = doc(db, "races", "8915");
+    const raceSnapshot = await getDoc(raceDocRef);
 
-        if (!raceSnapshot.exists()) {
-          console.warn("No race data found!");
-          setLoading(false); // 👈 Останавливаем загрузку
-          return;
-        }
+    if (!raceSnapshot.exists()) {
+      console.warn("No race data found!");
+      setLoading(false);
+      return;
+    }
 
-        const raceData = raceSnapshot.data();
+    const raceData = raceSnapshot.data();
 
-        if (!raceData?.telemetry) {
-          console.warn("No telemetry data found in race!");
-          setLoading(false); // 👈 Останавливаем загрузку
-          return;
-        }
+    if (!raceData?.telemetry) {
+      console.warn("No telemetry data found in race!");
+      setLoading(false);
+      return;
+    }
 
-        // 📌 1️⃣ Заполняем racersData ВСЕМИ чипами из telemetry с "Error: telemetry"
-        let racersData: Record<string, Racer> = {};
-        Object.keys(raceData.telemetry).forEach(chip => {
-          let normalizedChip = chip.trim();
-          racersData[normalizedChip] = {
-            chipNumber: normalizedChip,
-            nickname: "-",
-            raceNumber: "-",
-          };
-        });
+    // 📌 1️⃣ Добавляем ВСЕ chipNumber из `telemetry`
+    let racersData: Record<string, Racer> = {};
+    Object.keys(raceData.telemetry).forEach(chip => {
+      let normalizedChip = chip.trim();
+      racersData[normalizedChip] = {
+        chipNumber: normalizedChip,
+        nickname: "-",
+        raceNumber: "-",
+      };
+    });
 
-        // 📌 2️⃣ Загружаем `participants`
-        console.log("Fetching participants...");
-        const racersCollection = collection(db, "races", "8915", "participants");
-        const querySnapshot = await getDocs(racersCollection);
+    console.log("✅ Initial racersData with empty participants:", racersData);
 
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
+    // 📌 2️⃣ Загружаем `participants`
+    console.log("Fetching participants...");
+    const racersCollection = collection(db, "races", "8915", "participants");
+    const querySnapshot = await getDocs(racersCollection);
 
-          if (!data.chipNumber) {
-            return;
-          }
+    console.log("📌 Checking if querySnapshot has documents:", querySnapshot.empty ? "❌ No participants found!" : "✅ Participants found");
 
-          let formattedChip = data.chipNumber.trim();
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      console.log("📌 Found participant document:", doc.id, "=>", data);
 
-          // Если `chipNumber` есть в `telemetry`, обновляем данные
-          if (racersData.hasOwnProperty(formattedChip)) {
-            racersData[formattedChip].nickname = data.nickname || "Error: update";
-            racersData[formattedChip].raceNumber = data.raceNumber || "Error: update";
-          } else {
-            // Если `chipNumber` нет в `telemetry`, ставим ошибку
-            racersData[formattedChip] = {
-              chipNumber: formattedChip,
-              nickname: "Error: participants",
-              raceNumber: "Error: participants",
-            };
-          }
-        });
-
-        console.log("✅ Final racersData object:", racersData);
-        setRacers(racersData);
-        setLoading(false); // 👈 Останавливаем загрузку после обновления данных
-      } catch (error) {
-        console.error("❌ Error fetching race data:", error);
-        setLoading(false); // 👈 Останавливаем загрузку в случае ошибки
+      if (!data.chipNumber) {
+        console.warn(`⚠️ Participant ${doc.id} has no chipNumber!`);
+        return;
       }
-    };
+
+      let formattedChip = data.chipNumber.trim();
+      console.log(`🔄 Checking participant chipNumber: ${formattedChip}`);
+
+      if (racersData.hasOwnProperty(formattedChip)) {
+        console.log(`✅ Found matching chipNumber in telemetry: ${formattedChip}`);
+        racersData[formattedChip].nickname = data.nickname || "Unknown Racer";
+        racersData[formattedChip].raceNumber = data.raceNumber || "-";
+        console.log(`✅ Updated racer:`, racersData[formattedChip]);
+      } else {
+        console.warn(`⚠️ ChipNumber ${formattedChip} from participants is NOT in telemetry!`);
+      }
+    });
+
+    // 📌 3️⃣ Если нет совпадений, ставим "Unknown Racer"
+    Object.keys(racersData).forEach(chip => {
+      if (racersData[chip].nickname === "-") {
+        racersData[chip].nickname = "Unknown Racer";
+        racersData[chip].raceNumber = "-";
+      }
+    });
+
+    console.log("✅ Final racersData object:", racersData);
+    setRacers(racersData);
+    setLoading(false); // ✅ Теперь загрузка всегда завершается
+  } catch (error) {
+    console.error("❌ Error fetching race data:", error);
+    setLoading(false);
+  }
+};
+
 
     fetchRaceData();
   }, []);

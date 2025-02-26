@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, getDoc } from "firebase/firestore";
 import { db, auth } from "@/utils/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import {
@@ -22,7 +22,8 @@ const ADMIN_UID = "ztnWBUkh6dUcXLOH8D5nLBEYm2J2";
 
 interface Participant {
   id: string;
-  nickname: string;
+  userId: string;
+  nickname?: string;
   chipNumber?: string;
   raceNumber?: string;
 }
@@ -41,13 +42,28 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
     const fetchParticipants = async () => {
       const participantsRef = collection(db, "races", raceId, "participants");
       const snapshot = await getDocs(participantsRef);
-      const participantList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Participant[];
+      let participantList: Participant[] = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        userId: doc.id, // userId = id участника
+        ...doc.data(),
+      })) as Participant[];
+
+      // Получаем настоящие никнеймы из users/{userId}
+      const userPromises = participantList.map(async (participant) => {
+        const userRef = doc(db, "users", participant.userId);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          participant.nickname = userSnap.data().nickname; // Настоящий никнейм
+        }
+      });
+
+      await Promise.all(userPromises);
       setParticipants(participantList);
     };
 
     const fetchAvailableChips = async () => {
-      const raceRef = doc(db, "races", raceId);
-      const telemetrySnapshot = await getDocs(collection(raceRef, "telemetry"));
+      const telemetryRef = collection(db, "races", raceId, "telemetry");
+      const telemetrySnapshot = await getDocs(telemetryRef);
       const chipNumbers = telemetrySnapshot.docs.map((doc) => doc.id);
       setAvailableChips(chipNumbers);
     };
@@ -101,7 +117,7 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
           <TableBody>
             {participants.map((participant) => (
               <TableRow key={participant.id}>
-                <TableCell>{participant.nickname}</TableCell>
+                <TableCell>{participant.nickname || "Unknown"}</TableCell>
                 <TableCell>
                   <Select
                     value={updatedParticipants[participant.id]?.chipNumber || participant.chipNumber || ""}

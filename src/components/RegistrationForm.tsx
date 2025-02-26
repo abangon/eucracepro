@@ -6,6 +6,7 @@ import {
   Box, Button, Typography, Paper, TableContainer, Table, TableHead, TableRow,
   TableCell, TableBody, Select, MenuItem, Snackbar
 } from "@mui/material";
+import { FaFacebook, FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
 
 interface RegistrationFormProps {
   raceId: string;
@@ -17,6 +18,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [chipNumbers, setChipNumbers] = useState<string[]>([]);
   const [selectedChip, setSelectedChip] = useState<{ [key: string]: string }>({});
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const isAdmin = user?.uid === "ztnWBUkh6dUcXLOH8D5nLBEYm2J2"; // Проверка на админа
 
   useEffect(() => {
     // Загружаем всех участников гонки
@@ -58,8 +60,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
 
     const newParticipant = {
       nickname: user.displayName || user.uid,
-      team: "Ekolka Racing",
-      country: "Czechia",
+      team: "",
+      country: "",
       facebook: "",
       instagram: "",
       youtube: "",
@@ -67,14 +69,14 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
       chipNumber: selectedChip[user.uid] || ""
     };
 
-    await setDoc(participantRef, newParticipant);
+    await setDoc(participantRef, newParticipant, { merge: true });
     await setDoc(userRef, { chipNumber: selectedChip[user.uid] || "" }, { merge: true });
 
     setSnackbarMessage("Registered successfully!");
   };
 
   const handleSaveChip = async (userId: string) => {
-    if (!user || user.uid !== "ztnWBUkh6dUcXLOH8D5nLBEYm2J2") return;
+    if (!isAdmin) return;
 
     const participantRef = doc(db, `races/${raceId}/participants/${userId}`);
     const userRef = doc(db, `users/${userId}`);
@@ -108,29 +110,58 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
               <TableCell><strong>Nickname</strong></TableCell>
-              <TableCell><strong>Team</strong></TableCell>
-              <TableCell><strong>Country</strong></TableCell>
-              <TableCell><strong>Chip Number</strong></TableCell>
-              <TableCell><strong>Facebook</strong></TableCell>
-              <TableCell><strong>Instagram</strong></TableCell>
+              <TableCell align="center"><strong>Team</strong></TableCell>
+              <TableCell align="center"><strong>Country</strong></TableCell>
+              {isAdmin && <TableCell align="center"><strong>Chip Number</strong></TableCell>}
+              <TableCell align="center"><strong>Facebook</strong></TableCell>
+              <TableCell align="center"><strong>Instagram</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {participants.map((participant) => (
               <TableRow key={participant.id}>
                 <TableCell>{participant.nickname || participant.id}</TableCell>
-                <TableCell>{participant.team || "-"}</TableCell>
-                <TableCell>{participant.country || "-"}</TableCell>
-                <TableCell>
-                  <Select
-                    value={selectedChip[participant.id] || ""}
-                    onChange={(e) => setSelectedChip({ ...selectedChip, [participant.id]: e.target.value })}
-                  >
-                    {chipNumbers.map(chip => (
-                      <MenuItem key={chip} value={chip}>{chip}</MenuItem>
-                    ))}
-                  </Select>
+                <TableCell align="center">{participant.team || "-"}</TableCell>
+                <TableCell align="center">{participant.country || "-"}</TableCell>
+
+                {isAdmin && (
+                  <TableCell align="center">
+                    <Select
+                      value={selectedChip[participant.id] || ""}
+                      onChange={(e) => setSelectedChip({ ...selectedChip, [participant.id]: e.target.value })}
+                    >
+                      {chipNumbers.map(chip => (
+                        <MenuItem key={chip} value={chip}>{chip}</MenuItem>
+                      ))}
+                    </Select>
+                    <Button
+                      sx={{ ml: 1 }}
+                      variant="contained"
+                      color="secondary"
+                      size="small"
+                      onClick={() => handleSaveChip(participant.id)}
+                    >
+                      Save
+                    </Button>
+                  </TableCell>
+                )}
+
+                <TableCell align="center">
+                  {participant.facebook ? (
+                    <a href={`https://www.facebook.com/${participant.facebook}`} target="_blank" rel="noopener noreferrer">
+                      <FaFacebook style={{ color: "#1877F2" }} />
+                    </a>
+                  ) : "-"}
                 </TableCell>
+
+                <TableCell align="center">
+                  {participant.instagram ? (
+                    <a href={`https://www.instagram.com/${participant.instagram}`} target="_blank" rel="noopener noreferrer">
+                      <FaInstagram style={{ color: "#E1306C" }} />
+                    </a>
+                  ) : "-"}
+                </TableCell>
+
               </TableRow>
             ))}
           </TableBody>

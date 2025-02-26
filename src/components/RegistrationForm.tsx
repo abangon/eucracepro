@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../utils/firebase";
 import {
@@ -13,10 +13,15 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { FaFacebook, FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
 
-// Функции формирования URL соцсетей
+// Константа администратора
+const ADMIN_UID = "ztnWBUkh6dUcXLOH8D5nLBEYm2J2";
+
+// Функции генерации URL соцсетей
 const getFacebookUrl = (username: string) => `https://www.facebook.com/${username}`;
 const getInstagramUrl = (username: string) => `https://www.instagram.com/${username}`;
 const getYoutubeUrl = (username: string) => `https://www.youtube.com/@${username}`;
@@ -32,11 +37,14 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [user] = useAuthState(auth);
   const [registeredUser, setRegisteredUser] = useState<any | null>(null);
   const [userData, setUserData] = useState<any | null>(null);
+  const [chipNumber, setChipNumber] = useState<string>("");
+  const [availableChips, setAvailableChips] = useState<string[]>([]);
+  const isAdmin = user?.uid === ADMIN_UID;
 
   useEffect(() => {
     if (!user) return;
 
-    // Загружаем актуальные данные пользователя из Firestore
+    // Загружаем актуальные данные пользователя
     const fetchUserData = async () => {
       const userRef = doc(db, `users/${user.uid}`);
       const userSnap = await getDoc(userRef);
@@ -46,18 +54,34 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
       }
     };
 
-    // Проверяем, зарегистрирован ли пользователь на гонку
+    // Проверяем регистрацию в гонке
     const checkRegistration = async () => {
       const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
       const participantSnap = await getDoc(participantRef);
 
       if (participantSnap.exists()) {
         setRegisteredUser(participantSnap.data());
+        setChipNumber(participantSnap.data().chipNumber || "");
+      }
+    };
+
+    // Загружаем доступные чипы из telemetry
+    const fetchChips = async () => {
+      const raceRef = doc(db, `races/${raceId}`);
+      const raceSnap = await getDoc(raceRef);
+
+      if (raceSnap.exists()) {
+        const raceData = raceSnap.data();
+        if (raceData.telemetry) {
+          const chips = Object.keys(raceData.telemetry);
+          setAvailableChips(chips);
+        }
       }
     };
 
     fetchUserData();
     checkRegistration();
+    fetchChips();
   }, [user, raceId]);
 
   const handleRegister = async () => {
@@ -72,6 +96,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
       instagram: userData.instagram || "",
       youtube: userData.youtube || "",
       tiktok: userData.tiktok || "",
+      chipNumber,
     };
 
     await setDoc(participantRef, newParticipant);
@@ -84,27 +109,43 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
     await deleteDoc(participantRef);
     setRegisteredUser(null);
+    setChipNumber("");
+  };
+
+  const handleSaveChipNumber = async () => {
+    if (!user || !isAdmin || !registeredUser) return;
+
+    const participantRef = doc(db, `races/${raceId}/participants/${registeredUser.uid}`);
+    await updateDoc(participantRef, { chipNumber });
+    setRegisteredUser({ ...registeredUser, chipNumber });
   };
 
   return (
     <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h6" fontWeight="bold">Participants</Typography>
-        {user ? (
-          registeredUser ? (
-            <Button variant="contained" color="error" onClick={handleCancelRegistration}>
-              Cancel Registration
+        <Box>
+          {isAdmin && registeredUser && (
+            <Button variant="contained" color="secondary" onClick={handleSaveChipNumber} sx={{ mr: 2 }}>
+              Save
             </Button>
+          )}
+          {user ? (
+            registeredUser ? (
+              <Button variant="contained" color="error" onClick={handleCancelRegistration}>
+                Cancel Registration
+              </Button>
+            ) : (
+              <Button variant="contained" color="primary" onClick={handleRegister}>
+                Register
+              </Button>
+            )
           ) : (
-            <Button variant="contained" color="primary" onClick={handleRegister}>
-              Register
+            <Button variant="contained" color="error" href="/sign-in">
+              Please log in to register
             </Button>
-          )
-        ) : (
-          <Button variant="contained" color="error" href="/sign-in">
-            Please log in to register
-          </Button>
-        )}
+          )}
+        </Box>
       </Box>
 
       <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
@@ -114,6 +155,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
               <TableCell sx={{ textAlign: "left" }}><strong>Nickname</strong></TableCell>
               <TableCell sx={{ textAlign: "center" }}><strong>Team</strong></TableCell>
               <TableCell sx={{ textAlign: "center" }}><strong>Country</strong></TableCell>
+              <TableCell sx={{ textAlign: "center" }}><strong>Chip Number</strong></TableCell>
               <TableCell sx={{ textAlign: "center" }}><strong>Facebook</strong></TableCell>
               <TableCell sx={{ textAlign: "center" }}><strong>Instagram</strong></TableCell>
               <TableCell sx={{ textAlign: "center" }}><strong>YouTube</strong></TableCell>
@@ -123,47 +165,22 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
           <TableBody>
             {registeredUser && (
               <TableRow>
-                <TableCell sx={{ textAlign: "left" }}>
-                  {registeredUser.nickname || registeredUser.uid}
-                </TableCell>
+                <TableCell sx={{ textAlign: "left" }}>{registeredUser.nickname || registeredUser.uid}</TableCell>
                 <TableCell sx={{ textAlign: "center" }}>{registeredUser.team || "-"}</TableCell>
                 <TableCell sx={{ textAlign: "center" }}>{registeredUser.country || "-"}</TableCell>
 
-                {/* Facebook */}
                 <TableCell sx={{ textAlign: "center" }}>
-                  {registeredUser.facebook ? (
-                    <a href={getFacebookUrl(registeredUser.facebook)} target="_blank" rel="noopener noreferrer">
-                      <FaFacebook style={{ ...socialIconStyle, color: "#1877F2" }} />
-                    </a>
-                  ) : "-"}
+                  {isAdmin ? (
+                    <Select value={chipNumber} onChange={(e) => setChipNumber(e.target.value)} size="small">
+                      {availableChips.map((chip) => (
+                        <MenuItem key={chip} value={chip}>{chip}</MenuItem>
+                      ))}
+                    </Select>
+                  ) : (
+                    registeredUser.chipNumber || "-"
+                  )}
                 </TableCell>
 
-                {/* Instagram */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {registeredUser.instagram ? (
-                    <a href={getInstagramUrl(registeredUser.instagram)} target="_blank" rel="noopener noreferrer">
-                      <FaInstagram style={{ ...socialIconStyle, color: "#E1306C" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
-
-                {/* YouTube */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {registeredUser.youtube ? (
-                    <a href={getYoutubeUrl(registeredUser.youtube)} target="_blank" rel="noopener noreferrer">
-                      <FaYoutube style={{ ...socialIconStyle, color: "#FF0000" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
-
-                {/* TikTok */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {registeredUser.tiktok ? (
-                    <a href={getTiktokUrl(registeredUser.tiktok)} target="_blank" rel="noopener noreferrer">
-                      <FaTiktok style={{ ...socialIconStyle, color: "#000000" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
               </TableRow>
             )}
           </TableBody>

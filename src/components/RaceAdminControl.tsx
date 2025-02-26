@@ -43,6 +43,7 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
 
   useEffect(() => {
     const fetchParticipants = async () => {
+      console.log("Fetching participants...");
       const participantsRef = collection(db, "races", raceId, "participants");
       const snapshot = await getDocs(participantsRef);
       let participantList: Participant[] = snapshot.docs.map((doc) => ({
@@ -60,26 +61,18 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
       });
 
       await Promise.all(userPromises);
+      console.log("Loaded participants:", participantList);
       setParticipants(participantList);
     };
 
-   const fetchAvailableChips = async () => {
-   const raceRef = doc(db, "races", raceId);
-   const raceSnap = await getDoc(raceRef);
-   
-   if (raceSnap.exists()) {
-     const raceData = raceSnap.data();
-     if (raceData.telemetry) {
-       const chipNumbers = Object.keys(raceData.telemetry); // Используем ключи объекта telemetry
-       console.log("Available Chips:", chipNumbers); // Проверяем в консоли
-       setAvailableChips(chipNumbers);
-     } else {
-       console.log("No telemetry data found");
-       setAvailableChips([]);
-         }
-       }
+    const fetchAvailableChips = async () => {
+      console.log("Fetching available chips...");
+      const telemetryRef = collection(db, "races", raceId, "telemetry");
+      const telemetrySnapshot = await getDocs(telemetryRef);
+      const chipNumbers = telemetrySnapshot.docs.map((doc) => doc.id);
+      console.log("Available Chips:", chipNumbers);
+      setAvailableChips(chipNumbers);
     };
-
 
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -99,14 +92,19 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
 
   const saveChanges = async () => {
     try {
+      console.log("Starting saveChanges...");
       const updates = Object.entries(updatedParticipants);
+      console.log("Updates to save:", updates);
       for (const [id, data] of updates) {
+        console.log("Updating participant:", id, "with data:", data);
         const participantRef = doc(db, "races", raceId, "participants", id);
         await updateDoc(participantRef, { chipNumber: data.chipNumber, raceNumber: data.raceNumber });
       }
       setUpdatedParticipants({});
+      console.log("Changes saved successfully!");
       setNotification({ message: "Changes saved successfully!", type: "success" });
     } catch (error) {
+      console.error("Error saving changes:", error);
       setNotification({ message: "Error saving changes!", type: "error" });
     }
   };

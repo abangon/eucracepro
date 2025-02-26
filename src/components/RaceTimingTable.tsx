@@ -107,10 +107,6 @@ const RaceTimingTable: React.FC = () => {
       {loading ? (
         <Box sx={{ textAlign: "center", my: 4 }}>
           <CircularProgress />
-          <Typography variant="body1" sx={{ mt: 2 }}>
-            {loadingParticipants ? "Загружаем участников..." : ""}
-            {loadingTelemetry ? " Загружаем данные телеметрии..." : ""}
-          </Typography>
         </Box>
       ) : (
         <Paper elevation={3} sx={{ p: 2, width: "90%", maxWidth: "1200px" }}>

@@ -37,6 +37,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [user] = useAuthState(auth);
   const [participants, setParticipants] = useState<any[]>([]);
   const [chipAssignments, setChipAssignments] = useState<{ [key: string]: string }>({});
+  const [availableChips, setAvailableChips] = useState<string[]>([]);
+  const [isRegistered, setIsRegistered] = useState(false);
   const isAdmin = user?.uid === ADMIN_UID;
 
   useEffect(() => {
@@ -52,10 +54,24 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
         chipData[p.id] = p.chipNumber || "";
       });
       setChipAssignments(chipData);
+
+      if (user) {
+        setIsRegistered(usersList.some(p => p.id === user.uid));
+      }
+    };
+
+    const fetchChips = async () => {
+      const raceRef = doc(db, `races/${raceId}`);
+      const raceSnap = await getDoc(raceRef);
+      if (raceSnap.exists() && raceSnap.data().telemetry) {
+        const chips = Object.keys(raceSnap.data().telemetry);
+        setAvailableChips(chips);
+      }
     };
 
     fetchParticipants();
-  }, [raceId]);
+    fetchChips();
+  }, [raceId, user]);
 
   const handleChipChange = (userId: string, chipNumber: string) => {
     setChipAssignments(prev => ({ ...prev, [userId]: chipNumber }));
@@ -77,20 +93,51 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     }
   };
 
+  const handleRegister = async () => {
+    if (!user) return;
+    const userRef = doc(db, `users/${user.uid}`);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return;
+
+    const userData = userSnap.data();
+    const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
+    const newParticipant = {
+      nickname: userData.nickname || user.uid,
+      team: userData.team || "",
+      country: userData.country || "",
+      facebook: userData.facebook || "",
+      instagram: userData.instagram || "",
+      youtube: userData.youtube || "",
+      tiktok: userData.tiktok || "",
+    };
+
+    await setDoc(participantRef, newParticipant);
+    setIsRegistered(true);
+
+    const updatedSnapshot = await getDocs(collection(db, `races/${raceId}/participants`));
+    setParticipants(updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  };
+
   return (
     <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h6" fontWeight="bold">Participants</Typography>
-        {isAdmin && (
-          <Button variant="contained" color="error" onClick={handleSaveChips} sx={{ mr: 2 }}>
-            Save
-          </Button>
-        )}
-        {!user && (
-          <Button variant="contained" color="error" href="/sign-in">
-            Please log in to register
-          </Button>
-        )}
+        <Box>
+          {isAdmin && (
+            <Button variant="contained" color="error" onClick={handleSaveChips} sx={{ mr: 2 }}>
+              Save
+            </Button>
+          )}
+          {!user ? (
+            <Button variant="contained" color="error" href="/sign-in">
+              Please log in to register
+            </Button>
+          ) : !isRegistered ? (
+            <Button variant="contained" color="primary" onClick={handleRegister}>
+              Register
+            </Button>
+          ) : null}
+        </Box>
       </Box>
 
       <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
@@ -114,7 +161,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
                 <TableCell sx={{ textAlign: "center" }}>{participant.team || "-"}</TableCell>
                 <TableCell sx={{ textAlign: "center" }}>{participant.country || "-"}</TableCell>
 
-                {/* Поле выбора чипа (видно только администратору) */}
                 {isAdmin && (
                   <TableCell sx={{ textAlign: "center" }}>
                     <Select
@@ -123,47 +169,18 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
                       sx={{ width: "120px" }}
                     >
                       <MenuItem value=""><em>None</em></MenuItem>
-                      <MenuItem value="00029643">00029643</MenuItem>
-                      <MenuItem value="00000001">00000001</MenuItem>
+                      {availableChips.map(chip => (
+                        <MenuItem key={chip} value={chip}>{chip}</MenuItem>
+                      ))}
                     </Select>
                   </TableCell>
                 )}
 
-                {/* Facebook */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {participant.facebook ? (
-                    <a href={getFacebookUrl(participant.facebook)} target="_blank" rel="noopener noreferrer">
-                      <FaFacebook style={{ ...socialIconStyle, color: "#1877F2" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
-
-                {/* Instagram */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {participant.instagram ? (
-                    <a href={getInstagramUrl(participant.instagram)} target="_blank" rel="noopener noreferrer">
-                      <FaInstagram style={{ ...socialIconStyle, color: "#E1306C" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
-
-                {/* YouTube */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {participant.youtube ? (
-                    <a href={getYoutubeUrl(participant.youtube)} target="_blank" rel="noopener noreferrer">
-                      <FaYoutube style={{ ...socialIconStyle, color: "#FF0000" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
-
-                {/* TikTok */}
-                <TableCell sx={{ textAlign: "center" }}>
-                  {participant.tiktok ? (
-                    <a href={getTiktokUrl(participant.tiktok)} target="_blank" rel="noopener noreferrer">
-                      <FaTiktok style={{ ...socialIconStyle, color: "#000000" }} />
-                    </a>
-                  ) : "-"}
-                </TableCell>
+                {/* Социальные сети */}
+                <TableCell sx={{ textAlign: "center" }}>{participant.facebook || "-"}</TableCell>
+                <TableCell sx={{ textAlign: "center" }}>{participant.instagram || "-"}</TableCell>
+                <TableCell sx={{ textAlign: "center" }}>{participant.youtube || "-"}</TableCell>
+                <TableCell sx={{ textAlign: "center" }}>{participant.tiktok || "-"}</TableCell>
               </TableRow>
             ))}
           </TableBody>

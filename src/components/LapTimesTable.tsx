@@ -43,45 +43,49 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
       return;
     }
 
-    // 📌 1️⃣ Собираем chipNumber из telemetry
-    let telemetryData: Record<string, string> = {};
+    // 📌 1️⃣ Добавляем ВСЕ chipNumber из `telemetry` в racersData с прочерками
+    let racersData: Record<string, Racer> = {};
     Object.keys(raceData.telemetry).forEach(chip => {
       let normalizedChip = chip.trim();
-      telemetryData[normalizedChip] = chip;
+
+      // Чип есть в telemetry, но пока без участника
+      racersData[normalizedChip] = {
+        chipNumber: normalizedChip,
+        nickname: "-",
+        raceNumber: "-",
+      };
     });
 
-    console.log("✅ Extracted telemetry chipNumbers:", telemetryData);
+    console.log("✅ Initial racersData with empty participants:", racersData);
 
-    // 📌 2️⃣ Загружаем `participants`
+    // 📌 2️⃣ Загружаем `participants` и добавляем имена
     console.log("Fetching participants...");
     const racersCollection = collection(db, "races", "8915", "participants");
     const querySnapshot = await getDocs(racersCollection);
-    const racersData: Record<string, Racer> = {};
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      console.log("Participant data:", data);
+      console.log("🔍 Participant data:", data);
 
       if (!data.chipNumber) {
-        console.warn(`Participant ${doc.id} has no chipNumber!`);
+        console.warn(`⚠️ Participant ${doc.id} has no chipNumber!`);
         return;
       }
 
-      let formattedChip = data.chipNumber.trim(); // Приводим к строке
+      let formattedChip = data.chipNumber.trim();
+      console.log(`🔄 Checking participant chipNumber: ${formattedChip}`);
 
-      console.log(`🔍 Normalized chipNumber: ${formattedChip}`);
-
-      // 📌 3️⃣ Проверяем, есть ли этот чип в `telemetry`
-      if (telemetryData[formattedChip]) {
-        console.log(`✅ Found matching chipNumber: ${formattedChip}`);
+      // Если чип уже есть в telemetry (он должен там быть), обновляем nickname и raceNumber
+      if (racersData[formattedChip]) {
+        console.log(`✅ Found matching chipNumber in telemetry: ${formattedChip}`);
 
         racersData[formattedChip] = {
           chipNumber: formattedChip,
-          nickname: data.nickname || "Unknown",
-          raceNumber: data.raceNumber || "N/A",
+          nickname: data.nickname || "-",
+          raceNumber: data.raceNumber || "-",
         };
 
-        console.log(`✅ Added racer: ${formattedChip} ->`, racersData[formattedChip]);
+        console.log(`✅ Updated racer:`, racersData[formattedChip]);
       } else {
         console.warn(`⚠️ ChipNumber ${formattedChip} from participants is NOT in telemetry!`);
       }
@@ -89,10 +93,8 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
     console.log("✅ Final racersData object:", racersData);
     setRacers(racersData);
-  } catch (error) {
-    console.error("❌ Error fetching race data:", error);
-  }
-};
+  } catch (error
+
 
 
     fetchRaceData();

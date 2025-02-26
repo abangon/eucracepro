@@ -52,6 +52,36 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   console.log("Current user UID:", user?.uid);
   console.log("Admin UID:", ADMIN_UID);
 
+  const fetchParticipants = async () => {
+    try {
+      console.log("Fetching participants...");
+      const participantsRef = collection(db, "races", raceId, "participants");
+      const snapshot = await getDocs(participantsRef);
+
+      let participantList: Participant[] = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        userId: doc.id,
+        ...doc.data(),
+      })) as Participant[];
+
+      // Загружаем имена пользователей из коллекции users
+      const userPromises = participantList.map(async (participant) => {
+        const userRef = doc(db, "users", participant.userId);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          participant.nickname = userSnap.data().nickname;
+        }
+      });
+
+      await Promise.all(userPromises);
+
+      console.log("Loaded participants:", participantList);
+      setParticipants(participantList);
+    } catch (error) {
+      console.error("Error fetching participants:", error);
+    }
+  };
+
   const fetchAvailableChips = async () => {
     console.log("Fetching available chips...");
     const raceRef = doc(db, "races", raceId);
@@ -71,6 +101,7 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   };
 
   useEffect(() => {
+    fetchParticipants();
     fetchAvailableChips();
   }, [raceId]);
 
@@ -113,6 +144,9 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
         setUpdatedParticipants({});
         console.log("Changes saved successfully!");
         setNotification({ message: "Changes saved successfully!", type: "success" });
+
+        // 🔄 Обновляем участников после сохранения
+        fetchParticipants();
     } catch (error) {
         console.error("Error saving changes:", error);
         setNotification({ message: "Error saving changes!", type: "error" });
@@ -139,32 +173,40 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {participants.map((participant) => (
-              <TableRow key={participant.id}>
-                <TableCell>{participant.nickname || "Unknown"}</TableCell>
-                <TableCell>
-                  <Select
-                    value={updatedParticipants[participant.id]?.chipNumber || participant.chipNumber || ""}
-                    onChange={(e) => updateParticipant(participant.id, "chipNumber", e.target.value)}
-                    displayEmpty
-                    variant="outlined"
-                    size="small"
-                  >
-                    {availableChips.map((chip) => (
-                      <MenuItem key={chip} value={chip}>{chip}</MenuItem>
-                    ))}
-                  </Select>
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={updatedParticipants[participant.id]?.raceNumber || participant.raceNumber || ""}
-                    onChange={(e) => updateParticipant(participant.id, "raceNumber", e.target.value)}
-                    variant="outlined"
-                    size="small"
-                  />
+            {participants.length > 0 ? (
+              participants.map((participant) => (
+                <TableRow key={participant.id}>
+                  <TableCell>{participant.nickname || "Unknown"}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={updatedParticipants[participant.id]?.chipNumber || participant.chipNumber || ""}
+                      onChange={(e) => updateParticipant(participant.id, "chipNumber", e.target.value)}
+                      displayEmpty
+                      variant="outlined"
+                      size="small"
+                    >
+                      {availableChips.map((chip) => (
+                        <MenuItem key={chip} value={chip}>{chip}</MenuItem>
+                      ))}
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      value={updatedParticipants[participant.id]?.raceNumber || participant.raceNumber || ""}
+                      onChange={(e) => updateParticipant(participant.id, "raceNumber", e.target.value)}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={3} align="center">
+                  No participants found
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>

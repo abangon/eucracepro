@@ -1,11 +1,12 @@
 import React from "react";
-import { Button, Box, Typography, Paper } from "@mui/material";
+import { Button, Box, Paper } from "@mui/material";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../utils/firebase";
-import { collection, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, setDoc, deleteDoc } from "firebase/firestore";
 
 const RegistrationForm: React.FC<{ raceId: string }> = ({ raceId }) => {
   const [user] = useAuthState(auth);
+  const isRegistered = !!user; // Временная проверка (нужен реальный флаг регистрации из БД)
 
   const handleRegister = async () => {
     if (!user) return;
@@ -28,11 +29,9 @@ const RegistrationForm: React.FC<{ raceId: string }> = ({ raceId }) => {
   };
 
   return (
-    <Paper sx={{ p: 3, borderRadius: 2 }}>
+    <Paper sx={{ p: 3, borderRadius: 2, mb: 3 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="h6" fontWeight="bold">
-          Participants
-        </Typography>
+        {/* Кнопка в правом углу */}
         {user ? (
           <Button variant="contained" color="error" onClick={handleCancel}>
             Cancel Registration
@@ -44,7 +43,7 @@ const RegistrationForm: React.FC<{ raceId: string }> = ({ raceId }) => {
         )}
       </Box>
 
-      {/* Здесь вставлена таблица, аналогичная leaderboard */}
+      {/* Таблица участников аналогична leaderboard */}
     </Paper>
   );
 };

@@ -24,19 +24,29 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
   useEffect(() => {
     const fetchRacers = async () => {
-      try {
-        console.log("Fetching racers from Firestore...");
+  try {
+    console.log("Fetching racers from Firestore...");
+    const racersCollection = collection(db, "races", "8915", "participants");
+    const querySnapshot = await getDocs(racersCollection);
+    const racersData: Record<string, Racer> = {};
 
-        const racersCollection = collection(db, "races", "8915", "participants");
-        const querySnapshot = await getDocs(racersCollection);
+    querySnapshot.forEach((doc) => {
+      const data = doc.data() as Racer;
+      let formattedChip = data.chipNumber.toString(); // Приводим любой чип к строке
 
-        const racersData: Record<string, Racer> = {};
+      console.log("Fetched participant:", data);
+      console.log(`Formatted chipNumber: ${formattedChip}`);
 
-        querySnapshot.forEach((doc) => {
-          const data = doc.data() as Racer;
-          console.log("Fetched racer:", data);
-          racersData[data.chipNumber] = data;
-        });
+      racersData[formattedChip] = data; // Сохраняем без изменений
+    });
+
+    console.log("Final racersData object:", racersData);
+    setRacers(racersData);
+  } catch (error) {
+    console.error("Error fetching racers:", error);
+  }
+};
+
 
         console.log("Final racersData object:", racersData);
         setRacers(racersData);

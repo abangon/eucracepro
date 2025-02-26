@@ -73,55 +73,57 @@ const RaceTimingTable: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h5" sx={{ fontWeight: "bold", mb: 2 }}>
         Race Timing Table for {raceId}
       </Typography>
 
-      {loading ? (
-        <Typography>Loading...</Typography>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Position</TableCell>
-                <TableCell>Nickname</TableCell>
-                <TableCell>Race Number</TableCell>
-                <TableCell>Chip Number</TableCell>
-                <TableCell>Best Lap</TableCell>
-                <TableCell>Last Lap</TableCell>
-                <TableCell>Total Laps</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {Object.keys(telemetry).map((chip, index) => {
-                const chipString = chip.toString(); // Приводим ключи к строке
-                const participant = participants.find(p => p.chipNumber === chipString) || {};
+      <Paper elevation={3} sx={{ p: 2 }}>
+        {loading ? (
+          <Typography sx={{ textAlign: "center", p: 2 }}>Loading...</Typography>
+        ) : (
+          <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                  <TableCell sx={{ fontWeight: "bold" }}>Position</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Nickname</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Race Number</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Chip Number</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Best Lap</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Last Lap</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Total Laps</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {Object.keys(telemetry).map((chip, index) => {
+                  const chipString = chip.toString(); // Приводим ключи к строке
+                  const participant = participants.find(p => p.chipNumber === chipString) || {};
 
-                // ⚡️ Фильтруем неверные значения (убираем < 3 сек и отрицательные)
-                const laps = (telemetry[chipString] || []).filter(lap => lap.lap_time >= 3);
+                  // ⚡️ Фильтруем неверные значения (убираем < 3 сек и отрицательные)
+                  const laps = (telemetry[chipString] || []).filter(lap => lap.lap_time >= 3);
 
-                // 📌 Найти лучший круг (если есть)
-                const bestLap = laps.length > 0 ? Math.min(...laps.map(lap => lap.lap_time)) : "-";
-                const lastLap = laps.length > 0 ? laps[laps.length - 1].lap_time : "-";
-                const totalLaps = laps.length || "-";
+                  // 📌 Найти лучший круг (если есть)
+                  const bestLap = laps.length > 0 ? Math.min(...laps.map(lap => lap.lap_time)) : "-";
+                  const lastLap = laps.length > 0 ? laps[laps.length - 1].lap_time : "-";
+                  const totalLaps = laps.length || "-";
 
-                return (
-                  <TableRow key={chipString}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{participant.nickname || "-"}</TableCell>
-                    <TableCell>{participant.raceNumber || "-"}</TableCell>
-                    <TableCell>{chipString}</TableCell>
-                    <TableCell>{bestLap !== "-" ? bestLap.toFixed(3) : "-"}</TableCell>
-                    <TableCell>{lastLap !== "-" ? lastLap.toFixed(3) : "-"}</TableCell>
-                    <TableCell>{totalLaps}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+                  return (
+                    <TableRow key={chipString}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{participant.nickname || "-"}</TableCell>
+                      <TableCell>{participant.raceNumber || "-"}</TableCell>
+                      <TableCell>{chipString}</TableCell>
+                      <TableCell>{bestLap !== "-" ? bestLap.toFixed(3) : "-"}</TableCell>
+                      <TableCell>{lastLap !== "-" ? lastLap.toFixed(3) : "-"}</TableCell>
+                      <TableCell>{totalLaps}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </Paper>
     </Box>
   );
 };

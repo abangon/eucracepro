@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
-import { db } from "../../utils/firebase"; // Путь к firebase
+import { db } from "../utils/firebase"; // Относительный путь
 import { collection, getDocs } from "firebase/firestore";
 
 const TestPage: React.FC = () => {

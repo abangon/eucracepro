@@ -103,8 +103,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
     const newParticipant = {
       nickname: userData.nickname || user.uid,
-      team: userData.team || "",
-      country: userData.country || "",
+      team: userData.team || "-",
+      country: userData.country || "-",
       facebook: userData.facebook || "",
       instagram: userData.instagram || "",
       youtube: userData.youtube || "",
@@ -176,11 +176,10 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
                   </TableCell>
                 )}
 
-                {/* Социальные сети */}
-                <TableCell sx={{ textAlign: "center" }}>{participant.facebook || "-"}</TableCell>
-                <TableCell sx={{ textAlign: "center" }}>{participant.instagram || "-"}</TableCell>
-                <TableCell sx={{ textAlign: "center" }}>{participant.youtube || "-"}</TableCell>
-                <TableCell sx={{ textAlign: "center" }}>{participant.tiktok || "-"}</TableCell>
+                <TableCell sx={{ textAlign: "center" }}>{participant.facebook ? <a href={getFacebookUrl(participant.facebook)} target="_blank"><FaFacebook style={socialIconStyle} /></a> : "-"}</TableCell>
+                <TableCell sx={{ textAlign: "center" }}>{participant.instagram ? <a href={getInstagramUrl(participant.instagram)} target="_blank"><FaInstagram style={socialIconStyle} /></a> : "-"}</TableCell>
+                <TableCell sx={{ textAlign: "center" }}>{participant.youtube ? <a href={getYoutubeUrl(participant.youtube)} target="_blank"><FaYoutube style={socialIconStyle} /></a> : "-"}</TableCell>
+                <TableCell sx={{ textAlign: "center" }}>{participant.tiktok ? <a href={getTiktokUrl(participant.tiktok)} target="_blank"><FaTiktok style={socialIconStyle} /></a> : "-"}</TableCell>
               </TableRow>
             ))}
           </TableBody>

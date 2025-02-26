@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material';
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
-import { db } from "../firebaseConfig"; // Убедись, что путь к Firebase верный
+import { db } from "../firebaseConfig"; // Проверь путь к Firebase
 
 interface LapTime {
   lap: number;
@@ -27,7 +27,7 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
       try {
         console.log("Fetching race data from Firestore...");
 
-        const raceDocRef = doc(db, "races", "8915"); // Получаем всю гонку
+        const raceDocRef = doc(db, "races", "8915");
         const raceSnapshot = await getDoc(raceDocRef);
 
         if (!raceSnapshot.exists()) {
@@ -43,15 +43,15 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
           return;
         }
 
-        // 📌 1️⃣ Получаем chipNumber из telemetry
-        let telemetryData: Record<string, string> = {}; // Связка chipNumber -> participantId
+        // 📌 1️⃣ Собираем chipNumber из telemetry
+        let telemetryData: Record<string, string> = {};
         Object.keys(raceData.telemetry).forEach(chip => {
           telemetryData[chip] = chip;
         });
 
         console.log("Extracted telemetry chipNumbers:", telemetryData);
 
-        // 📌 2️⃣ Теперь загружаем `participants`
+        // 📌 2️⃣ Загружаем `participants`
         console.log("Fetching participants...");
         const racersCollection = collection(db, "races", "8915", "participants");
         const querySnapshot = await getDocs(racersCollection);
@@ -74,8 +74,10 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
           }
 
           // 📌 3️⃣ Проверяем, есть ли этот чип в `telemetry`
-          if (telemetryData[formattedChip]) {
-            console.log(`✅ Matching chipNumber found: ${formattedChip}`);
+          const foundChip = Object.keys(telemetryData).find(chip => chip === formattedChip);
+
+          if (foundChip) {
+            console.log(`✅ Found matching chipNumber: ${formattedChip}`);
 
             racersData[formattedChip] = {
               chipNumber: formattedChip,
@@ -83,7 +85,7 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
               raceNumber: data.raceNumber || "N/A",
             };
           } else {
-            console.warn(`⚠️ ChipNumber ${formattedChip} is NOT in telemetry!`);
+            console.warn(`⚠️ ChipNumber ${formattedChip} from participants is NOT in telemetry!`);
           }
         });
 
@@ -114,7 +116,7 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
         </TableHead>
         <TableBody>
           {lapTimes.map((lapTime, index) => {
-            const chipNumber = lapTime.chipNumber.toString().trim(); // Приводим к строке
+            const chipNumber = lapTime.chipNumber.toString().trim();
             const racer = racers[chipNumber] || { nickname: "Unknown", raceNumber: "N/A" };
 
             console.log(`🔍 Processing lapTime[${index}]:`, lapTime);

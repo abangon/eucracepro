@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/utils/firebase"; // ✅ Используем правильный импорт
 import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
 
@@ -43,27 +44,29 @@ const RaceTimingTable: React.FC = () => {
       }
     };
 
-    const fetchTelemetry = async () => {
-      try {
-        console.log(`📡 Загружаем телеметрию для гонки: ${raceId}`);
-        const raceDoc = collection(db, "races", raceId);
-        const raceData = await getDocs(raceDoc);
+   // ✅ Загружаем документ гонки и достаем поле telemetry
+const fetchTelemetry = async () => {
+  try {
+    console.log(`📡 Загружаем телеметрию для гонки: ${raceId}`);
+    
+    const raceRef = doc(db, "races", raceId); // 🔥 Правильный путь к документу
+    const raceSnap = await getDoc(raceRef);
 
-        if (raceData.empty) {
-          console.warn("⚠️ Телеметрия отсутствует!");
-          setTelemetry({});
-          setLoading(false);
-          return;
-        }
+    if (!raceSnap.exists()) {
+      console.warn("⚠️ Документ гонки не найден!");
+      setTelemetry({});
+      setLoading(false);
+      return;
+    }
 
-        const telemetryData = raceData.docs[0]?.data()?.telemetry || {};
-        console.log("✅ Телеметрия загружена:", telemetryData);
-        setTelemetry(telemetryData);
-      } catch (error) {
-        console.error("❌ Ошибка загрузки телеметрии:", error);
-      }
-    };
-
+    const raceData = raceSnap.data();
+    const telemetryData = raceData.telemetry || {}; // ✅ Берем поле telemetry
+    console.log("✅ Телеметрия загружена:", telemetryData);
+    setTelemetry(telemetryData);
+  } catch (error) {
+    console.error("❌ Ошибка загрузки телеметрии:", error);
+  }
+};
     fetchParticipants();
     fetchTelemetry();
     setLoading(false);

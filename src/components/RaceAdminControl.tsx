@@ -36,7 +36,7 @@ interface RaceAdminControlProps {
 
 const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [availableChips, setAvailableChips] = useState<string[]>([]);
+  const [chipAssignments, setChipAssignments] = useState<Record<string, string>>({});
   const [user, setUser] = useState<any>(null);
   const [updatedParticipants, setUpdatedParticipants] = useState<Record<string, Participant>>({});
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" | "warning" | undefined } | null>(null);
@@ -63,11 +63,17 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
       setParticipants(participantList);
     };
 
-    const fetchAvailableChips = async () => {
+    const fetchChipAssignments = async () => {
       const telemetryRef = collection(db, "races", raceId, "telemetry");
       const telemetrySnapshot = await getDocs(telemetryRef);
-      const chipNumbers = telemetrySnapshot.docs.map((doc) => doc.id);
-      setAvailableChips(chipNumbers);
+      let chips: Record<string, string> = {};
+      telemetrySnapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (data && data.participantId) {
+          chips[data.participantId] = doc.id;
+        }
+      });
+      setChipAssignments(chips);
     };
 
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
@@ -75,7 +81,7 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
     });
 
     fetchParticipants();
-    fetchAvailableChips();
+    fetchChipAssignments();
     return () => unsubscribeAuth();
   }, [raceId]);
 
@@ -125,19 +131,7 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
             {participants.map((participant) => (
               <TableRow key={participant.id}>
                 <TableCell>{participant.nickname || "Unknown"}</TableCell>
-                <TableCell>
-                  <Select
-                    value={updatedParticipants[participant.id]?.chipNumber || participant.chipNumber || ""}
-                    onChange={(e) => updateParticipant(participant.id, "chipNumber", e.target.value)}
-                    displayEmpty
-                    variant="outlined"
-                    size="small"
-                  >
-                    {availableChips.map((chip) => (
-                      <MenuItem key={chip} value={chip}>{chip}</MenuItem>
-                    ))}
-                  </Select>
-                </TableCell>
+                <TableCell>{chipAssignments[participant.id] || "Not Assigned"}</TableCell>
                 <TableCell>
                   <TextField
                     value={updatedParticipants[participant.id]?.raceNumber || participant.raceNumber || ""}

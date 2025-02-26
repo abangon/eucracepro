@@ -103,7 +103,7 @@ const RaceTimingTable: React.FC = () => {
   }, [loadingParticipants, loadingTelemetry]);
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, display: "flex", justifyContent: "center" }}>
       {loading ? (
         <Box sx={{ textAlign: "center", my: 4 }}>
           <CircularProgress />
@@ -113,13 +113,13 @@ const RaceTimingTable: React.FC = () => {
           </Typography>
         </Box>
       ) : (
-        <Paper elevation={3} sx={{ p: 2 }}>
+        <Paper elevation={3} sx={{ p: 2, width: "90%", maxWidth: "1200px" }}>
           <Typography variant="h6" sx={{ mb: 2, textAlign: "center" }}>
             Race Timing
           </Typography>
           <TableContainer>
             <Table>
-              <TableHead>
+              <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
                 <TableRow>
                   <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>Position</TableCell>
                   <TableCell sx={{ textAlign: "left", fontWeight: "bold" }}>Nickname</TableCell>

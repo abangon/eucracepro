@@ -43,12 +43,47 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      console.log("Auth state changed. Current user UID:", currentUser?.uid);
       setUser(currentUser);
     });
     return () => unsubscribeAuth();
   }, []);
 
+  console.log("Current user UID:", user?.uid);
+  console.log("Admin UID:", ADMIN_UID);
+
+  const fetchParticipants = async () => {
+    try {
+      console.log("Fetching participants...");
+      const participantsRef = collection(db, "races", raceId, "participants");
+      const snapshot = await getDocs(participantsRef);
+
+      let participantList: Participant[] = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        userId: doc.id,
+        ...doc.data(),
+      })) as Participant[];
+
+      // Загружаем имена пользователей из коллекции users
+      const userPromises = participantList.map(async (participant) => {
+        const userRef = doc(db, "users", participant.userId);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          participant.nickname = userSnap.data().nickname;
+        }
+      });
+
+      await Promise.all(userPromises);
+
+      console.log("Loaded participants:", participantList);
+      setParticipants(participantList);
+    } catch (error) {
+      console.error("Error fetching participants:", error);
+    }
+  };
+
   const fetchAvailableChips = async () => {
+    console.log("Fetching available chips...");
     const raceRef = doc(db, "races", raceId);
     const raceSnap = await getDoc(raceRef);
   
@@ -56,14 +91,17 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
       const raceData = raceSnap.data();
       if (raceData.telemetry) {
         const chipNumbers = Object.keys(raceData.telemetry);
+        console.log("Available Chips:", chipNumbers);
         setAvailableChips(chipNumbers);
       } else {
+        console.log("No telemetry data found.");
         setAvailableChips([]);
       }
     }
   };
 
   useEffect(() => {
+    fetchParticipants();
     fetchAvailableChips();
   }, [raceId]);
 
@@ -83,14 +121,20 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
 
   const saveChanges = async () => {
     try {
+        console.log("Starting saveChanges...");
         const updates = Object.entries(updatedParticipants);
+        console.log("Updates to save:", updates);
 
         for (const [id, data] of updates) {
+            console.log("Updating participant:", id, "with data:", data);
+
             const participantRef = doc(db, "races", raceId, "participants", id);
 
             let updateData: any = {};
             if (data.chipNumber !== undefined) updateData.chipNumber = data.chipNumber;
             if (data.raceNumber !== undefined) updateData.raceNumber = data.raceNumber;
+
+            console.log("Final update data:", updateData);
 
             if (Object.keys(updateData).length > 0) {
                 await updateDoc(participantRef, updateData);
@@ -98,8 +142,13 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
         }
 
         setUpdatedParticipants({});
+        console.log("Changes saved successfully!");
         setNotification({ message: "Changes saved successfully!", type: "success" });
+
+        // 🔄 Обновляем участников после сохранения
+        fetchParticipants();
     } catch (error) {
+        console.error("Error saving changes:", error);
         setNotification({ message: "Error saving changes!", type: "error" });
     }
   };
@@ -124,32 +173,40 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {participants.map((participant) => (
-              <TableRow key={participant.id}>
-                <TableCell>{participant.nickname || "Unknown"}</TableCell>
-                <TableCell>
-                  <Select
-                    value={updatedParticipants[participant.id]?.chipNumber || participant.chipNumber || ""}
-                    onChange={(e) => updateParticipant(participant.id, "chipNumber", e.target.value)}
-                    displayEmpty
-                    variant="outlined"
-                    size="small"
-                  >
-                    {availableChips.map((chip) => (
-                      <MenuItem key={chip} value={chip}>{chip}</MenuItem>
-                    ))}
-                  </Select>
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={updatedParticipants[participant.id]?.raceNumber || participant.raceNumber || ""}
-                    onChange={(e) => updateParticipant(participant.id, "raceNumber", e.target.value)}
-                    variant="outlined"
-                    size="small"
-                  />
+            {participants.length > 0 ? (
+              participants.map((participant) => (
+                <TableRow key={participant.id}>
+                  <TableCell>{participant.nickname || "Unknown"}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={updatedParticipants[participant.id]?.chipNumber || participant.chipNumber || ""}
+                      onChange={(e) => updateParticipant(participant.id, "chipNumber", e.target.value)}
+                      displayEmpty
+                      variant="outlined"
+                      size="small"
+                    >
+                      {availableChips.map((chip) => (
+                        <MenuItem key={chip} value={chip}>{chip}</MenuItem>
+                      ))}
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      value={updatedParticipants[participant.id]?.raceNumber || participant.raceNumber || ""}
+                      onChange={(e) => updateParticipant(participant.id, "raceNumber", e.target.value)}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={3} align="center">
+                  No participants found
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>

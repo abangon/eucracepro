@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../utils/firebase";
 import {
@@ -30,34 +30,36 @@ interface RegistrationFormProps {
 
 const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [user] = useAuthState(auth);
-  const [registeredUser, setRegisteredUser] = useState<any | null>(null);
+  const [participants, setParticipants] = useState<any[]>([]); // Хранение всех участников
   const [userData, setUserData] = useState<any | null>(null);
+  const [isRegistered, setIsRegistered] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    // Загружаем всех участников гонки
+    const fetchParticipants = async () => {
+      const participantsRef = collection(db, `races/${raceId}/participants`);
+      const snapshot = await getDocs(participantsRef);
+      const usersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setParticipants(usersList);
 
-    // Загружаем актуальные данные пользователя из Firestore
+      // Проверяем, зарегистрирован ли текущий пользователь
+      if (user) {
+        setIsRegistered(usersList.some(p => p.id === user.uid));
+      }
+    };
+
+    // Загружаем актуальные данные пользователя
     const fetchUserData = async () => {
+      if (!user) return;
       const userRef = doc(db, `users/${user.uid}`);
       const userSnap = await getDoc(userRef);
-
       if (userSnap.exists()) {
         setUserData(userSnap.data());
       }
     };
 
-    // Проверяем, зарегистрирован ли пользователь на гонку
-    const checkRegistration = async () => {
-      const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
-      const participantSnap = await getDoc(participantRef);
-
-      if (participantSnap.exists()) {
-        setRegisteredUser(participantSnap.data());
-      }
-    };
-
+    fetchParticipants();
     fetchUserData();
-    checkRegistration();
   }, [user, raceId]);
 
   const handleRegister = async () => {
@@ -66,8 +68,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
     const newParticipant = {
       nickname: userData.nickname || user.uid,
-      team: userData.team || "Unknown Team",
-      country: userData.country || "Unknown",
+      team: userData.team || "",
+      country: userData.country || "",
       facebook: userData.facebook || "",
       instagram: userData.instagram || "",
       youtube: userData.youtube || "",
@@ -75,7 +77,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     };
 
     await setDoc(participantRef, newParticipant);
-    setRegisteredUser(newParticipant);
+    setIsRegistered(true);
+
+    // Перезагружаем список участников
+    const updatedSnapshot = await getDocs(collection(db, `races/${raceId}/participants`));
+    setParticipants(updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
   const handleCancelRegistration = async () => {
@@ -83,7 +89,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
 
     const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
     await deleteDoc(participantRef);
-    setRegisteredUser(null);
+    setIsRegistered(false);
+
+    // Перезагружаем список участников
+    const updatedSnapshot = await getDocs(collection(db, `races/${raceId}/participants`));
+    setParticipants(updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
   return (
@@ -91,7 +101,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h6" fontWeight="bold">Participants</Typography>
         {user ? (
-          registeredUser ? (
+          isRegistered ? (
             <Button variant="contained" color="error" onClick={handleCancelRegistration}>
               Cancel Registration
             </Button>
@@ -121,18 +131,18 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {registeredUser && (
-              <TableRow>
+            {participants.map((participant) => (
+              <TableRow key={participant.id}>
                 <TableCell sx={{ textAlign: "left" }}>
-                  {registeredUser.nickname || registeredUser.uid}
+                  {participant.nickname || participant.id}
                 </TableCell>
-                <TableCell sx={{ textAlign: "center" }}>{registeredUser.team || "-"}</TableCell>
-                <TableCell sx={{ textAlign: "center" }}>{registeredUser.country || "-"}</TableCell>
+                <TableCell sx={{ textAlign: "center" }}>{participant.team || "-"}</TableCell>
+                <TableCell sx={{ textAlign: "center" }}>{participant.country || "-"}</TableCell>
 
                 {/* Facebook */}
                 <TableCell sx={{ textAlign: "center" }}>
-                  {registeredUser.facebook ? (
-                    <a href={getFacebookUrl(registeredUser.facebook)} target="_blank" rel="noopener noreferrer">
+                  {participant.facebook ? (
+                    <a href={getFacebookUrl(participant.facebook)} target="_blank" rel="noopener noreferrer">
                       <FaFacebook style={{ ...socialIconStyle, color: "#1877F2" }} />
                     </a>
                   ) : "-"}
@@ -140,8 +150,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
 
                 {/* Instagram */}
                 <TableCell sx={{ textAlign: "center" }}>
-                  {registeredUser.instagram ? (
-                    <a href={getInstagramUrl(registeredUser.instagram)} target="_blank" rel="noopener noreferrer">
+                  {participant.instagram ? (
+                    <a href={getInstagramUrl(participant.instagram)} target="_blank" rel="noopener noreferrer">
                       <FaInstagram style={{ ...socialIconStyle, color: "#E1306C" }} />
                     </a>
                   ) : "-"}
@@ -149,8 +159,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
 
                 {/* YouTube */}
                 <TableCell sx={{ textAlign: "center" }}>
-                  {registeredUser.youtube ? (
-                    <a href={getYoutubeUrl(registeredUser.youtube)} target="_blank" rel="noopener noreferrer">
+                  {participant.youtube ? (
+                    <a href={getYoutubeUrl(participant.youtube)} target="_blank" rel="noopener noreferrer">
                       <FaYoutube style={{ ...socialIconStyle, color: "#FF0000" }} />
                     </a>
                   ) : "-"}
@@ -158,14 +168,14 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
 
                 {/* TikTok */}
                 <TableCell sx={{ textAlign: "center" }}>
-                  {registeredUser.tiktok ? (
-                    <a href={getTiktokUrl(registeredUser.tiktok)} target="_blank" rel="noopener noreferrer">
+                  {participant.tiktok ? (
+                    <a href={getTiktokUrl(participant.tiktok)} target="_blank" rel="noopener noreferrer">
                       <FaTiktok style={{ ...socialIconStyle, color: "#000000" }} />
                     </a>
                   ) : "-"}
                 </TableCell>
               </TableRow>
-            )}
+            ))}
           </TableBody>
         </Table>
       </TableContainer>

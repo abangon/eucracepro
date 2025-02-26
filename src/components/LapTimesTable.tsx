@@ -24,82 +24,76 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
   useEffect(() => {
     const fetchRaceData = async () => {
-      try {
-        console.log("Fetching race data from Firestore...");
+  try {
+    console.log("Fetching race data from Firestore...");
 
-        const raceDocRef = doc(db, "races", "8915");
-        const raceSnapshot = await getDoc(raceDocRef);
+    const raceDocRef = doc(db, "races", "8915");
+    const raceSnapshot = await getDoc(raceDocRef);
 
-        if (!raceSnapshot.exists()) {
-          console.warn("No race data found!");
-          return;
-        }
+    if (!raceSnapshot.exists()) {
+      console.warn("No race data found!");
+      return;
+    }
 
-        const raceData = raceSnapshot.data();
-        console.log("Race data:", raceData);
+    const raceData = raceSnapshot.data();
+    console.log("Race data:", raceData);
 
-        if (!raceData?.telemetry) {
-          console.warn("No telemetry data found in race!");
-          return;
-        }
+    if (!raceData?.telemetry) {
+      console.warn("No telemetry data found in race!");
+      return;
+    }
 
-        // 📌 1️⃣ Собираем chipNumber из telemetry и нормализуем
-        let telemetryData: Record<string, string> = {};
-        Object.keys(raceData.telemetry).forEach(chip => {
-          let normalizedChip = chip.toLowerCase().trim();
+    // 📌 1️⃣ Собираем chipNumber из telemetry
+    let telemetryData: Record<string, string> = {};
+    Object.keys(raceData.telemetry).forEach(chip => {
+      let normalizedChip = chip.trim();
+      telemetryData[normalizedChip] = chip;
+    });
 
-          // Если chipNumber состоит только из цифр, удаляем ведущие нули
-          if (/^\d+$/.test(normalizedChip)) {
-            normalizedChip = normalizedChip.replace(/^0+/, "");
-          }
+    console.log("✅ Extracted telemetry chipNumbers:", telemetryData);
 
-          telemetryData[normalizedChip] = chip;
-        });
+    // 📌 2️⃣ Загружаем `participants`
+    console.log("Fetching participants...");
+    const racersCollection = collection(db, "races", "8915", "participants");
+    const querySnapshot = await getDocs(racersCollection);
+    const racersData: Record<string, Racer> = {};
 
-        console.log("Extracted telemetry chipNumbers:", telemetryData);
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      console.log("Participant data:", data);
 
-        // 📌 2️⃣ Загружаем `participants`
-        console.log("Fetching participants...");
-        const racersCollection = collection(db, "races", "8915", "participants");
-        const querySnapshot = await getDocs(racersCollection);
-        const racersData: Record<string, Racer> = {};
-
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          console.log("Participant data:", data);
-
-          if (!data.chipNumber) {
-            console.warn(`Participant ${doc.id} has no chipNumber!`);
-            return;
-          }
-
-          let formattedChip = data.chipNumber.toLowerCase().trim();
-
-          // Если chipNumber состоит только из цифр, удаляем ведущие нули
-          if (/^\d+$/.test(formattedChip)) {
-            formattedChip = formattedChip.replace(/^0+/, "");
-          }
-
-          // 📌 3️⃣ Проверяем, есть ли этот чип в `telemetry`
-          if (telemetryData[formattedChip]) {
-            console.log(`✅ Found matching chipNumber: ${formattedChip}`);
-
-            racersData[formattedChip] = {
-              chipNumber: formattedChip,
-              nickname: data.nickname || "Unknown",
-              raceNumber: data.raceNumber || "N/A",
-            };
-          } else {
-            console.warn(`⚠️ ChipNumber ${formattedChip} from participants is NOT in telemetry!`);
-          }
-        });
-
-        console.log("✅ Final racersData object:", racersData);
-        setRacers(racersData);
-      } catch (error) {
-        console.error("❌ Error fetching race data:", error);
+      if (!data.chipNumber) {
+        console.warn(`Participant ${doc.id} has no chipNumber!`);
+        return;
       }
-    };
+
+      let formattedChip = data.chipNumber.trim(); // Приводим к строке
+
+      console.log(`🔍 Normalized chipNumber: ${formattedChip}`);
+
+      // 📌 3️⃣ Проверяем, есть ли этот чип в `telemetry`
+      if (telemetryData[formattedChip]) {
+        console.log(`✅ Found matching chipNumber: ${formattedChip}`);
+
+        racersData[formattedChip] = {
+          chipNumber: formattedChip,
+          nickname: data.nickname || "Unknown",
+          raceNumber: data.raceNumber || "N/A",
+        };
+
+        console.log(`✅ Added racer: ${formattedChip} ->`, racersData[formattedChip]);
+      } else {
+        console.warn(`⚠️ ChipNumber ${formattedChip} from participants is NOT in telemetry!`);
+      }
+    });
+
+    console.log("✅ Final racersData object:", racersData);
+    setRacers(racersData);
+  } catch (error) {
+    console.error("❌ Error fetching race data:", error);
+  }
+};
+
 
     fetchRaceData();
   }, []);

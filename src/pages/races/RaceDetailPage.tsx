@@ -17,7 +17,6 @@ import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import RegistrationForm from "../../components/RegistrationForm";
 
-
 interface TelemetryRecord {
   id: string;
   chipNumber: string;
@@ -105,16 +104,15 @@ const RaceDetailPage: React.FC = () => {
         {raceName} ({raceId})
       </Typography>
 
+      {/* Форма регистрации участников */}
+      <RegistrationForm raceId={raceId} />
+
       {loading ? (
         <Typography>Loading telemetry data...</Typography>
       ) : telemetryData.length === 0 ? (
         <Typography>No valid telemetry data available</Typography>
       ) : (
-
-      {/* Форма регистрации участников */}
-        <RegistrationForm raceId={raceId} />
-
-        <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
+        <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden", mt: 3 }}>
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>

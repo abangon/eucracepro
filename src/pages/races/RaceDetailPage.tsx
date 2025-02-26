@@ -15,6 +15,8 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../../utils/firebase";
+import RegistrationForm from "../../components/RegistrationForm";
+
 
 interface TelemetryRecord {
   id: string;
@@ -108,6 +110,10 @@ const RaceDetailPage: React.FC = () => {
       ) : telemetryData.length === 0 ? (
         <Typography>No valid telemetry data available</Typography>
       ) : (
+
+      {/* Форма регистрации участников */}
+        <RegistrationForm raceId={raceId} />
+
         <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
           <Table>
             <TableHead>

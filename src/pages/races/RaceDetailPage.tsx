@@ -115,7 +115,7 @@ const RaceDetailPage: React.FC = () => {
                     <strong>Position</strong>
                   </TableCell>
                   <TableCell sx={{ textAlign: "left" }}>
-                    <strong>Name</strong>
+                    <strong>Nickname</strong>
                   </TableCell>
                   <TableCell sx={{ textAlign: "center" }}>
                     <strong>Racer Number</strong>

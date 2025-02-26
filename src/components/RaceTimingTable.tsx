@@ -98,10 +98,12 @@ const RaceTimingTable: React.FC = () => {
                 const chipString = chip.toString(); // Приводим ключи к строке
                 const participant = participants.find(p => p.chipNumber === chipString) || {};
 
-                // ⚡️ Находим лучший круг (минимальный lap_time)
-                const laps = telemetry[chipString] || [];
-                const bestLap = laps.length > 0 ? Math.min(...laps.map(lap => lap.lap_time || Infinity)) : "-";
-                const lastLap = laps.length > 0 ? laps[laps.length - 1].lap_time || "-" : "-";
+                // ⚡️ Фильтруем неверные значения (убираем < 3 сек и отрицательные)
+                const laps = (telemetry[chipString] || []).filter(lap => lap.lap_time >= 3);
+
+                // 📌 Найти лучший круг (если есть)
+                const bestLap = laps.length > 0 ? Math.min(...laps.map(lap => lap.lap_time)) : "-";
+                const lastLap = laps.length > 0 ? laps[laps.length - 1].lap_time : "-";
                 const totalLaps = laps.length || "-";
 
                 return (
@@ -110,7 +112,7 @@ const RaceTimingTable: React.FC = () => {
                     <TableCell>{participant.nickname || "-"}</TableCell>
                     <TableCell>{participant.raceNumber || "-"}</TableCell>
                     <TableCell>{chipString}</TableCell>
-                    <TableCell>{bestLap !== Infinity ? bestLap.toFixed(3) : "-"}</TableCell>
+                    <TableCell>{bestLap !== "-" ? bestLap.toFixed(3) : "-"}</TableCell>
                     <TableCell>{lastLap !== "-" ? lastLap.toFixed(3) : "-"}</TableCell>
                     <TableCell>{totalLaps}</TableCell>
                   </TableRow>

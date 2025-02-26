@@ -101,7 +101,7 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
     }
   };
 
-  if (!user || user.uid !== ADMIN_UID) return null;
+  // if (!user || user.uid !== ADMIN_UID) return null;
 
   return (
     <Paper sx={{ p: 3, borderRadius: 2, mt: 4 }}>

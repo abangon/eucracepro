@@ -41,34 +41,24 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   const [updatedParticipants, setUpdatedParticipants] = useState<Record<string, Participant>>({});
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" | "warning" | undefined } | null>(null);
 
-  const fetchParticipants = useCallback(async () => {
-  try {
-    console.log("Fetching participants...");
-    const participantsRef = collection(db, "races", raceId, "participants");
-    const snapshot = await getDocs(participantsRef);
+  const fetchAvailableChips = async () => {
+  console.log("Fetching available chips...");
+  const raceRef = doc(db, "races", raceId);
+  const raceSnap = await getDoc(raceRef);
 
-    let participantList: Participant[] = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      userId: doc.id,
-      ...doc.data(),
-    })) as Participant[];
-
-    const userPromises = participantList.map(async (participant) => {
-      const userRef = doc(db, "users", participant.userId);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        participant.nickname = userSnap.data().nickname;
-      }
-    });
-
-    await Promise.all(userPromises);
-
-    console.log("Updated participants list:", participantList); // ЛОГИРУЕМ НОВЫЕ ДАННЫЕ
-    setParticipants(participantList);
-  } catch (error) {
-    console.error("Error fetching participants:", error);
+  if (raceSnap.exists()) {
+    const raceData = raceSnap.data();
+    if (raceData.telemetry) {
+      const chipNumbers = Object.keys(raceData.telemetry); // Достаем ключи из объекта telemetry
+      console.log("Available Chips:", chipNumbers);
+      setAvailableChips(chipNumbers);
+    } else {
+      console.log("No telemetry data found.");
+      setAvailableChips([]);
+    }
   }
-}, [raceId]);
+};
+
 
   useEffect(() => {
     fetchParticipants();

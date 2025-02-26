@@ -1,3 +1,5 @@
+// src/pages/races/RaceDetailPage.tsx
+
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
@@ -11,6 +13,8 @@ import {
   TableRow,
   Paper,
   IconButton,
+  Card,
+  CardContent,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
@@ -104,15 +108,22 @@ const RaceDetailPage: React.FC = () => {
         {raceName} ({raceId})
       </Typography>
 
-      {/* Форма регистрации участников */}
-      <RegistrationForm raceId={raceId} />
+      {/* Карточка с формой регистрации */}
+      <Card sx={{ mb: 4, borderRadius: 2 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Participants
+          </Typography>
+          <RegistrationForm raceId={raceId} />
+        </CardContent>
+      </Card>
 
       {loading ? (
         <Typography>Loading telemetry data...</Typography>
       ) : telemetryData.length === 0 ? (
         <Typography>No valid telemetry data available</Typography>
       ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden", mt: 3 }}>
+        <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>

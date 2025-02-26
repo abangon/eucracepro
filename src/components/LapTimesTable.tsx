@@ -32,13 +32,22 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
         const racersData: Record<string, Racer> = {};
 
         querySnapshot.forEach((doc) => {
-          const data = doc.data() as Racer;
-          const formattedChip = data.chipNumber.toString().trim(); // Приводим к строке
+          const data = doc.data();
+          console.log("Participant data:", data);
 
-          console.log("Fetched participant:", data);
+          if (!data.chipNumber) {
+            console.warn(`Participant ${doc.id} has no chipNumber!`);
+            return;
+          }
+
+          const formattedChip = data.chipNumber.toString().trim(); // Приводим к строке
           console.log(`Formatted chipNumber: ${formattedChip}`);
 
-          racersData[formattedChip] = data;
+          racersData[formattedChip] = {
+            chipNumber: formattedChip,
+            nickname: data.nickname || "Unknown",
+            raceNumber: data.raceNumber || "N/A",
+          };
         });
 
         console.log("Final racersData object:", racersData);

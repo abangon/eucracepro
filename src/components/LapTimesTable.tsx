@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Table, TableHead, TableRow, TableCell, TableBody, CircularProgress } from '@mui/material';
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { db } from "../firebaseConfig"; // Проверь путь к Firebase
 
 interface LapTime {
   lap: number;
@@ -44,29 +45,33 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
       return;
     }
 
-    // 📌 1️⃣ Добавляем ВСЕ chipNumber из `telemetry`
+    // 📌 1️⃣ Заполняем `racersData` чипами из `telemetry`
     let racersData: Record<string, Racer> = {};
     Object.keys(raceData.telemetry).forEach(chip => {
       let normalizedChip = chip.trim();
       racersData[normalizedChip] = {
         chipNumber: normalizedChip,
-        nickname: "-",
-        raceNumber: "-",
+        nickname: "Error: missing",
+        raceNumber: "Error: missing",
       };
     });
 
     console.log("✅ Initial racersData with empty participants:", racersData);
 
     // 📌 2️⃣ Загружаем `participants`
-    console.log("Fetching participants...");
+    console.log("📌 Fetching participants from Firestore...");
     const racersCollection = collection(db, "races", "8915", "participants");
     const querySnapshot = await getDocs(racersCollection);
 
-    console.log("📌 Checking if querySnapshot has documents:", querySnapshot.empty ? "❌ No participants found!" : "✅ Participants found");
+    if (querySnapshot.empty) {
+      console.warn("❌ No participants found in Firestore!");
+      setLoading(false);
+      return;
+    }
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      console.log("📌 Found participant document:", doc.id, "=>", data);
+      console.log("📌 Participant document:", doc.id, "=>", data);
 
       if (!data.chipNumber) {
         console.warn(`⚠️ Participant ${doc.id} has no chipNumber!`);
@@ -78,30 +83,23 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
       if (racersData.hasOwnProperty(formattedChip)) {
         console.log(`✅ Found matching chipNumber in telemetry: ${formattedChip}`);
-        racersData[formattedChip].nickname = data.nickname || "Unknown Racer";
-        racersData[formattedChip].raceNumber = data.raceNumber || "-";
-        console.log(`✅ Updated racer:`, racersData[formattedChip]);
+
+        racersData[formattedChip].nickname = data.nickname || "Error: missing";
+        racersData[formattedChip].raceNumber = data.raceNumber || "Error: missing";
       } else {
         console.warn(`⚠️ ChipNumber ${formattedChip} from participants is NOT in telemetry!`);
       }
     });
 
-    // 📌 3️⃣ Если нет совпадений, ставим "Unknown Racer"
-    Object.keys(racersData).forEach(chip => {
-      if (racersData[chip].nickname === "-") {
-        racersData[chip].nickname = "Unknown Racer";
-        racersData[chip].raceNumber = "-";
-      }
-    });
-
     console.log("✅ Final racersData object:", racersData);
     setRacers(racersData);
-    setLoading(false); // ✅ Теперь загрузка всегда завершается
+    setLoading(false);
   } catch (error) {
     console.error("❌ Error fetching race data:", error);
     setLoading(false);
   }
 };
+
 
 
     fetchRaceData();

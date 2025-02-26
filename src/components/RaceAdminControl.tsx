@@ -107,12 +107,15 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
     setNotification({ message: "Changes saved successfully!", type: "success" });
 
     // 🔄 Подождем 1 секунду перед обновлением данных, чтобы избежать конфликтов
-    setTimeout(fetchParticipants, 1000);
+    setTimeout(() => {
+      fetchParticipants();
+    }, 1000);
   } catch (error) {
     console.error("Error saving changes:", error);
     setNotification({ message: "Error saving changes!", type: "error" });
   }
 };
+
 
 
   if (!user || user.uid !== ADMIN_UID) return null;

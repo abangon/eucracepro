@@ -44,9 +44,9 @@ const LapTimesTable = () => {
 
         console.log("Initial racersData:", racersData);
 
-        // 2️⃣ Загружаем участников из коллекции participants
+        // 2️⃣ Загружаем участников из подколлекции participants
         console.log("Fetching participants...");
-        const participantsCollection = collection(db, "races", raceId, "participants");
+        const participantsCollection = collection(db, "races", raceId, "participants"); // Правильный путь к подколлекции
         const querySnapshot = await getDocs(participantsCollection);
 
         if (querySnapshot.empty) {

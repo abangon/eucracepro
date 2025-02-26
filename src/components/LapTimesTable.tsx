@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material';
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebaseConfig"; // Убедись, что путь верный!
+import { db } from "../firebaseConfig"; // Убедись, что путь к Firebase верный
 
 interface LapTime {
   lap: number;
   time: string;
-  chipNumber: string;
+  chipNumber: string | number; // Чип может быть строкой или числом
 }
 
 interface Racer {
@@ -24,29 +24,22 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
 
   useEffect(() => {
     const fetchRacers = async () => {
-  try {
-    console.log("Fetching racers from Firestore...");
-    const racersCollection = collection(db, "races", "8915", "participants");
-    const querySnapshot = await getDocs(racersCollection);
-    const racersData: Record<string, Racer> = {};
+      try {
+        console.log("Fetching racers from Firestore...");
 
-    querySnapshot.forEach((doc) => {
-      const data = doc.data() as Racer;
-      let formattedChip = data.chipNumber.toString(); // Приводим любой чип к строке
+        const racersCollection = collection(db, "races", "8915", "participants");
+        const querySnapshot = await getDocs(racersCollection);
+        const racersData: Record<string, Racer> = {};
 
-      console.log("Fetched participant:", data);
-      console.log(`Formatted chipNumber: ${formattedChip}`);
+        querySnapshot.forEach((doc) => {
+          const data = doc.data() as Racer;
+          const formattedChip = data.chipNumber.toString().trim(); // Приводим к строке
 
-      racersData[formattedChip] = data; // Сохраняем без изменений
-    });
+          console.log("Fetched participant:", data);
+          console.log(`Formatted chipNumber: ${formattedChip}`);
 
-    console.log("Final racersData object:", racersData);
-    setRacers(racersData);
-  } catch (error) {
-    console.error("Error fetching racers:", error);
-  }
-};
-
+          racersData[formattedChip] = data;
+        });
 
         console.log("Final racersData object:", racersData);
         setRacers(racersData);
@@ -68,21 +61,24 @@ const LapTimesTable: React.FC<LapTimesTableProps> = ({ lapTimes }) => {
           <TableRow>
             <TableCell>Lap</TableCell>
             <TableCell>Time</TableCell>
+            <TableCell>Chip Number</TableCell>
             <TableCell>Nickname</TableCell>
             <TableCell>Race Number</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {lapTimes.map((lapTime, index) => {
-            const racer = racers[lapTime.chipNumber] || { nickname: "Unknown", raceNumber: "N/A" };
+            const chipNumber = lapTime.chipNumber.toString().trim(); // Приводим к строке
+            const racer = racers[chipNumber] || { nickname: "Unknown", raceNumber: "N/A" };
 
             console.log(`Processing lapTime[${index}]:`, lapTime);
-            console.log(`Matched racer for chipNumber ${lapTime.chipNumber}:`, racer);
+            console.log(`Matching lapTime chip: ${chipNumber} -> Found racer:`, racer);
 
             return (
               <TableRow key={index}>
                 <TableCell>{lapTime.lap}</TableCell>
                 <TableCell>{lapTime.time}</TableCell>
+                <TableCell>{chipNumber}</TableCell>
                 <TableCell>{racer.nickname}</TableCell>
                 <TableCell>{racer.raceNumber}</TableCell>
               </TableRow>

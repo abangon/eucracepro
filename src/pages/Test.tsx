@@ -3,6 +3,21 @@ import { useParams } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import { db } from "../utils/firebase";
 import { collection, getDocs } from "firebase/firestore";
+import React from "react";
+
+const TestPage: React.FC = () => {
+  console.log("🔥 TestPage loaded!"); // Проверяем, вызывается ли компонент
+
+  return (
+    <div>
+      <h1>Test Page is working!</h1>
+      <p>If you see this message, the component is rendered correctly.</p>
+    </div>
+  );
+};
+
+export default TestPage;
+
 
 const TestPage: React.FC = () => {
   console.log("🔥 TestPage loaded!"); // Проверяем, загружается ли компонент

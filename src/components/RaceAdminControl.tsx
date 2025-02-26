@@ -41,6 +41,17 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   const [updatedParticipants, setUpdatedParticipants] = useState<Record<string, Participant>>({});
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" | "warning" | undefined } | null>(null);
 
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      console.log("Auth state changed. Current user UID:", currentUser?.uid);
+      setUser(currentUser);
+    });
+    return () => unsubscribeAuth();
+  }, []);
+
+  console.log("Current user UID:", user?.uid);
+  console.log("Admin UID:", ADMIN_UID);
+
   const fetchAvailableChips = async () => {
     console.log("Fetching available chips...");
     const raceRef = doc(db, "races", raceId);
@@ -62,6 +73,13 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   useEffect(() => {
     fetchAvailableChips();
   }, [raceId]);
+
+  if (!user) {
+    return <Typography>Loading...</Typography>;
+  }
+  if (user.uid !== ADMIN_UID) {
+    return <Typography>Access Denied</Typography>;
+  }
 
   const updateParticipant = (id: string, field: "chipNumber" | "raceNumber", value: string) => {
     setUpdatedParticipants((prev) => ({
@@ -100,8 +118,6 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
         setNotification({ message: "Error saving changes!", type: "error" });
     }
   };
-
-  // if (!user || user.uid !== ADMIN_UID) return null;
 
   return (
     <Paper sx={{ p: 3, borderRadius: 2, mt: 4 }}>

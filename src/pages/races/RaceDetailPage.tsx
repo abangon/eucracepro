@@ -6,6 +6,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import RegistrationForm from "../../components/RegistrationForm";
 import RaceTimingTable from "../../components/RaceTimingTable";
+import RaceAdminControl from "../../components/RaceAdminControl";
 
 const RaceDetailPage: React.FC = () => {
   const { raceId } = useParams<{ raceId: string }>();
@@ -84,5 +85,7 @@ const RaceDetailPage: React.FC = () => {
     </Box>
   );
 };
+
+<RaceAdminControl raceId={raceId} />
 
 export default RaceDetailPage;

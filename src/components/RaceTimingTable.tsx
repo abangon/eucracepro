@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import {
   Paper,
@@ -9,11 +9,7 @@ import {
   TableHead,
   TableRow,
   Typography,
-  Select,
-  MenuItem,
 } from "@mui/material";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/utils/firebase";
 
 interface RaceTimingTableProps {
   telemetryData: any[];
@@ -29,27 +25,6 @@ const formatLapTime = (time: number | null) => {
 };
 
 const RaceTimingTable: React.FC<RaceTimingTableProps> = ({ telemetryData, raceId, loading }) => {
-  const [participants, setParticipants] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    const fetchParticipants = async () => {
-      const participantsRef = collection(db, "races", raceId, "participants");
-      const snapshot = await getDocs(participantsRef);
-      const participantsData: Record<string, string> = {};
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        participantsData[data.chipNumber] = data.nickname || `Participant ${data.chipNumber}`;
-      });
-
-      setParticipants(participantsData);
-    };
-
-    if (raceId) {
-      fetchParticipants();
-    }
-  }, [raceId]);
-
   return (
     <Paper sx={{ p: 3, borderRadius: 2, mt: 4 }}>
       <Typography variant="h6" fontWeight="bold" gutterBottom>
@@ -84,17 +59,7 @@ const RaceTimingTable: React.FC<RaceTimingTableProps> = ({ telemetryData, raceId
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
                   <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>{index + 1}</TableCell>
-                  <TableCell sx={{ textAlign: "left" }}>
-                    <Select
-                      value={participants[record.chipNumber] || ""}
-                      displayEmpty
-                      sx={{ width: "100%" }}
-                    >
-                      {Object.entries(participants).map(([chip, nickname]) => (
-                        <MenuItem key={chip} value={nickname}>{nickname}</MenuItem>
-                      ))}
-                    </Select>
-                  </TableCell>
+                  <TableCell sx={{ textAlign: "left" }}></TableCell>
                   <TableCell sx={{ textAlign: "center" }}></TableCell>
                   <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>{record.chipNumber}</TableCell>
                   <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>{formatLapTime(record.bestLap)}</TableCell>

@@ -1,5 +1,3 @@
-// src/pages/races/RaceDetailPage.tsx
-
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
@@ -13,26 +11,15 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Card,
-  CardContent,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import RegistrationForm from "../../components/RegistrationForm";
 
-interface TelemetryRecord {
-  id: string;
-  chipNumber: string;
-  lapTimes: number[];
-  bestLap: number | null;
-  lastLap: number | null;
-  totalLaps: number;
-}
-
 const RaceDetailPage: React.FC = () => {
   const { raceId } = useParams<{ raceId: string }>();
-  const [telemetryData, setTelemetryData] = useState<TelemetryRecord[]>([]);
+  const [telemetryData, setTelemetryData] = useState<any[]>([]);
   const [raceName, setRaceName] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -61,9 +48,8 @@ const RaceDetailPage: React.FC = () => {
         return;
       }
 
-      const telemetryArray: TelemetryRecord[] = Object.keys(raceData.telemetry).map((chipNumber) => {
+      const telemetryArray = Object.keys(raceData.telemetry).map((chipNumber) => {
         const lapEntries = Object.values(raceData.telemetry[chipNumber]);
-
         const lapTimes = lapEntries
           .map((lap: any) => lap.lap_time)
           .filter((time: number | null) => time !== null && time >= 3.000);
@@ -78,7 +64,6 @@ const RaceDetailPage: React.FC = () => {
         };
       });
 
-      // Сортируем гонщиков по Best Lap (меньше - выше в списке)
       const sortedTelemetry = telemetryArray.filter((r) => r.bestLap !== null);
       sortedTelemetry.sort((a, b) => (a.bestLap ?? Infinity) - (b.bestLap ?? Infinity));
 
@@ -98,56 +83,33 @@ const RaceDetailPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Кнопка Назад */}
       <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
         <ArrowBackIcon />
       </IconButton>
 
-      {/* Заголовок с именем гонки и ID */}
       <Typography variant="h4" gutterBottom sx={{ mt: 2, mb: 4 }}>
         {raceName} ({raceId})
       </Typography>
 
-      {/* Карточка с формой регистрации */}
-      <Card sx={{ mb: 4, borderRadius: 2 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Participants
-          </Typography>
-          <RegistrationForm raceId={raceId} />
-        </CardContent>
-      </Card>
+      {/* Форма регистрации участников */}
+      <RegistrationForm raceId={raceId} />
 
       {loading ? (
         <Typography>Loading telemetry data...</Typography>
       ) : telemetryData.length === 0 ? (
         <Typography>No valid telemetry data available</Typography>
       ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
+        <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden", mt: 4 }}>
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                <TableCell sx={{ textAlign: "center" }}>
-                  <strong>Position</strong>
-                </TableCell>
-                <TableCell sx={{ textAlign: "left" }}>
-                  <strong>Name</strong>
-                </TableCell>
-                <TableCell sx={{ textAlign: "center" }}>
-                  <strong>Racer Number</strong>
-                </TableCell>
-                <TableCell sx={{ textAlign: "center" }}>
-                  <strong>Chip Number</strong>
-                </TableCell>
-                <TableCell sx={{ textAlign: "center" }}>
-                  <strong>Best Lap</strong>
-                </TableCell>
-                <TableCell sx={{ textAlign: "center" }}>
-                  <strong>Last Lap</strong>
-                </TableCell>
-                <TableCell sx={{ textAlign: "center" }}>
-                  <strong>Total Laps</strong>
-                </TableCell>
+                <TableCell sx={{ textAlign: "center" }}><strong>Position</strong></TableCell>
+                <TableCell sx={{ textAlign: "left" }}><strong>Name</strong></TableCell>
+                <TableCell sx={{ textAlign: "center" }}><strong>Racer Number</strong></TableCell>
+                <TableCell sx={{ textAlign: "center" }}><strong>Chip Number</strong></TableCell>
+                <TableCell sx={{ textAlign: "center" }}><strong>Best Lap</strong></TableCell>
+                <TableCell sx={{ textAlign: "center" }}><strong>Last Lap</strong></TableCell>
+                <TableCell sx={{ textAlign: "center" }}><strong>Total Laps</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -159,17 +121,11 @@ const RaceDetailPage: React.FC = () => {
                   to={`/races/${raceId}/driver/${record.chipNumber}`}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
-                  <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
-                    {index + 1}
-                  </TableCell>
+                  <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>{index + 1}</TableCell>
                   <TableCell sx={{ textAlign: "left" }}>{/* Name - пока пусто */}</TableCell>
                   <TableCell sx={{ textAlign: "center" }}>{/* Racer Number - пока пусто */}</TableCell>
-                  <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
-                    {record.chipNumber}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
-                    {formatLapTime(record.bestLap)}
-                  </TableCell>
+                  <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>{record.chipNumber}</TableCell>
+                  <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>{formatLapTime(record.bestLap)}</TableCell>
                   <TableCell sx={{ textAlign: "center" }}>{formatLapTime(record.lastLap)}</TableCell>
                   <TableCell sx={{ textAlign: "center" }}>{record.totalLaps}</TableCell>
                 </TableRow>

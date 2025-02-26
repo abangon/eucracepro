@@ -1,54 +1,71 @@
 import React, { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
-import { db } from "../../utils/firebase";
 import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../utils/firebase";
+import { useParams } from "react-router-dom";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
 
-const RaceTimingTable = ({ raceId }) => {
-  const [timingData, setTimingData] = useState([]);
-  const [participants, setParticipants] = useState({});
+interface Participant {
+  chipNumber: string;
+  nickname: string;
+  raceNumber: string;
+}
+
+interface RacerData {
+  chipNumber: string;
+  nickname: string;
+  raceNumber: string;
+  bestLap: string;
+  lastLap: string;
+  totalLaps: number;
+}
+
+const RaceTimingTable: React.FC = () => {
+  const { raceId } = useParams();
+  const [racers, setRacers] = useState<RacerData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchRaceData = async () => {
       try {
-        console.log("Fetching telemetry data...");
-        const telemetryRef = collection(db, "races", raceId, "telemetry");
-        const telemetrySnap = await getDocs(telemetryRef);
-        
-        let telemetryData = [];
-        telemetrySnap.forEach((doc) => {
-          telemetryData.push({ chipNumber: doc.id, laps: doc.data() });
-        });
-        console.log("Loaded telemetry data:", telemetryData);
+        console.log(`📌 Fetching race data for raceId: ${raceId}`);
 
-        console.log("Fetching participants...");
-        const participantsRef = collection(db, "races", raceId, "participants");
+        // 📌 1️⃣ Загружаем участников (participants)
+        const participantsRef = collection(db, "races", raceId!, "participants");
         const participantsSnap = await getDocs(participantsRef);
-        
-        let participantsMap = {};
-        participantsSnap.forEach((doc) => {
-          let data = doc.data();
-          participantsMap[data.chipNumber] = {
-            nickname: data.nickname || "-",
-            raceNumber: data.raceNumber || "-",
+
+        const participants: Participant[] = participantsSnap.docs.map(doc => doc.data() as Participant);
+        console.log("✅ Participants loaded:", participants);
+
+        // 📌 2️⃣ Загружаем телеметрию (telemetry)
+        const raceRef = collection(db, "races");
+        const raceSnap = await getDocs(raceRef);
+        const raceData = raceSnap.docs.find(doc => doc.id === raceId)?.data();
+        const telemetry = raceData?.telemetry || {};
+        console.log("✅ Telemetry data:", telemetry);
+
+        // 📌 3️⃣ Сопоставляем участников и телеметрию
+        const racersData: RacerData[] = Object.entries(telemetry).map(([chipNumber, lapData]: any) => {
+          // Форматируем чип, добавляя нули
+          const formattedChipNumber = String(chipNumber).padStart(8, "0");
+
+          // Ищем участника с таким чипом
+          const participant = participants.find(p => p.chipNumber === formattedChipNumber);
+
+          return {
+            chipNumber: formattedChipNumber,
+            nickname: participant?.nickname || "-",
+            raceNumber: participant?.raceNumber || "-",
+            bestLap: lapData?.[0]?.lap_time ? `${lapData[0].lap_time.toFixed(3)}` : "-",
+            lastLap: lapData?.[lapData.length - 1]?.lap_time ? `${lapData[lapData.length - 1].lap_time.toFixed(3)}` : "-",
+            totalLaps: lapData?.length || 0,
           };
         });
-        console.log("Loaded participants:", participantsMap);
 
-        const finalData = telemetryData.map((item, index) => ({
-          position: index + 1,
-          chipNumber: item.chipNumber,
-          nickname: participantsMap[item.chipNumber]?.nickname || "-",
-          raceNumber: participantsMap[item.chipNumber]?.raceNumber || "-",
-          bestLap: item.laps[1]?.lap_time || "-",
-          lastLap: item.laps[item.laps.length - 1]?.lap_time || "-",
-          totalLaps: item.laps.length || "-",
-        }));
-
-        setTimingData(finalData);
+        console.log("✅ Final racersData:", racersData);
+        setRacers(racersData);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching race data:", error);
+        console.error("❌ Error fetching race data:", error);
         setLoading(false);
       }
     };
@@ -71,20 +88,27 @@ const RaceTimingTable = ({ raceId }) => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {timingData.map((row) => (
-            <TableRow key={row.chipNumber}>
-              <TableCell>{row.position}</TableCell>
-              <TableCell>{row.nickname}</TableCell>
-              <TableCell>{row.raceNumber}</TableCell>
-              <TableCell>{row.chipNumber}</TableCell>
-              <TableCell>{row.bestLap}</TableCell>
-              <TableCell>{row.lastLap}</TableCell>
-              <TableCell>{row.totalLaps}</TableCell>
+          {racers.length > 0 ? (
+            racers.map((racer, index) => (
+              <TableRow key={index}>
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>{racer.nickname}</TableCell>
+                <TableCell>{racer.raceNumber}</TableCell>
+                <TableCell>{racer.chipNumber}</TableCell>
+                <TableCell>{racer.bestLap}</TableCell>
+                <TableCell>{racer.lastLap}</TableCell>
+                <TableCell>{racer.totalLaps}</TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={7} align="center">
+                {loading ? "Loading..." : "No data available"}
+              </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
-      {loading && <p>Loading...</p>}
     </TableContainer>
   );
 };

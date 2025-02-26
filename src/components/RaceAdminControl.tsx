@@ -66,13 +66,23 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
     };
 
     const fetchAvailableChips = async () => {
-      console.log("Fetching available chips...");
-      const telemetryRef = collection(db, "races", raceId, "telemetry");
-      const telemetrySnapshot = await getDocs(telemetryRef);
-      const chipNumbers = telemetrySnapshot.docs.map((doc) => doc.id);
+  console.log("Fetching available chips...");
+  const raceRef = doc(db, "races", raceId);
+  const raceSnap = await getDoc(raceRef);
+
+  if (raceSnap.exists()) {
+    const raceData = raceSnap.data();
+    if (raceData.telemetry) {
+      const chipNumbers = Object.keys(raceData.telemetry); // Достаем ключи из объекта telemetry
       console.log("Available Chips:", chipNumbers);
       setAvailableChips(chipNumbers);
-    };
+    } else {
+      console.log("No telemetry data found.");
+      setAvailableChips([]);
+    }
+  }
+};
+
 
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);

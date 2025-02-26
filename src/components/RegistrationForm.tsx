@@ -1,56 +1,93 @@
 import React, { useEffect, useState } from "react";
-import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../utils/firebase";
 import { Box, Button, Typography, Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from "@mui/material";
 
-interface RegistrationFormProps {
-  raceId: string;
+interface Participant {
+  id: string;
+  nickname: string;
+  team: string;
+  country: string;
+  facebook: string;
+  instagram: string;
+  youtube: string;
+  tiktok: string;
 }
 
-const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
+const RegistrationForm: React.FC<{ raceId: string }> = ({ raceId }) => {
   const [user] = useAuthState(auth);
-  const [registeredUser, setRegisteredUser] = useState<any | null>(null);
-  
+  const [registeredUser, setRegisteredUser] = useState<Participant | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+
   useEffect(() => {
     if (!user) return;
 
-    const checkRegistration = async () => {
-      const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
-      const participantSnap = await getDoc(participantRef);
+    const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
 
-      if (participantSnap.exists()) {
-        setRegisteredUser(participantSnap.data());
+    const checkRegistration = async () => {
+      try {
+        const participantSnap = await getDoc(participantRef);
+        if (participantSnap.exists()) {
+          setRegisteredUser(participantSnap.data() as Participant);
+        } else {
+          setRegisteredUser(null);
+        }
+      } catch (error) {
+        console.error("Error fetching registration:", error);
       }
     };
 
     checkRegistration();
   }, [user, raceId]);
 
+  // Live-обновление списка участников
+  useEffect(() => {
+    const participantsRef = collection(db, `races/${raceId}/participants`);
+    const unsubscribe = onSnapshot(participantsRef, (snapshot) => {
+      const participantsList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Participant),
+      }));
+      setParticipants(participantsList);
+    });
+
+    return () => unsubscribe();
+  }, [raceId]);
+
   const handleRegister = async () => {
     if (!user) return;
 
-    const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
-    const newParticipant = {
-      nickname: user.displayName || "Anonymous",
-      team: "Ekolka Racing", // Можно расширить, если добавится настройка команды
-      country: "Czechia", // Данные можно получать из профиля
-      facebook: "https://facebook.com",
-      instagram: "https://instagram.com",
-      youtube: "https://youtube.com",
-      tiktok: "",
-    };
+    try {
+      const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
+      const newParticipant: Participant = {
+        id: user.uid,
+        nickname: user.displayName || "Anonymous",
+        team: "Ekolka Racing",
+        country: "Czechia",
+        facebook: "https://facebook.com",
+        instagram: "https://instagram.com",
+        youtube: "https://youtube.com",
+        tiktok: "",
+      };
 
-    await setDoc(participantRef, newParticipant);
-    setRegisteredUser(newParticipant);
+      await setDoc(participantRef, newParticipant);
+      setRegisteredUser(newParticipant);
+    } catch (error) {
+      console.error("Error registering:", error);
+    }
   };
 
   const handleCancelRegistration = async () => {
     if (!user) return;
 
-    const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
-    await deleteDoc(participantRef);
-    setRegisteredUser(null);
+    try {
+      const participantRef = doc(db, `races/${raceId}/participants/${user.uid}`);
+      await deleteDoc(participantRef);
+      setRegisteredUser(null);
+    } catch (error) {
+      console.error("Error canceling registration:", error);
+    }
   };
 
   return (
@@ -74,7 +111,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
         )}
       </Box>
 
-      <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
+      {/* Таблица участников */}
+      <TableContainer sx={{ borderRadius: 2, overflow: "hidden" }}>
         <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
@@ -88,17 +126,17 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {registeredUser && (
-              <TableRow>
-                <TableCell>{registeredUser.nickname}</TableCell>
-                <TableCell>{registeredUser.team}</TableCell>
-                <TableCell>{registeredUser.country}</TableCell>
-                <TableCell><a href={registeredUser.facebook} target="_blank" rel="noopener noreferrer">Facebook</a></TableCell>
-                <TableCell><a href={registeredUser.instagram} target="_blank" rel="noopener noreferrer">Instagram</a></TableCell>
-                <TableCell><a href={registeredUser.youtube} target="_blank" rel="noopener noreferrer">YouTube</a></TableCell>
-                <TableCell>{registeredUser.tiktok || "-"}</TableCell>
+            {participants.map((participant) => (
+              <TableRow key={participant.id}>
+                <TableCell>{participant.nickname}</TableCell>
+                <TableCell>{participant.team}</TableCell>
+                <TableCell>{participant.country}</TableCell>
+                <TableCell><a href={participant.facebook} target="_blank" rel="noopener noreferrer">Facebook</a></TableCell>
+                <TableCell><a href={participant.instagram} target="_blank" rel="noopener noreferrer">Instagram</a></TableCell>
+                <TableCell><a href={participant.youtube} target="_blank" rel="noopener noreferrer">YouTube</a></TableCell>
+                <TableCell>{participant.tiktok || "-"}</TableCell>
               </TableRow>
-            )}
+            ))}
           </TableBody>
         </Table>
       </TableContainer>

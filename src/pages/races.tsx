@@ -68,20 +68,30 @@ const Races: React.FC = () => {
   // Загрузка списка гонок
   useEffect(() => {
     const fetchRaces = async () => {
-      try {
-        const q = query(collection(db, "races"), orderBy("date", "asc"));
-        const snapshot = await getDocs(q);
-        const fetched: Race[] = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Race[];
-        setRaces(fetched);
-      } catch (error) {
-        console.error("Error fetching races:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  try {
+    const q = query(collection(db, "races"), orderBy("date", "asc"));
+    const snapshot = await getDocs(q);
+
+    const fetched: Race[] = await Promise.all(
+      snapshot.docs.map(async (raceDoc) => {
+        const participantsRef = collection(db, "races", raceDoc.id, "participants");
+        const participantsSnapshot = await getDocs(participantsRef);
+        return {
+          id: raceDoc.id,
+          ...raceDoc.data(),
+          participantsCount: participantsSnapshot.size, // Подсчет количества документов в подколлекции
+        } as Race;
+      })
+    );
+
+    setRaces(fetched);
+  } catch (error) {
+    console.error("Error fetching races:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+Обновленный рен
     fetchRaces();
   }, []);
 
@@ -219,7 +229,7 @@ const Races: React.FC = () => {
             // Преобразуем название страны → ISO-код (если есть)
             const isoCode = countryMap[race.country] || "";
             // Подсчитываем количество участников, если participants нет или пусто, то 0
-            const participantsCount = race.participants?.length || 0;
+            const participantsCount = race.participantsCount || 0;
 
             return (
               <Grid item xs={12} sm={6} md={4} lg={3} key={race.id}>

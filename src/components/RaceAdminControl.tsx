@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { collection, getDocs, updateDoc, doc, getDoc } from "firebase/firestore";
 import { db, auth } from "@/utils/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -38,19 +38,31 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [availableChips, setAvailableChips] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true); // Для авторизации
+  const [loadingData, setLoadingData] = useState(true); // Для данных
+  const [error, setError] = useState<string | null>(null);
   const [updatedParticipants, setUpdatedParticipants] = useState<Record<string, Participant>>({});
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" | "warning" | undefined } | null>(null);
 
+  // Проверка авторизации
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-     
-      setUser(currentUser);
-    });
+    const unsubscribeAuth = onAuthStateChanged(
+      auth,
+      (currentUser) => {
+        setUser(currentUser);
+        setLoadingAuth(false);
+      },
+      (err) => {
+        console.error("Error in auth state change:", err);
+        setError("Failed to authenticate user");
+        setLoadingAuth(false);
+      }
+    );
+
     return () => unsubscribeAuth();
   }, []);
 
- 
-
+  // Загрузка данных участников и чипов
   const fetchParticipants = async () => {
     try {
       console.log("Fetching participants...");
@@ -78,39 +90,50 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
       setParticipants(participantList);
     } catch (error) {
       console.error("Error fetching participants:", error);
+      setError("Failed to load participants");
     }
   };
 
   const fetchAvailableChips = async () => {
-    console.log("Fetching available chips...");
-    const raceRef = doc(db, "races", raceId);
-    const raceSnap = await getDoc(raceRef);
-  
-    if (raceSnap.exists()) {
-      const raceData = raceSnap.data();
-      if (raceData.telemetry) {
-        const chipNumbers = Object.keys(raceData.telemetry);
-        console.log("Available Chips:", chipNumbers);
-        setAvailableChips(chipNumbers);
-      } else {
-        console.log("No telemetry data found.");
-        setAvailableChips([]);
+    try {
+      console.log("Fetching available chips...");
+      const raceRef = doc(db, "races", raceId);
+      const raceSnap = await getDoc(raceRef);
+
+      if (raceSnap.exists()) {
+        const raceData = raceSnap.data();
+        if (raceData.telemetry) {
+          const chipNumbers = Object.keys(raceData.telemetry);
+          console.log("Available Chips:", chipNumbers);
+          setAvailableChips(chipNumbers);
+        } else {
+          console.log("No telemetry data found.");
+          setAvailableChips([]);
+        }
       }
+    } catch (error) {
+      console.error("Error fetching available chips:", error);
+      setError("Failed to load available chips");
     }
   };
 
+  // Выполняем загрузку данных после авторизации
   useEffect(() => {
-    fetchParticipants();
-    fetchAvailableChips();
-  }, [raceId]);
+    const loadData = async () => {
+      if (!loadingAuth && user) {
+        setLoadingData(true);
+        try {
+          await Promise.all([fetchParticipants(), fetchAvailableChips()]);
+        } finally {
+          setLoadingData(false);
+        }
+      }
+    };
 
-  if (!user) {
-    return <Typography>Loading...</Typography>;
-  }
-  if (user.uid !== ADMIN_UID) {
-    return <Typography>Access Denied</Typography>;
-  }
+    loadData();
+  }, [raceId, loadingAuth, user]);
 
+  // Обновление данных участника
   const updateParticipant = (id: string, field: "chipNumber" | "raceNumber", value: string) => {
     setUpdatedParticipants((prev) => ({
       ...prev,
@@ -118,39 +141,83 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
     }));
   };
 
+  // Сохранение изменений
   const saveChanges = async () => {
     try {
-        console.log("Starting saveChanges...");
-        const updates = Object.entries(updatedParticipants);
-        console.log("Updates to save:", updates);
+      console.log("Starting saveChanges...");
+      const updates = Object.entries(updatedParticipants);
+      console.log("Updates to save:", updates);
 
-        for (const [id, data] of updates) {
-            console.log("Updating participant:", id, "with data:", data);
+      for (const [id, data] of updates) {
+        console.log("Updating participant:", id, "with data:", data);
 
-            const participantRef = doc(db, "races", raceId, "participants", id);
+        const participantRef = doc(db, "races", raceId, "participants", id);
 
-            let updateData: any = {};
-            if (data.chipNumber !== undefined) updateData.chipNumber = data.chipNumber;
-            if (data.raceNumber !== undefined) updateData.raceNumber = data.raceNumber;
+        let updateData: any = {};
+        if (data.chipNumber !== undefined) updateData.chipNumber = data.chipNumber;
+        if (data.raceNumber !== undefined) updateData.raceNumber = data.raceNumber;
 
-            console.log("Final update data:", updateData);
+        console.log("Final update data:", updateData);
 
-            if (Object.keys(updateData).length > 0) {
-                await updateDoc(participantRef, updateData);
-            }
+        if (Object.keys(updateData).length > 0) {
+          await updateDoc(participantRef, updateData);
         }
+      }
 
-        setUpdatedParticipants({});
-        console.log("Changes saved successfully!");
-        setNotification({ message: "Changes saved successfully!", type: "success" });
+      setUpdatedParticipants({});
+      console.log("Changes saved successfully!");
+      setNotification({ message: "Changes saved successfully!", type: "success" });
 
-        // 🔄 Обновляем участников после сохранения
-        fetchParticipants();
+      // 🔄 Обновляем участников после сохранения
+      fetchParticipants();
     } catch (error) {
-        console.error("Error saving changes:", error);
-        setNotification({ message: "Error saving changes!", type: "error" });
+      console.error("Error saving changes:", error);
+      setNotification({ message: "Error saving changes!", type: "error" });
     }
   };
+
+  // Отображение в зависимости от состояния
+  if (loadingAuth) {
+    return (
+      <Box sx={{ p: 3, textAlign: "center" }}>
+        <Typography variant="h6">Checking authentication...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3, textAlign: "center" }}>
+        <Typography variant="h6" color="error">
+          {error}
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Box sx={{ p: 3, textAlign: "center" }}>
+        <Typography variant="h6">Please log in to access admin controls</Typography>
+      </Box>
+    );
+  }
+
+  if (user.uid !== ADMIN_UID) {
+    return (
+      <Box sx={{ p: 3, textAlign: "center" }}>
+        <Typography variant="h6">Access Denied</Typography>
+      </Box>
+    );
+  }
+
+  if (loadingData) {
+    return (
+      <Box sx={{ p: 3, textAlign: "center" }}>
+        <Typography variant="h6">Loading race admin data...</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Paper sx={{ p: 3, borderRadius: 2, mt: 4 }}>

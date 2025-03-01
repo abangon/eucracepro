@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import PeopleIcon from "@mui/icons-material/People"; // Импортируем иконку для участников
+import PeopleIcon from "@mui/icons-material/People";
 import { keyframes } from "@mui/system";
 import { collection, getDocs, query, orderBy, setDoc, doc } from "firebase/firestore";
 import { db, auth } from "../utils/firebase";
@@ -24,7 +24,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import ReactCountryFlag from "react-country-flag";
 import { Link } from "react-router-dom";
 
-// Анимация мигающего кружка (для Registration / Active)
 const blinker = keyframes`
   50% { opacity: 0; }
 `;
@@ -35,10 +34,10 @@ interface Race {
   date: string;
   track_name: string;
   country: string;
-  status: string; // "Registration", "Active", "Finished"
+  status: string;
   participants: string[];
-  imageData?: string; // Base64 Data URL
-  // race_type хранится, но не отображается
+  race_type: string; // "Race", "Training", "Camp"
+  imageData?: string;
 }
 
 const Races: React.FC = () => {
@@ -46,7 +45,6 @@ const Races: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Поля админской формы
   const [newRaceName, setNewRaceName] = useState("");
   const [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceTrackName, setNewRaceTrackName] = useState("");
@@ -56,45 +54,41 @@ const Races: React.FC = () => {
   const [newRaceImage, setNewRaceImage] = useState("");
   const [formMessage, setFormMessage] = useState("");
 
-  // Список стран + маппинг полного названия → ISO-код
   const [countryMap, setCountryMap] = useState<Record<string, string>>({});
   const [countries, setCountries] = useState<string[]>([]);
 
-  // Генерация 4-значного ID
   const generateRaceId = () => {
     return (Math.floor(Math.random() * 9000) + 1000).toString();
   };
 
-  // Загрузка списка гонок
   useEffect(() => {
     const fetchRaces = async () => {
-  try {
-    const q = query(collection(db, "races"), orderBy("date", "asc"));
-    const snapshot = await getDocs(q);
+      try {
+        const q = query(collection(db, "races"), orderBy("date", "asc"));
+        const snapshot = await getDocs(q);
 
-    const fetched: Race[] = await Promise.all(
-      snapshot.docs.map(async (raceDoc) => {
-        const participantsRef = collection(db, "races", raceDoc.id, "participants");
-        const participantsSnapshot = await getDocs(participantsRef);
-        return {
-          id: raceDoc.id,
-          ...raceDoc.data(),
-          participantsCount: participantsSnapshot.size, // Подсчет количества документов в подколлекции
-        } as Race;
-      })
-    );
+        const fetched: Race[] = await Promise.all(
+          snapshot.docs.map(async (raceDoc) => {
+            const participantsRef = collection(db, "races", raceDoc.id, "participants");
+            const participantsSnapshot = await getDocs(participantsRef);
+            return {
+              id: raceDoc.id,
+              ...raceDoc.data(),
+              participantsCount: participantsSnapshot.size,
+            } as Race;
+          })
+        );
 
-    setRaces(fetched);
-  } catch (error) {
-    console.error("Error fetching races:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+        setRaces(fetched);
+      } catch (error) {
+        console.error("Error fetching races:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchRaces();
   }, []);
 
-  // Загрузка списка стран (полное название → ISO-код) и формирование выпадающего списка
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -122,7 +116,6 @@ const Races: React.FC = () => {
     fetchCountries();
   }, []);
 
-  // Проверка прав администратора (UID "ztnWBUkh6dUcXLOH8D5nLBEYm2J2")
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && user.uid === "ztnWBUkh6dUcXLOH8D5nLBEYm2J2") {
@@ -134,7 +127,6 @@ const Races: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Обработка загрузки изображения
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -148,7 +140,6 @@ const Races: React.FC = () => {
     }
   };
 
-  // Создание новой гонки
   const handleCreateRace = async () => {
     if (!newRaceName || !newRaceDate || !newRaceTrackName || !newRaceCountry) {
       setFormMessage("Please fill all fields.");
@@ -169,7 +160,6 @@ const Races: React.FC = () => {
     try {
       await setDoc(doc(db, "races", raceId), newRaceData);
       setFormMessage(`Race created with ID: ${raceId}`);
-      // Сброс формы
       setNewRaceName("");
       setNewRaceDate("");
       setNewRaceTrackName("");
@@ -178,7 +168,6 @@ const Races: React.FC = () => {
       setNewRaceType("Race");
       setNewRaceImage("");
 
-      // Обновление списка гонок
       const q = query(collection(db, "races"), orderBy("date", "asc"));
       const snapshot = await getDocs(q);
       const fetched: Race[] = snapshot.docs.map((doc) => ({
@@ -192,7 +181,6 @@ const Races: React.FC = () => {
     }
   };
 
-  // Форматирование даты (en-US)
   const formatDate = (dateStr: string) => {
     const dateObj = new Date(dateStr);
     return dateObj.toLocaleDateString("en-US", {
@@ -202,17 +190,154 @@ const Races: React.FC = () => {
     });
   };
 
-  // Капитализация статуса
   const capitalizeStatus = (status: string) =>
     status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 
-  // Цвет статуса
   const getStatusColor = (status: string) => {
     const lower = status.toLowerCase();
     if (lower === "registration") return "green";
     if (lower === "active") return "red";
     if (lower === "finished") return "black";
     return "black";
+  };
+
+  // Группировка гонок по race_type
+  const groupedRaces = races.reduce((acc, race) => {
+    const type = race.race_type || "Uncategorized"; // Если race_type не указан, используем "Uncategorized"
+    if (!acc[type]) {
+      acc[type] = [];
+    }
+    acc[type].push(race);
+    return acc;
+  }, {} as Record<string, Race[]>);
+
+  // Список типов гонок, которые существуют (не пустые категории)
+  const raceTypes = Object.keys(groupedRaces).sort(); // Сортируем для порядка
+
+  const renderRaceCard = (race: Race) => {
+    const isoCode = countryMap[race.country] || "";
+    const participantsCount = race.participantsCount || 0;
+
+    return (
+      <Grid item xs={12} sm={6} md={4} lg={3} key={race.id}>
+        <Link to={`/races/${race.id}`} style={{ textDecoration: "none" }}>
+          <Card
+            sx={{
+              position: "relative",
+              borderRadius: 2,
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+            }}
+          >
+            <Chip
+              label={race.id}
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                fontWeight: "bold",
+                backgroundColor: "#d287fe",
+                color: "white",
+              }}
+            />
+            {race.imageData ? (
+              <CardMedia
+                component="img"
+                image={race.imageData}
+                alt={race.name}
+                sx={{
+                  height: 180,
+                  objectFit: "contain",
+                  backgroundColor: "#f5f5f5",
+                }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  height: 180,
+                  backgroundColor: "#f5f5f5",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  No Image
+                </Typography>
+              </Box>
+            )}
+            <CardContent sx={{ flexGrow: 1 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                {race.name}
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                {isoCode && (
+                  <ReactCountryFlag
+                    countryCode={isoCode}
+                    svg
+                    style={{
+                      width: "1.2em",
+                      height: "1.2em",
+                      marginRight: 6,
+                    }}
+                    title={isoCode}
+                  />
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  {race.country}
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                <CalendarTodayIcon sx={{ fontSize: 16, mr: 1 }} />
+                <Typography variant="body2" color="text.secondary">
+                  {formatDate(race.date)}
+                </Typography>
+              </Box>
+              {race.track_name && (
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <LocationOnIcon sx={{ fontSize: 16, mr: 1 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    {race.track_name}
+                  </Typography>
+                </Box>
+              )}
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                <PeopleIcon sx={{ fontSize: 16, mr: 1 }} />
+                <Typography variant="body2" color="text.secondary">
+                  Participants: {participantsCount}
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: "bold",
+                    color: getStatusColor(race.status),
+                  }}
+                >
+                  Status: {capitalizeStatus(race.status)}
+                </Typography>
+                {(race.status.toLowerCase() === "registration" ||
+                  race.status.toLowerCase() === "active") && (
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      backgroundColor: getStatusColor(race.status),
+                      ml: 1,
+                      animation: `${blinker} 1.5s linear infinite`,
+                    }}
+                  />
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Link>
+      </Grid>
+    );
   };
 
   return (
@@ -222,152 +347,23 @@ const Races: React.FC = () => {
       </Typography>
       {loading ? (
         <Typography>Loading...</Typography>
+      ) : races.length === 0 ? (
+        <Typography>No races available.</Typography>
       ) : (
-        <Grid container spacing={2} alignItems="stretch">
-          {races.map((race) => {
-            // Преобразуем название страны → ISO-код (если есть)
-            const isoCode = countryMap[race.country] || "";
-            // Подсчитываем количество участников, если participants нет или пусто, то 0
-            const participantsCount = race.participantsCount || 0;
-
-            return (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={race.id}>
-                <Link to={`/races/${race.id}`} style={{ textDecoration: "none" }}>
-                  <Card
-                    sx={{
-                      position: "relative",
-                      borderRadius: 2,
-                      overflow: "hidden",
-                      display: "flex",
-                      flexDirection: "column",
-                      height: "100%",
-                    }}
-                  >
-                    {/* Race ID в правом верхнем углу */}
-                    <Chip
-                      label={race.id}
-                      sx={{
-                        position: "absolute",
-                        top: 8,
-                        right: 8,
-                        fontWeight: "bold",
-                        backgroundColor: "#d287fe",
-                        color: "white",
-                      }}
-                    />
-                    {/* Изображение гонки */}
-                    {race.imageData ? (
-                      <CardMedia
-                        component="img"
-                        image={race.imageData}
-                        alt={race.name}
-                        sx={{
-                          height: 180,
-                          objectFit: "contain",
-                          backgroundColor: "#f5f5f5",
-                        }}
-                      />
-                    ) : (
-                      <Box
-                        sx={{
-                          height: 180,
-                          backgroundColor: "#f5f5f5",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Typography variant="body2" color="text.secondary">
-                          No Image
-                        </Typography>
-                      </Box>
-                    )}
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      {/* Название гонки с отступом снизу */}
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                        {race.name}
-                      </Typography>
-
-                      {/* Флаг и название страны */}
-                      <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                        {isoCode && (
-                          <ReactCountryFlag
-                            countryCode={isoCode}
-                            svg
-                            style={{
-                              width: "1.2em",
-                              height: "1.2em",
-                              marginRight: 6,
-                            }}
-                            title={isoCode}
-                          />
-                        )}
-                        <Typography variant="body2" color="text.secondary">
-                          {race.country}
-                        </Typography>
-                      </Box>
-
-                      {/* Дата проведения */}
-                      <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                        <CalendarTodayIcon sx={{ fontSize: 16, mr: 1 }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {formatDate(race.date)}
-                        </Typography>
-                      </Box>
-
-                      {/* Место проведения + отступ снизу */}
-                      {race.track_name && (
-                        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                          <LocationOnIcon sx={{ fontSize: 16, mr: 1 }} />
-                          <Typography variant="body2" color="text.secondary">
-                            {race.track_name}
-                          </Typography>
-                        </Box>
-                      )}
-
-                      {/* Перемещенное поле Participants */}
-                      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                       <PeopleIcon sx={{ fontSize: 16, mr: 1 }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Participants: {participantsCount}
-                        </Typography>
-                      </Box>
-                      
-                      {/* Статус (убираем лишние отступы снизу) */}
-                      <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: "bold",
-                            color: getStatusColor(race.status),
-                          }}
-                        >
-                          Status: {capitalizeStatus(race.status)}
-                        </Typography>
-                        {(race.status.toLowerCase() === "registration" ||
-                          race.status.toLowerCase() === "active") && (
-                          <Box
-                            sx={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: "50%",
-                              backgroundColor: getStatusColor(race.status),
-                              ml: 1,
-                              animation: `${blinker} 1.5s linear infinite`,
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Link>
+        <Box>
+          {raceTypes.map((raceType) => (
+            <Box key={raceType} sx={{ mb: 4 }}>
+              <Typography variant="h5" gutterBottom>
+                {raceType}
+              </Typography>
+              <Grid container spacing={2} alignItems="stretch">
+                {groupedRaces[raceType].map((race) => renderRaceCard(race))}
               </Grid>
-            );
-          })}
-        </Grid>
+            </Box>
+          ))}
+        </Box>
       )}
 
-      {/* Админская форма */}
       {isAdmin && (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>

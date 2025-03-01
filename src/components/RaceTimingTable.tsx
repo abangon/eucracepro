@@ -80,7 +80,6 @@ const RaceTimingTable: React.FC = () => {
     fetchData();
   }, [raceId]);
 
-  // Функция форматирования времени
   const formatLapTime = (time: number | string) => {
     if (time === "-") return "-";
     const timeInSeconds = Number(time);
@@ -89,7 +88,6 @@ const RaceTimingTable: React.FC = () => {
     return `${minutes}:${seconds.padStart(6, "0")}`;
   };
 
-  // Преобразуем данные в массив и сортируем по Best Lap
   const sortedTelemetry = Object.keys(telemetry).map((chip) => {
     const bestLap = telemetry[chip].length ? Math.min(...telemetry[chip].map((lap: any) => lap.lap_time)) : "-";
     const lastLap = telemetry[chip]?.[telemetry[chip].length - 1]?.lap_time || "-";
@@ -106,7 +104,6 @@ const RaceTimingTable: React.FC = () => {
     };
   }).sort((a, b) => (a.bestLap === "-" ? 1 : b.bestLap === "-" ? -1 : a.bestLap - b.bestLap));
 
-  // Находим лучшее время (для подсветки)
   const bestOverallLap = sortedTelemetry.length > 0
     ? Math.min(
         ...sortedTelemetry
@@ -140,8 +137,13 @@ const RaceTimingTable: React.FC = () => {
   }
 
   return (
-    <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
-      <Typography variant="h6" fontWeight="bold" mb={2}>
+    <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 4, borderRadius: 2 }}>
+      <Typography
+        variant="h6"
+        fontWeight="bold"
+        mb={2}
+        sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }} // Уменьшаем шрифт на мобильных
+      >
         Race Timing
       </Typography>
 
@@ -150,12 +152,29 @@ const RaceTimingTable: React.FC = () => {
           No data available for this race.
         </Typography>
       ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
-          <Table>
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 2,
+            overflowX: "auto", // Добавляем горизонтальную прокрутку
+            minWidth: 0, // Убираем минимальную ширину для адаптивности
+          }}
+        >
+          <Table
+            sx={{
+              minWidth: 650, // Минимальная ширина для десктопа, но прокрутка на мобильных
+              "& th, & td": {
+                fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Уменьшаем шрифт на мобильных
+                padding: { xs: "6px 8px", sm: "8px 16px" }, // Уменьшаем отступы на мобильных
+              },
+            }}
+          >
             <TableHead>
               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                 <TableCell sx={{ textAlign: "center" }}><strong>Position</strong></TableCell>
-                <TableCell><strong>Nickname</strong></TableCell>
+                <TableCell sx={{ textAlign: { xs: "left", sm: "center" } }}>
+                  <strong>Nickname</strong>
+                </TableCell>
                 <TableCell sx={{ textAlign: "center" }}><strong>Race Number</strong></TableCell>
                 <TableCell sx={{ textAlign: "center" }}><strong>Chip Number</strong></TableCell>
                 <TableCell sx={{ textAlign: "center" }}><strong>Best Lap</strong></TableCell>
@@ -173,11 +192,13 @@ const RaceTimingTable: React.FC = () => {
                     sx={{
                       cursor: "pointer",
                       "&:hover": { backgroundColor: "#f0f0f0" },
-                      backgroundColor: isBestLap ? "#fffde7" : "inherit", // Золотистый цвет для лучшего круга
+                      backgroundColor: isBestLap ? "#fffde7" : "inherit",
                     }}
                   >
                     <TableCell sx={{ textAlign: "center" }}>{index + 1}</TableCell>
-                    <TableCell>{data.nickname}</TableCell>
+                    <TableCell sx={{ textAlign: { xs: "left", sm: "center" } }}>
+                      {data.nickname}
+                    </TableCell>
                     <TableCell sx={{ textAlign: "center" }}>{data.raceNumber}</TableCell>
                     <TableCell sx={{ textAlign: "center" }}>{data.chip}</TableCell>
                     <TableCell sx={{ textAlign: "center" }}>{formatLapTime(data.bestLap)}</TableCell>

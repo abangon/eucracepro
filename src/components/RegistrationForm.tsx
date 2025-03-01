@@ -12,17 +12,20 @@ import {
   AccordionDetails,
   IconButton,
   Pagination,
+  Stack,
+  Tooltip,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { FaFacebook, FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
+import FacebookIcon from "@mui/icons-material/Facebook";
+import InstagramIcon from "@mui/icons-material/Instagram";
+import YouTubeIcon from "@mui/icons-material/YouTube";
+import TikTokIcon from "@mui/icons-material/Tiktok";
 
 // Функции формирования URL соцсетей
 const getFacebookUrl = (username: string) => `https://www.facebook.com/${username}`;
 const getInstagramUrl = (username: string) => `https://www.instagram.com/${username}`;
 const getYoutubeUrl = (username: string) => `https://www.youtube.com/@${username}`;
 const getTiktokUrl = (username: string) => `https://www.tiktok.com/@${username}`;
-
-const socialIconStyle = { width: "1.5em", height: "1.5em" };
 
 interface RegistrationFormProps {
   raceId: string;
@@ -33,7 +36,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [participants, setParticipants] = useState<any[]>([]);
   const [usersData, setUsersData] = useState<{ [key: string]: any }>({});
   const [isRegistered, setIsRegistered] = useState(false);
-  
+
   // Пагинация
   const [currentPage, setCurrentPage] = useState(1);
   const participantsPerPage = 10; // Количество участников на странице
@@ -104,7 +107,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" }); // Прокрутка вверх при смене страницы
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -217,36 +220,80 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
                     <Typography variant="body2">
                       <strong>Team:</strong> {team}
                     </Typography>
-                    <Box display="flex" gap={2} alignItems="center">
+                    <Box display="flex" alignItems="center" gap={1}>
                       <Typography variant="body2"><strong>Social:</strong></Typography>
-                      {facebook ? (
-                        <a href={getFacebookUrl(facebook)} target="_blank" rel="noopener noreferrer">
-                          <FaFacebook style={{ ...socialIconStyle, color: "#1877F2" }} />
-                        </a>
-                      ) : (
-                        <Typography variant="body2">-</Typography>
-                      )}
-                      {instagram ? (
-                        <a href={getInstagramUrl(instagram)} target="_blank" rel="noopener noreferrer">
-                          <FaInstagram style={{ ...socialIconStyle, color: "#E1306C" }} />
-                        </a>
-                      ) : (
-                        <Typography variant="body2">-</Typography>
-                      )}
-                      {youtube ? (
-                        <a href={getYoutubeUrl(youtube)} target="_blank" rel="noopener noreferrer">
-                          <FaYoutube style={{ ...socialIconStyle, color: "#FF0000" }} />
-                        </a>
-                      ) : (
-                        <Typography variant="body2">-</Typography>
-                      )}
-                      {tiktok ? (
-                        <a href={getTiktokUrl(tiktok)} target="_blank" rel="noopener noreferrer">
-                          <FaTiktok style={{ ...socialIconStyle, color: "#000000" }} />
-                        </a>
-                      ) : (
-                        <Typography variant="body2">-</Typography>
-                      )}
+                      <Stack direction="row" spacing={1}>
+                        {facebook && (
+                          <Tooltip title="Facebook" arrow>
+                            <IconButton
+                              href={getFacebookUrl(facebook)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={{
+                                color: "#1877F2",
+                                "&:hover": { bgcolor: "#e8f4f8" },
+                                p: 0.5,
+                              }}
+                            >
+                              <FacebookIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {instagram && (
+                          <Tooltip title="Instagram" arrow>
+                            <IconButton
+                              href={getInstagramUrl(instagram)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={{
+                                color: "#E1306C",
+                                "&:hover": { bgcolor: "#fce4ec" },
+                                p: 0.5,
+                              }}
+                            >
+                              <InstagramIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {youtube && (
+                          <Tooltip title="YouTube" arrow>
+                            <IconButton
+                              href={getYoutubeUrl(youtube)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={{
+                                color: "#FF0000",
+                                "&:hover": { bgcolor: "#fee6e6" },
+                                p: 0.5,
+                              }}
+                            >
+                              <YouTubeIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {tiktok && (
+                          <Tooltip title="TikTok" arrow>
+                            <IconButton
+                              href={getTiktokUrl(tiktok)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={{
+                                color: "#000000",
+                                "&:hover": { bgcolor: "#e0e0e0" },
+                                p: 0.5,
+                              }}
+                            >
+                              <TikTokIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {/* Если нет ни одной соцсети, показываем текст */}
+                        {!facebook && !instagram && !youtube && !tiktok && (
+                          <Typography variant="body2" color="text.secondary">
+                            No social links
+                          </Typography>
+                        )}
+                      </Stack>
                     </Box>
                   </Box>
                 </AccordionDetails>

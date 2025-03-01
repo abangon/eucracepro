@@ -316,6 +316,14 @@ const Races: React.FC = () => {
                         </Box>
                       )}
 
+                      /* Перемещенное поле Participants */
+                      <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                       <PeopleIcon sx={{ fontSize: 16, mr: 1 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        Participants: {participantsCount}
+                        </Typography>
+                      </Box>
+                      
                       {/* Статус (убираем лишние отступы снизу) */}
                       <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                         <Typography
@@ -340,14 +348,6 @@ const Races: React.FC = () => {
                             }}
                           />
                         )}
-                      </Box>
-
-                      {/* Количество участников */}
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <PeopleIcon sx={{ fontSize: 16, mr: 1 }} />
-                        <Typography variant="body2" color="text.secondary">
-                          Participants: {participantsCount}
-                        </Typography>
                       </Box>
                     </CardContent>
                   </Card>

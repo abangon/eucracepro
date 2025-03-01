@@ -13,7 +13,7 @@ import {
   IconButton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, collection, getDocs } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 
 interface DriverTelemetry {
@@ -24,8 +24,8 @@ const RaceDriverPage: React.FC = () => {
   const { raceId, chipNumber } = useParams<{ raceId: string; chipNumber: string }>();
   const [driverTelemetry, setDriverTelemetry] = useState<DriverTelemetry | null>(null);
   const [raceName, setRaceName] = useState<string>("");
-  const [driverName, setDriverName] = useState<string>(""); // Убрали дефолтное "-"
-  const [raceNumber, setRaceNumber] = useState<string>(""); // Добавили состояние для raceNumber
+  const [driverName, setDriverName] = useState<string>("");
+  const [raceNumber, setRaceNumber] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -34,7 +34,7 @@ const RaceDriverPage: React.FC = () => {
 
     const raceRef = doc(db, "races", raceId);
 
-    const unsubscribe = onSnapshot(raceRef, (raceSnapshot) => {
+    const unsubscribe = onSnapshot(raceRef, async (raceSnapshot) => {
       if (!raceSnapshot.exists()) {
         console.log(`Race ${raceId} not found.`);
         setDriverTelemetry(null);
@@ -59,16 +59,23 @@ const RaceDriverPage: React.FC = () => {
         .map((lap: any) => lap.lap_time)
         .filter((time: number | null) => time !== null && time >= 3.000);
 
-      // Проверяем наличие participants и извлекаем nickname и raceNumber
-      if (raceData.participants && raceData.participants[chipNumber]) {
-        const participant = raceData.participants[chipNumber];
-        setDriverName(participant.name || ""); // Устанавливаем nickname, если есть
-        setRaceNumber(participant.raceNumber || ""); // Устанавливаем raceNumber, если есть
-      } else {
-        // Если participants или chipNumber отсутствуют, оставляем пустыми
-        setDriverName("");
-        setRaceNumber("");
-      }
+      // Загружаем подколлекцию participants
+      const participantsRef = collection(db, "races", raceId, "participants");
+      const participantsSnapshot = await getDocs(participantsRef);
+
+      // Ищем участника с нужным chipNumber
+      let foundDriverName = "";
+      let foundRaceNumber = "";
+      participantsSnapshot.forEach((doc) => {
+        const participantData = doc.data();
+        if (participantData.chipNumber === chipNumber) {
+          foundDriverName = participantData.nickname || "";
+          foundRaceNumber = participantData.raceNumber || "";
+        }
+      });
+
+      setDriverName(foundDriverName);
+      setRaceNumber(foundRaceNumber);
 
       setDriverTelemetry({ lapTimes });
       setLoading(false);
@@ -100,7 +107,7 @@ const RaceDriverPage: React.FC = () => {
     const details = [];
     if (driverName) details.push(driverName);
     if (raceNumber) details.push(raceNumber);
-    titleParts.push(details.join(" ")); // Объединяем nickname и raceNumber через пробел, если они есть
+    titleParts.push(details.join(" "));
   }
   titleParts.push(`(${chipNumber})`);
 

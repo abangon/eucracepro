@@ -180,14 +180,7 @@ const RaceTimingTable: React.FC = () => {
                     <TableCell>{data.nickname}</TableCell>
                     <TableCell sx={{ textAlign: "center" }}>{data.raceNumber}</TableCell>
                     <TableCell sx={{ textAlign: "center" }}>{data.chip}</TableCell>
-                    <TableCell sx={{ textAlign: "center" }}>
-                      {formatLapTime(data.bestLap)}{" "}
-                      {isBestLap && (
-                        <Typography component="span" color="success.main" fontSize="0.8em">
-                          (Best)
-                        </Typography>
-                      )}
-                    </TableCell>
+                    <TableCell sx={{ textAlign: "center" }}>{formatLapTime(data.bestLap)}</TableCell>
                     <TableCell sx={{ textAlign: "center" }}>{formatLapTime(data.lastLap)}</TableCell>
                     <TableCell sx={{ textAlign: "center" }}>{data.totalLaps}</TableCell>
                   </TableRow>

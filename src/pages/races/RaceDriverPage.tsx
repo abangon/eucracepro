@@ -13,7 +13,7 @@ import {
   IconButton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 
 interface DriverTelemetry {
@@ -24,7 +24,8 @@ const RaceDriverPage: React.FC = () => {
   const { raceId, chipNumber } = useParams<{ raceId: string; chipNumber: string }>();
   const [driverTelemetry, setDriverTelemetry] = useState<DriverTelemetry | null>(null);
   const [raceName, setRaceName] = useState<string>("");
-  const [driverName, setDriverName] = useState<string>("-");
+  const [driverName, setDriverName] = useState<string>(""); // Убрали дефолтное "-"
+  const [raceNumber, setRaceNumber] = useState<string>(""); // Добавили состояние для raceNumber
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -58,8 +59,15 @@ const RaceDriverPage: React.FC = () => {
         .map((lap: any) => lap.lap_time)
         .filter((time: number | null) => time !== null && time >= 3.000);
 
+      // Проверяем наличие participants и извлекаем nickname и raceNumber
       if (raceData.participants && raceData.participants[chipNumber]) {
-        setDriverName(raceData.participants[chipNumber].name || "-");
+        const participant = raceData.participants[chipNumber];
+        setDriverName(participant.name || ""); // Устанавливаем nickname, если есть
+        setRaceNumber(participant.raceNumber || ""); // Устанавливаем raceNumber, если есть
+      } else {
+        // Если participants или chipNumber отсутствуют, оставляем пустыми
+        setDriverName("");
+        setRaceNumber("");
       }
 
       setDriverTelemetry({ lapTimes });
@@ -86,6 +94,16 @@ const RaceDriverPage: React.FC = () => {
 
   const bestLap = Math.min(...driverTelemetry.lapTimes);
 
+  // Формируем заголовок динамически
+  const titleParts = [raceName, `(${raceId})`];
+  if (driverName || raceNumber) {
+    const details = [];
+    if (driverName) details.push(driverName);
+    if (raceNumber) details.push(raceNumber);
+    titleParts.push(details.join(" ")); // Объединяем nickname и raceNumber через пробел, если они есть
+  }
+  titleParts.push(`(${chipNumber})`);
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Кнопка Назад */}
@@ -93,9 +111,9 @@ const RaceDriverPage: React.FC = () => {
         <ArrowBackIcon />
       </IconButton>
 
-      {/* Заголовок с именем гонки и ID */}
+      {/* Заголовок с динамическим формированием */}
       <Typography variant="h4" gutterBottom sx={{ mt: 2, mb: 4 }}>
-        {raceName} ({raceId}) - {driverName} ({chipNumber})
+        {titleParts.join(" ")}
       </Typography>
 
       {/* Таблица с кругами */}

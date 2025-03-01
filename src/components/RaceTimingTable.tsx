@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom"; // Добавляем useNavigate
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/utils/firebase";
 import {
@@ -16,6 +16,7 @@ import {
 
 const RaceTimingTable: React.FC = () => {
   const { raceId } = useParams<{ raceId: string }>();
+  const navigate = useNavigate(); // Для навигации
   console.log("🏁 raceId from URL:", raceId);
 
   const [participants, setParticipants] = useState<any[]>([]);
@@ -99,6 +100,13 @@ const RaceTimingTable: React.FC = () => {
     };
   }).sort((a, b) => (a.bestLap === "-" ? 1 : b.bestLap === "-" ? -1 : a.bestLap - b.bestLap));
 
+  // Обработчик клика по строке
+  const handleRowClick = (chip: string) => {
+    if (raceId && chip) {
+      navigate(`/race/${raceId}/driver/${chip}`); // Перенаправляем на RaceDriverPage
+    }
+  };
+
   if (loading) {
     return (
       <Box sx={{ p: 3, textAlign: "center" }}>
@@ -143,7 +151,11 @@ const RaceTimingTable: React.FC = () => {
             </TableHead>
             <TableBody>
               {sortedTelemetry.map((data, index) => (
-                <TableRow key={data.chip}>
+                <TableRow
+                  key={data.chip}
+                  onClick={() => handleRowClick(data.chip)} // Добавляем обработчик клика
+                  sx={{ cursor: "pointer", "&:hover": { backgroundColor: "#f0f0f0" } }} // Добавляем визуальный эффект
+                >
                   <TableCell sx={{ textAlign: "center" }}>{index + 1}</TableCell>
                   <TableCell>{data.nickname}</TableCell>
                   <TableCell sx={{ textAlign: "center" }}>{data.raceNumber}</TableCell>

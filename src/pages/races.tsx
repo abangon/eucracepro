@@ -36,7 +36,7 @@ interface Race {
   country: string;
   status: string;
   participants: string[];
-  race_type: string; // "Race", "Training", "Camp"
+  race_type: string;
   imageData?: string;
 }
 
@@ -203,7 +203,7 @@ const Races: React.FC = () => {
 
   // Группировка гонок по race_type
   const groupedRaces = races.reduce((acc, race) => {
-    const type = race.race_type || "Uncategorized"; // Если race_type не указан, используем "Uncategorized"
+    const type = race.race_type || "Uncategorized";
     if (!acc[type]) {
       acc[type] = [];
     }
@@ -211,8 +211,27 @@ const Races: React.FC = () => {
     return acc;
   }, {} as Record<string, Race[]>);
 
-  // Список типов гонок, которые существуют (не пустые категории)
-  const raceTypes = Object.keys(groupedRaces).sort(); // Сортируем для порядка
+  // Сортировка внутри групп по дате (от ближней к дальней)
+  Object.keys(groupedRaces).forEach((type) => {
+    groupedRaces[type].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  });
+
+  // Определяем порядок категорий
+  const categoryOrder = ["Race", "Camp", "Training"];
+  const displayNames: Record<string, string> = {
+    Race: "Upcoming Races",
+    Camp: "Upcoming Camp",
+    Training: "Upcoming Training",
+    Uncategorized: "Uncategorized", // Если вдруг есть некатегоризированные записи
+  };
+
+  // Получаем только те категории, которые существуют, и сортируем их согласно заданному порядку
+  const raceTypes = Object.keys(groupedRaces).sort((a, b) => {
+    const indexA = categoryOrder.indexOf(a);
+    const indexB = categoryOrder.indexOf(b);
+    // Если категория не в заданном списке, она идет в конец
+    return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+  });
 
   const renderRaceCard = (race: Race) => {
     const isoCode = countryMap[race.country] || "";
@@ -342,19 +361,16 @@ const Races: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Upcoming Races
-      </Typography>
       {loading ? (
         <Typography>Loading...</Typography>
       ) : races.length === 0 ? (
-        <Typography>No races available.</Typography>
+        <Typography>No events available.</Typography>
       ) : (
         <Box>
           {raceTypes.map((raceType) => (
             <Box key={raceType} sx={{ mb: 4 }}>
               <Typography variant="h5" gutterBottom>
-                {raceType}
+                {displayNames[raceType] || raceType}
               </Typography>
               <Grid container spacing={2} alignItems="stretch">
                 {groupedRaces[raceType].map((race) => renderRaceCard(race))}
@@ -442,8 +458,8 @@ const Races: React.FC = () => {
                 onChange={(e) => setNewRaceType(e.target.value)}
               >
                 <MenuItem value="Race">Race</MenuItem>
-                <MenuItem value="Training">Training</MenuItem>
                 <MenuItem value="Camp">Camp</MenuItem>
+                <MenuItem value="Training">Training</MenuItem>
               </Select>
             </FormControl>
             <Box>

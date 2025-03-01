@@ -80,6 +80,16 @@ const RaceTimingTable: React.FC = () => {
     fetchData();
   }, [raceId]);
 
+  // Функция форматирования времени
+  const formatLapTime = (time: number | string) => {
+    if (time === "-") return "-";
+    const timeInSeconds = Number(time);
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = (timeInSeconds % 60).toFixed(3);
+    return `${minutes}:${seconds.padStart(6, "0")}`;
+  };
+
+  // Преобразуем данные в массив и сортируем по Best Lap
   const sortedTelemetry = Object.keys(telemetry).map((chip) => {
     const bestLap = telemetry[chip].length ? Math.min(...telemetry[chip].map((lap: any) => lap.lap_time)) : "-";
     const lastLap = telemetry[chip]?.[telemetry[chip].length - 1]?.lap_time || "-";
@@ -96,9 +106,18 @@ const RaceTimingTable: React.FC = () => {
     };
   }).sort((a, b) => (a.bestLap === "-" ? 1 : b.bestLap === "-" ? -1 : a.bestLap - b.bestLap));
 
+  // Находим лучшее время (для подсветки)
+  const bestOverallLap = sortedTelemetry.length > 0
+    ? Math.min(
+        ...sortedTelemetry
+          .filter((data) => data.bestLap !== "-")
+          .map((data) => Number(data.bestLap))
+      )
+    : null;
+
   const handleRowClick = (chip: string) => {
     if (raceId && chip) {
-      navigate(`/races/${raceId}/driver/${chip}`); // Исправляем путь на /races/...
+      navigate(`/races/${raceId}/driver/${chip}`);
     }
   };
 
@@ -145,21 +164,35 @@ const RaceTimingTable: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {sortedTelemetry.map((data, index) => (
-                <TableRow
-                  key={data.chip}
-                  onClick={() => handleRowClick(data.chip)}
-                  sx={{ cursor: "pointer", "&:hover": { backgroundColor: "#f0f0f0" } }}
-                >
-                  <TableCell sx={{ textAlign: "center" }}>{index + 1}</TableCell>
-                  <TableCell>{data.nickname}</TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>{data.raceNumber}</TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>{data.chip}</TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>{data.bestLap}</TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>{data.lastLap}</TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>{data.totalLaps}</TableCell>
-                </TableRow>
-              ))}
+              {sortedTelemetry.map((data, index) => {
+                const isBestLap = bestOverallLap !== null && data.bestLap === bestOverallLap;
+                return (
+                  <TableRow
+                    key={data.chip}
+                    onClick={() => handleRowClick(data.chip)}
+                    sx={{
+                      cursor: "pointer",
+                      "&:hover": { backgroundColor: "#f0f0f0" },
+                      backgroundColor: isBestLap ? "#e0ffe0" : "inherit", // Подсвечиваем лучший круг
+                    }}
+                  >
+                    <TableCell sx={{ textAlign: "center" }}>{index + 1}</TableCell>
+                    <TableCell>{data.nickname}</TableCell>
+                    <TableCell sx={{ textAlign: "center" }}>{data.raceNumber}</TableCell>
+                    <TableCell sx={{ textAlign: "center" }}>{data.chip}</TableCell>
+                    <TableCell sx={{ textAlign: "center" }}>
+                      {formatLapTime(data.bestLap)}{" "}
+                      {isBestLap && (
+                        <Typography component="span" color="success.main" fontSize="0.8em">
+                          (Best)
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell sx={{ textAlign: "center" }}>{formatLapTime(data.lastLap)}</TableCell>
+                    <TableCell sx={{ textAlign: "center" }}>{data.totalLaps}</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>

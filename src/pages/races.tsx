@@ -16,12 +16,13 @@ import {
 } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import PeopleIcon from "@mui/icons-material/People"; // Импортируем иконку для участников
 import { keyframes } from "@mui/system";
 import { collection, getDocs, query, orderBy, setDoc, doc } from "firebase/firestore";
 import { db, auth } from "../utils/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import ReactCountryFlag from "react-country-flag";
-import { Link } from "react-router-dom"; // Добавляем импорт Link
+import { Link } from "react-router-dom";
 
 // Анимация мигающего кружка (для Registration / Active)
 const blinker = keyframes`
@@ -213,137 +214,148 @@ const Races: React.FC = () => {
       {loading ? (
         <Typography>Loading...</Typography>
       ) : (
-       <Grid container spacing={2} alignItems="stretch">
-  {races.map((race) => {
-    // Преобразуем название страны → ISO-код (если есть)
-    const isoCode = countryMap[race.country] || "";
-    return (
-      <Grid item xs={12} sm={6} md={4} lg={3} key={race.id}>
-        <Link to={`/races/${race.id}`} style={{ textDecoration: "none" }}>
-          <Card
-            sx={{
-              position: "relative",
-              borderRadius: 2,
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-            }}
-          >
-            {/* Race ID в правом верхнем углу */}
-            <Chip
-              label={race.id}
-              sx={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                fontWeight: "bold",
-                backgroundColor: "#d287fe",
-                color: "white",
-              }}
-            />
-            {/* Изображение гонки */}
-            {race.imageData ? (
-              <CardMedia
-                component="img"
-                image={race.imageData}
-                alt={race.name}
-                sx={{
-                  height: 180,
-                  objectFit: "contain",
-                  backgroundColor: "#f5f5f5",
-                }}
-              />
-            ) : (
-              <Box
-                sx={{
-                  height: 180,
-                  backgroundColor: "#f5f5f5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  No Image
-                </Typography>
-              </Box>
-            )}
-            <CardContent sx={{ flexGrow: 1 }}>
-              {/* Название гонки с отступом снизу */}
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                {race.name}
-              </Typography>
+        <Grid container spacing={2} alignItems="stretch">
+          {races.map((race) => {
+            // Преобразуем название страны → ISO-код (если есть)
+            const isoCode = countryMap[race.country] || "";
+            // Подсчитываем количество участников, если participants нет или пусто, то 0
+            const participantsCount = race.participants?.length || 0;
 
-              {/* Флаг и название страны */}
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                {isoCode && (
-                  <ReactCountryFlag
-                    countryCode={isoCode}
-                    svg
-                    style={{
-                      width: "1.2em",
-                      height: "1.2em",
-                      marginRight: 6,
-                    }}
-                    title={isoCode}
-                  />
-                )}
-                <Typography variant="body2" color="text.secondary">
-                  {race.country}
-                </Typography>
-              </Box>
-
-              {/* Дата проведения */}
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <CalendarTodayIcon sx={{ fontSize: 16, mr: 1 }} />
-                <Typography variant="body2" color="text.secondary">
-                  {formatDate(race.date)}
-                </Typography>
-              </Box>
-
-              {/* Место проведения + отступ снизу */}
-              {race.track_name && (
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <LocationOnIcon sx={{ fontSize: 16, mr: 1 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    {race.track_name}
-                  </Typography>
-                </Box>
-              )}
-
-              {/* Статус (убираем лишние отступы снизу) */}
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: "bold",
-                    color: getStatusColor(race.status),
-                  }}
-                >
-                  Status: {capitalizeStatus(race.status)}
-                </Typography>
-                {(race.status.toLowerCase() === "registration" ||
-                  race.status.toLowerCase() === "active") && (
-                  <Box
+            return (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={race.id}>
+                <Link to={`/races/${race.id}`} style={{ textDecoration: "none" }}>
+                  <Card
                     sx={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      backgroundColor: getStatusColor(race.status),
-                      ml: 1,
-                      animation: `${blinker} 1.5s linear infinite`,
+                      position: "relative",
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      display: "flex",
+                      flexDirection: "column",
+                      height: "100%",
                     }}
-                  />
-                )}
-              </Box>
-            </CardContent>
-          </Card>
-        </Link>
-      </Grid>
-    );
-  })}
-</Grid>
+                  >
+                    {/* Race ID в правом верхнем углу */}
+                    <Chip
+                      label={race.id}
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        fontWeight: "bold",
+                        backgroundColor: "#d287fe",
+                        color: "white",
+                      }}
+                    />
+                    {/* Изображение гонки */}
+                    {race.imageData ? (
+                      <CardMedia
+                        component="img"
+                        image={race.imageData}
+                        alt={race.name}
+                        sx={{
+                          height: 180,
+                          objectFit: "contain",
+                          backgroundColor: "#f5f5f5",
+                        }}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          height: 180,
+                          backgroundColor: "#f5f5f5",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Typography variant="body2" color="text.secondary">
+                          No Image
+                        </Typography>
+                      </Box>
+                    )}
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      {/* Название гонки с отступом снизу */}
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                        {race.name}
+                      </Typography>
+
+                      {/* Флаг и название страны */}
+                      <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                        {isoCode && (
+                          <ReactCountryFlag
+                            countryCode={isoCode}
+                            svg
+                            style={{
+                              width: "1.2em",
+                              height: "1.2em",
+                              marginRight: 6,
+                            }}
+                            title={isoCode}
+                          />
+                        )}
+                        <Typography variant="body2" color="text.secondary">
+                          {race.country}
+                        </Typography>
+                      </Box>
+
+                      {/* Дата проведения */}
+                      <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                        <CalendarTodayIcon sx={{ fontSize: 16, mr: 1 }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {formatDate(race.date)}
+                        </Typography>
+                      </Box>
+
+                      {/* Место проведения + отступ снизу */}
+                      {race.track_name && (
+                        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                          <LocationOnIcon sx={{ fontSize: 16, mr: 1 }} />
+                          <Typography variant="body2" color="text.secondary">
+                            {race.track_name}
+                          </Typography>
+                        </Box>
+                      )}
+
+                      {/* Статус (убираем лишние отступы снизу) */}
+                      <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: "bold",
+                            color: getStatusColor(race.status),
+                          }}
+                        >
+                          Status: {capitalizeStatus(race.status)}
+                        </Typography>
+                        {(race.status.toLowerCase() === "registration" ||
+                          race.status.toLowerCase() === "active") && (
+                          <Box
+                            sx={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: "50%",
+                              backgroundColor: getStatusColor(race.status),
+                              ml: 1,
+                              animation: `${blinker} 1.5s linear infinite`,
+                            }}
+                          />
+                        )}
+                      </Box>
+
+                      {/* Количество участников */}
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <PeopleIcon sx={{ fontSize: 16, mr: 1 }} />
+                        <Typography variant="body2" color="text.secondary">
+                          Participants: {participantsCount}
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </Grid>
+            );
+          })}
+        </Grid>
       )}
 
       {/* Админская форма */}

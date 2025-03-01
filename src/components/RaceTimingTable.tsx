@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom"; // Добавляем useNavigate
+import { useParams, useNavigate } from "react-router-dom";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/utils/firebase";
 import {
@@ -16,7 +16,7 @@ import {
 
 const RaceTimingTable: React.FC = () => {
   const { raceId } = useParams<{ raceId: string }>();
-  const navigate = useNavigate(); // Для навигации
+  const navigate = useNavigate();
   console.log("🏁 raceId from URL:", raceId);
 
   const [participants, setParticipants] = useState<any[]>([]);
@@ -37,7 +37,6 @@ const RaceTimingTable: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Загружаем участников
         console.log(`🚀 Загружаем участников для гонки: ${raceId}`);
         const participantsCollection = collection(db, "races", raceId, "participants");
         const querySnapshot = await getDocs(participantsCollection);
@@ -49,7 +48,6 @@ const RaceTimingTable: React.FC = () => {
         console.log("✅ Участники загружены:", participantsList);
         setParticipants(participantsList);
 
-        // Загружаем телеметрию
         console.log(`📡 Загружаем телеметрию для гонки: ${raceId}`);
         const raceRef = doc(db, "races", raceId);
         const raceSnap = await getDoc(raceRef);
@@ -63,7 +61,6 @@ const RaceTimingTable: React.FC = () => {
         const raceData = raceSnap.data();
         let telemetryData = raceData.telemetry || {};
 
-        // Фильтруем неверные значения
         Object.keys(telemetryData).forEach((chip) => {
           telemetryData[chip] = telemetryData[chip].filter(
             (lap: any) => lap.lap_time >= 3 && lap.lap_time > 0
@@ -83,7 +80,6 @@ const RaceTimingTable: React.FC = () => {
     fetchData();
   }, [raceId]);
 
-  // Преобразуем данные в массив и сортируем по Best Lap
   const sortedTelemetry = Object.keys(telemetry).map((chip) => {
     const bestLap = telemetry[chip].length ? Math.min(...telemetry[chip].map((lap: any) => lap.lap_time)) : "-";
     const lastLap = telemetry[chip]?.[telemetry[chip].length - 1]?.lap_time || "-";
@@ -100,10 +96,9 @@ const RaceTimingTable: React.FC = () => {
     };
   }).sort((a, b) => (a.bestLap === "-" ? 1 : b.bestLap === "-" ? -1 : a.bestLap - b.bestLap));
 
-  // Обработчик клика по строке
   const handleRowClick = (chip: string) => {
     if (raceId && chip) {
-      navigate(`/race/${raceId}/driver/${chip}`); // Перенаправляем на RaceDriverPage
+      navigate(`/races/${raceId}/driver/${chip}`); // Исправляем путь на /races/...
     }
   };
 
@@ -153,8 +148,8 @@ const RaceTimingTable: React.FC = () => {
               {sortedTelemetry.map((data, index) => (
                 <TableRow
                   key={data.chip}
-                  onClick={() => handleRowClick(data.chip)} // Добавляем обработчик клика
-                  sx={{ cursor: "pointer", "&:hover": { backgroundColor: "#f0f0f0" } }} // Добавляем визуальный эффект
+                  onClick={() => handleRowClick(data.chip)}
+                  sx={{ cursor: "pointer", "&:hover": { backgroundColor: "#f0f0f0" } }}
                 >
                   <TableCell sx={{ textAlign: "center" }}>{index + 1}</TableCell>
                   <TableCell>{data.nickname}</TableCell>

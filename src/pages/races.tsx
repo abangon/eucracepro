@@ -91,7 +91,6 @@ const Races: React.FC = () => {
     setLoading(false);
   }
 };
-Обновленный рен
     fetchRaces();
   }, []);
 

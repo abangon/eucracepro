@@ -316,7 +316,7 @@ const Races: React.FC = () => {
                         </Box>
                       )}
 
-                      /* Перемещенное поле Participants */
+                      {/* Перемещенное поле Participants */}
                       <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                        <PeopleIcon sx={{ fontSize: 16, mr: 1 }} />
                       <Typography variant="body2" color="text.secondary">

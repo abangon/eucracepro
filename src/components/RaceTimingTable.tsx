@@ -173,7 +173,7 @@ const RaceTimingTable: React.FC = () => {
                     sx={{
                       cursor: "pointer",
                       "&:hover": { backgroundColor: "#f0f0f0" },
-                      backgroundColor: isBestLap ? "#e0ffe0" : "inherit", // Подсвечиваем лучший круг
+                      backgroundColor: isBestLap ? "#fffde7" : "inherit", // Золотистый цвет для лучшего круга
                     }}
                   >
                     <TableCell sx={{ textAlign: "center" }}>{index + 1}</TableCell>

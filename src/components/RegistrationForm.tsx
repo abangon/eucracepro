@@ -19,7 +19,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import YouTubeIcon from "@mui/icons-material/YouTube";
-import TikTokIcon from "@mui/icons-material/Tiktok";
+import TikTokIcon from "@mui/icons-material/TikTok"; // Исправлено название импорта
 
 // Функции формирования URL соцсетей
 const getFacebookUrl = (username: string) => `https://www.facebook.com/${username}`;

@@ -17,7 +17,6 @@ import TestPage from './pages/Test';
 import NotFound from './pages/NotFound';
 import Box from '@mui/material/Box';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { FaTiktok } from "react-icons/fa";
 
 const App: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);

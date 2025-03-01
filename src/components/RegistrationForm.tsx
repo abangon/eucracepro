@@ -7,13 +7,13 @@ import {
   Button,
   Typography,
   Paper,
-  TableContainer,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  IconButton,
+  Pagination,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { FaFacebook, FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
 
 // Функции формирования URL соцсетей
@@ -33,6 +33,10 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [participants, setParticipants] = useState<any[]>([]);
   const [usersData, setUsersData] = useState<{ [key: string]: any }>({});
   const [isRegistered, setIsRegistered] = useState(false);
+  
+  // Пагинация
+  const [currentPage, setCurrentPage] = useState(1);
+  const participantsPerPage = 10; // Количество участников на странице
 
   useEffect(() => {
     const fetchParticipants = async () => {
@@ -92,90 +96,185 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     setParticipants(updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
+  // Логика пагинации
+  const totalParticipants = participants.length;
+  const totalPages = Math.ceil(totalParticipants / participantsPerPage);
+  const startIndex = (currentPage - 1) * participantsPerPage;
+  const currentParticipants = participants.slice(startIndex, startIndex + participantsPerPage);
+
+  const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" }); // Прокрутка вверх при смене страницы
+  };
+
   return (
-    <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+    <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 4, borderRadius: 2 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6" fontWeight="bold">Participants</Typography>
+        <Typography
+          variant="h6"
+          fontWeight="bold"
+          sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}
+        >
+          Participants ({totalParticipants})
+        </Typography>
         {user ? (
           isRegistered ? (
-            <Button variant="contained" color="error" onClick={handleCancelRegistration}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleCancelRegistration}
+              sx={{
+                minWidth: "120px",
+                minHeight: "40px",
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+              }}
+            >
               Cancel Registration
             </Button>
           ) : (
-            <Button variant="contained" color="primary" onClick={handleRegister}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleRegister}
+              sx={{
+                minWidth: "120px",
+                minHeight: "40px",
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+              }}
+            >
               Register to the race
             </Button>
           )
         ) : (
-          <Button variant="contained" color="error" href="/sign-in">
+          <Button
+            variant="contained"
+            color="error"
+            href="/sign-in"
+            sx={{
+              minWidth: "120px",
+              minHeight: "40px",
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+            }}
+          >
             Please log in to register
           </Button>
         )}
       </Box>
 
-      <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: "hidden" }}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-              <TableCell><strong>Nickname</strong></TableCell>
-              <TableCell sx={{ textAlign: "center" }}><strong>Team</strong></TableCell>
-              <TableCell sx={{ textAlign: "center" }}><strong>Country</strong></TableCell>
-              <TableCell sx={{ textAlign: "center" }}><strong>Facebook</strong></TableCell>
-              <TableCell sx={{ textAlign: "center" }}><strong>Instagram</strong></TableCell>
-              <TableCell sx={{ textAlign: "center" }}><strong>YouTube</strong></TableCell>
-              <TableCell sx={{ textAlign: "center" }}><strong>TikTok</strong></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {participants.map(participant => {
-              const userInfo = usersData[participant.id] || {}; // Данные из users
-              return (
-                <TableRow key={participant.id}>
-                  <TableCell>{userInfo.nickname || participant.nickname || participant.id}</TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>{userInfo.team || participant.team || "-"}</TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>{userInfo.country || participant.country || "-"}</TableCell>
+      {participants.length === 0 ? (
+        <Typography variant="body1" textAlign="center">
+          No participants registered yet.
+        </Typography>
+      ) : (
+        <Box>
+          {/* Список участников в виде Accordion */}
+          {currentParticipants.map((participant) => {
+            const userInfo = usersData[participant.id] || {};
+            const nickname = userInfo.nickname || participant.nickname || participant.id;
+            const team = userInfo.team || participant.team || "-";
+            const country = userInfo.country || participant.country || "-";
+            const facebook = userInfo.facebook || participant.facebook;
+            const instagram = userInfo.instagram || participant.instagram;
+            const youtube = userInfo.youtube || participant.youtube;
+            const tiktok = userInfo.tiktok || participant.tiktok;
 
-                  {/* Facebook */}
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {userInfo.facebook || participant.facebook ? (
-                      <a href={getFacebookUrl(userInfo.facebook || participant.facebook)} target="_blank" rel="noopener noreferrer">
-                        <FaFacebook style={{ ...socialIconStyle, color: "#1877F2" }} />
-                      </a>
-                    ) : "-"}
-                  </TableCell>
+            return (
+              <Accordion key={participant.id} sx={{ mb: 1, borderRadius: 2 }}>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    backgroundColor: "#f5f5f5",
+                    borderRadius: 2,
+                    "& .MuiAccordionSummary-content": {
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    },
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: { xs: "0.875rem", sm: "1rem" },
+                      flex: 1,
+                    }}
+                  >
+                    {nickname}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                      color: "text.secondary",
+                      flex: 2,
+                      textAlign: "right",
+                    }}
+                  >
+                    {country}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ p: 2 }}>
+                  <Box display="flex" flexDirection="column" gap={1}>
+                    <Typography variant="body2">
+                      <strong>Team:</strong> {team}
+                    </Typography>
+                    <Box display="flex" gap={2} alignItems="center">
+                      <Typography variant="body2"><strong>Social:</strong></Typography>
+                      {facebook ? (
+                        <a href={getFacebookUrl(facebook)} target="_blank" rel="noopener noreferrer">
+                          <FaFacebook style={{ ...socialIconStyle, color: "#1877F2" }} />
+                        </a>
+                      ) : (
+                        <Typography variant="body2">-</Typography>
+                      )}
+                      {instagram ? (
+                        <a href={getInstagramUrl(instagram)} target="_blank" rel="noopener noreferrer">
+                          <FaInstagram style={{ ...socialIconStyle, color: "#E1306C" }} />
+                        </a>
+                      ) : (
+                        <Typography variant="body2">-</Typography>
+                      )}
+                      {youtube ? (
+                        <a href={getYoutubeUrl(youtube)} target="_blank" rel="noopener noreferrer">
+                          <FaYoutube style={{ ...socialIconStyle, color: "#FF0000" }} />
+                        </a>
+                      ) : (
+                        <Typography variant="body2">-</Typography>
+                      )}
+                      {tiktok ? (
+                        <a href={getTiktokUrl(tiktok)} target="_blank" rel="noopener noreferrer">
+                          <FaTiktok style={{ ...socialIconStyle, color: "#000000" }} />
+                        </a>
+                      ) : (
+                        <Typography variant="body2">-</Typography>
+                      )}
+                    </Box>
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+            );
+          })}
 
-                  {/* Instagram */}
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {userInfo.instagram || participant.instagram ? (
-                      <a href={getInstagramUrl(userInfo.instagram || participant.instagram)} target="_blank" rel="noopener noreferrer">
-                        <FaInstagram style={{ ...socialIconStyle, color: "#E1306C" }} />
-                      </a>
-                    ) : "-"}
-                  </TableCell>
-
-                  {/* YouTube */}
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {userInfo.youtube || participant.youtube ? (
-                      <a href={getYoutubeUrl(userInfo.youtube || participant.youtube)} target="_blank" rel="noopener noreferrer">
-                        <FaYoutube style={{ ...socialIconStyle, color: "#FF0000" }} />
-                      </a>
-                    ) : "-"}
-                  </TableCell>
-
-                  {/* TikTok */}
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {userInfo.tiktok || participant.tiktok ? (
-                      <a href={getTiktokUrl(userInfo.tiktok || participant.tiktok)} target="_blank" rel="noopener noreferrer">
-                        <FaTiktok style={{ ...socialIconStyle, color: "#000000" }} />
-                      </a>
-                    ) : "-"}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          {/* Пагинация */}
+          {totalPages > 1 && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                size="medium"
+                sx={{
+                  "& .MuiPaginationItem-root": {
+                    fontSize: { xs: "0.875rem", sm: "1rem" },
+                    minWidth: { xs: "32px", sm: "36px" },
+                    minHeight: { xs: "32px", sm: "36px" },
+                  },
+                }}
+              />
+            </Box>
+          )}
+        </Box>
+      )}
     </Paper>
   );
 };

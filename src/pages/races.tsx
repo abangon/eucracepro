@@ -308,7 +308,7 @@ const Races: React.FC = () => {
 
                       {/* Место проведения + отступ снизу */}
                       {race.track_name && (
-                        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                           <LocationOnIcon sx={{ fontSize: 16, mr: 1 }} />
                           <Typography variant="body2" color="text.secondary">
                             {race.track_name}

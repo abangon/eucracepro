@@ -38,8 +38,8 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [availableChips, setAvailableChips] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
-  const [loadingAuth, setLoadingAuth] = useState(true); // Для авторизации
-  const [loadingData, setLoadingData] = useState(true); // Для данных
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatedParticipants, setUpdatedParticipants] = useState<Record<string, Participant>>({});
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" | "warning" | undefined } | null>(null);
@@ -75,7 +75,6 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
         ...doc.data(),
       })) as Participant[];
 
-      // Загружаем имена пользователей из коллекции users
       const userPromises = participantList.map(async (participant) => {
         const userRef = doc(db, "users", participant.userId);
         const userSnap = await getDoc(userRef);
@@ -120,7 +119,7 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
   // Выполняем загрузку данных после авторизации
   useEffect(() => {
     const loadData = async () => {
-      if (!loadingAuth && user) {
+      if (!loadingAuth && user && user.uid === ADMIN_UID) {
         setLoadingData(true);
         try {
           await Promise.all([fetchParticipants(), fetchAvailableChips()]);
@@ -168,7 +167,6 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
       console.log("Changes saved successfully!");
       setNotification({ message: "Changes saved successfully!", type: "success" });
 
-      // 🔄 Обновляем участников после сохранения
       fetchParticipants();
     } catch (error) {
       console.error("Error saving changes:", error);
@@ -176,13 +174,14 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
     }
   };
 
-  // Отображение в зависимости от состояния
+  // Логика рендеринга
   if (loadingAuth) {
-    return (
-      <Box sx={{ p: 3, textAlign: "center" }}>
-        <Typography variant="h6">Checking authentication...</Typography>
-      </Box>
-    );
+    return null; // Не рендерим ничего во время проверки авторизации
+  }
+
+  // Если пользователь не авторизован или не является администратором, ничего не показываем
+  if (!user || user.uid !== ADMIN_UID) {
+    return null;
   }
 
   if (error) {
@@ -191,22 +190,6 @@ const RaceAdminControl: React.FC<RaceAdminControlProps> = ({ raceId }) => {
         <Typography variant="h6" color="error">
           {error}
         </Typography>
-      </Box>
-    );
-  }
-
-  if (!user) {
-    return (
-      <Box sx={{ p: 3, textAlign: "center" }}>
-        <Typography variant="h6">Please log in to access admin controls</Typography>
-      </Box>
-    );
-  }
-
-  if (user.uid !== ADMIN_UID) {
-    return (
-      <Box sx={{ p: 3, textAlign: "center" }}>
-        <Typography variant="h6">Access Denied</Typography>
       </Box>
     );
   }

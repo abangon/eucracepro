@@ -19,7 +19,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import YouTubeIcon from "@mui/icons-material/YouTube";
-import TikTokIcon from "@mui/icons-material/TikTok"; // Исправлено название импорта
+import { FaTiktok } from "react-icons/fa"; // Возвращаем иконку из react-icons
 
 // Функции формирования URL соцсетей
 const getFacebookUrl = (username: string) => `https://www.facebook.com/${username}`;
@@ -283,7 +283,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
                                 p: 0.5,
                               }}
                             >
-                              <TikTokIcon fontSize="small" />
+                              <FaTiktok style={{ fontSize: "1rem" }} />
                             </IconButton>
                           </Tooltip>
                         )}

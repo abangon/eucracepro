@@ -1,4 +1,4 @@
-// src/pages/settings.tsx
+// src/pages/Settings.tsx
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -15,6 +15,7 @@ import {
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../utils/firebase";
+import { countriesData } from "../data/countries"; // Импортируем список стран
 
 const Settings: React.FC = () => {
   const [nickname, setNickname] = useState("");
@@ -29,15 +30,16 @@ const Settings: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    // Загружаем список стран
-    fetch("https://restcountries.com/v3.1/all")
-      .then((response) => response.json())
-      .then((data) => {
-        const countryNames = data.map((item: any) => item.name.common);
-        countryNames.sort();
-        setCountries(countryNames);
-      })
-      .catch((error) => console.error("Error fetching countries:", error));
+    // Загружаем список стран из локального файла
+    try {
+      const countryNames = countriesData.map((country) => country.name);
+      countryNames.sort();
+      setCountries(countryNames);
+      console.log("Countries loaded successfully in Settings:", countryNames);
+    } catch (err) {
+      console.error("Error loading countries in Settings:", err);
+      setError("Failed to load countries list.");
+    }
 
     // Загружаем данные пользователя после аутентификации
     const unsubscribe = onAuthStateChanged(auth, async (user) => {

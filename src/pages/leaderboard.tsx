@@ -1,3 +1,4 @@
+// Файл: src/pages/Leaderboard.tsx
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -16,6 +17,7 @@ import {
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
 import CountryFlag from "../components/CountryFlag";
+import { countriesData } from "../data/countries"; // Импортируем список стран
 
 // Иконки соцсетей
 import { FaFacebook, FaInstagram, FaYoutube, FaTiktok } from "react-icons/fa";
@@ -72,27 +74,22 @@ const Leaderboard: React.FC = () => {
     fetchUsers();
   }, []);
 
-  // Загрузка маппинга стран (полное название -> ISO2)
+  // Загрузка маппинга стран из локального файла
   useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const response = await fetch("https://restcountries.com/v3.1/all");
-        const data = await response.json();
-        const map: Record<string, string> = {};
-
-        data.forEach((countryObj: any) => {
-          const commonName = countryObj?.name?.common; // например "Czechia"
-          const code = countryObj?.cca2;              // "CZ"
-          if (commonName && code) {
-            map[commonName] = code;
-          }
-        });
-        setCountryMap(map);
-      } catch (error) {
-        console.error("Error fetching countries:", error);
-      }
-    };
-    fetchCountries();
+    try {
+      const map: Record<string, string> = {};
+      countriesData.forEach((country) => {
+        const commonName = country.name;
+        const code = country.code;
+        if (commonName && code) {
+          map[commonName] = code;
+        }
+      });
+      setCountryMap(map);
+      console.log("Country map loaded successfully in Leaderboard:", map);
+    } catch (error) {
+      console.error("Error loading country map in Leaderboard:", error);
+    }
   }, []);
 
   // Фильтрация по имени и стране
@@ -159,13 +156,13 @@ const Leaderboard: React.FC = () => {
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-              <TableCell><strong>Nickname</strong></TableCell>
-              <TableCell><strong>Team</strong></TableCell>
-              <TableCell><strong>Country</strong></TableCell>
-              <TableCell><strong>Facebook</strong></TableCell>
-              <TableCell><strong>Instagram</strong></TableCell>
-              <TableCell><strong>Youtube</strong></TableCell>
-              <TableCell><strong>Tiktok</strong></TableCell>
+              <TableCell sx={{ textAlign: "left" }}><strong>Nickname</strong></TableCell>
+              <TableCell sx={{ textAlign: "left" }}><strong>Team</strong></TableCell>
+              <TableCell sx={{ textAlign: "center" }}><strong>Country</strong></TableCell>
+              <TableCell sx={{ textAlign: "center" }}><strong>Facebook</strong></TableCell>
+              <TableCell sx={{ textAlign: "center" }}><strong>Instagram</strong></TableCell>
+              <TableCell sx={{ textAlign: "center" }}><strong>Youtube</strong></TableCell>
+              <TableCell sx={{ textAlign: "center" }}><strong>Tiktok</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -174,9 +171,9 @@ const Leaderboard: React.FC = () => {
 
               return (
                 <TableRow key={index} sx={{ borderBottom: "1px solid #eee" }}>
-                  <TableCell>{user.nickname || "–"}</TableCell>
-                  <TableCell>{user.team || "–"}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ textAlign: "left" }}>{user.nickname || "–"}</TableCell>
+                  <TableCell sx={{ textAlign: "left" }}>{user.team || "–"}</TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>
                     {isoCode ? (
                       <CountryFlag countryCode={isoCode} />
                     ) : (
@@ -185,7 +182,7 @@ const Leaderboard: React.FC = () => {
                   </TableCell>
 
                   {/* Facebook */}
-                  <TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>
                     {user.facebook ? (
                       <a
                         href={getFacebookUrl(user.facebook)}
@@ -200,7 +197,7 @@ const Leaderboard: React.FC = () => {
                   </TableCell>
 
                   {/* Instagram */}
-                  <TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>
                     {user.instagram ? (
                       <a
                         href={getInstagramUrl(user.instagram)}
@@ -215,7 +212,7 @@ const Leaderboard: React.FC = () => {
                   </TableCell>
 
                   {/* YouTube */}
-                  <TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>
                     {user.youtube ? (
                       <a
                         href={getYoutubeUrl(user.youtube)}
@@ -230,7 +227,7 @@ const Leaderboard: React.FC = () => {
                   </TableCell>
 
                   {/* TikTok */}
-                  <TableCell>
+                  <TableCell sx={{ textAlign: "center" }}>
                     {user.tiktok ? (
                       <a
                         href={getTiktokUrl(user.tiktok)}

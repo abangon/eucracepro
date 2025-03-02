@@ -27,7 +27,7 @@ import ReactCountryFlag from "react-country-flag";
 import { Link } from "react-router-dom";
 
 // Импортируем локальный JSON-файл
-import countriesData from "./countries.json"; // Убедитесь, что путь к файлу правильный
+import countriesData from "../countries.json"; // Убедитесь, что путь к файлу правильный
 
 const blinker = keyframes`
   50% { opacity: 0; }

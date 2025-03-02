@@ -346,6 +346,10 @@ const Races: React.FC = () => {
               }}
             >
               <EditIcon sx={{ fontSize: 18 }} />
+sx={{
+  ...,
+  padding: "4px",
+}}
             </IconButton>
           ) : (
             console.log("Not rendering Edit button: User is not admin")

@@ -338,7 +338,7 @@ const Races: React.FC = () => {
               sx={{
                 position: "absolute",
                 top: 8,
-                right: 80, // Сдвигаем левее, чтобы не перекрывать чип
+                right: 70, // Сдвигаем левее, чтобы не перекрывать чип
                 backgroundColor: "#d287fe", // Фиолетовый фон, как у race_id
                 color: "white", // Белая иконка
                 zIndex: 10,

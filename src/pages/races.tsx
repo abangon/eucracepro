@@ -338,15 +338,14 @@ const Races: React.FC = () => {
               sx={{
                 position: "absolute",
                 top: 8,
-                right: 60, // Сдвигаем левее, чтобы не перекрывать чип
+                right: 80, // Сдвигаем левее, чтобы не перекрывать чип
                 backgroundColor: "#d287fe", // Фиолетовый фон, как у race_id
                 color: "white", // Белая иконка
                 zIndex: 10,
                 "&:hover": { backgroundColor: "#b576e2" }, // Чуть темнее при наведении
               }}
             >
-              <EditIcon sx={{ fontSize: 18,
-  padding: "8px", }} />
+              <EditIcon sx={{ fontSize: 18 }} />
             </IconButton>
           ) : (
             console.log("Not rendering Edit button: User is not admin")

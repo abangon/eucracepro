@@ -26,6 +26,9 @@ import { onAuthStateChanged } from "firebase/auth";
 import ReactCountryFlag from "react-country-flag";
 import { Link } from "react-router-dom";
 
+// Импортируем локальный JSON-файл
+import countriesData from "./countries.json"; // Убедитесь, что путь к файлу правильный
+
 const blinker = keyframes`
   50% { opacity: 0; }
 `;
@@ -71,16 +74,6 @@ const Races: React.FC = () => {
   const [countryMap, setCountryMap] = useState<Record<string, string>>({});
   const [countries, setCountries] = useState<string[]>([]);
 
-  // Запасной список стран
-  const fallbackCountries = ["USA", "Canada", "UK", "Germany", "France"];
-  const fallbackCountryMap: Record<string, string> = {
-    USA: "US",
-    Canada: "CA",
-    UK: "GB",
-    Germany: "DE",
-    France: "FR",
-  };
-
   const generateRaceId = () => {
     return (Math.floor(Math.random() * 9000) + 1000).toString();
   };
@@ -115,39 +108,34 @@ const Races: React.FC = () => {
     fetchRaces();
   }, []);
 
-  // Загрузка списка стран с улучшенной обработкой ошибок
+  // Загрузка списка стран из локального JSON
   useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const res = await fetch("https://restcountries.com/v3.1/all");
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
+    try {
+      const map: Record<string, string> = {};
+      const names: string[] = [];
+
+      countriesData.forEach((country: { name: string; code: string }) => {
+        const commonName = country.name;
+        const code = country.code;
+        if (commonName && code) {
+          map[commonName] = code;
+          names.push(commonName);
         }
-        const data = await res.json();
-        const map: Record<string, string> = {};
-        const names: string[] = [];
-        data.forEach((c: any) => {
-          const commonName = c?.name?.common;
-          const code = c?.cca2;
-          if (commonName && code) {
-            map[commonName] = code;
-          }
-          if (commonName) {
-            names.push(commonName);
-          }
-        });
-        names.sort();
-        setCountryMap(map);
-        setCountries(names);
-        console.log("Countries loaded successfully:", names);
-      } catch (err) {
-        console.error("Error fetching countries:", err);
-        setFormMessage("Failed to load countries. Using default list.");
-        setCountries(fallbackCountries);
-        setCountryMap(fallbackCountryMap);
-      }
-    };
-    fetchCountries();
+      });
+
+      names.sort();
+      setCountryMap(map);
+      setCountries(names);
+      console.log("Countries loaded successfully from local JSON:", names);
+    } catch (err) {
+      console.error("Error loading countries from JSON:", err);
+      setFormMessage("Failed to load countries from local data.");
+      // Можно использовать минимальный запасной список на случай ошибки
+      const fallbackCountries = ["USA", "Canada", "UK"];
+      const fallbackMap = { USA: "US", Canada: "CA", UK: "GB" };
+      setCountries(fallbackCountries);
+      setCountryMap(fallbackMap);
+    }
   }, []);
 
   // Проверка авторизации с отладочными логами

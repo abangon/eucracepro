@@ -345,7 +345,8 @@ const Races: React.FC = () => {
                 "&:hover": { backgroundColor: "#b576e2" }, // Чуть темнее при наведении
               }}
             >
-              <EditIcon sx={{ fontSize: 18 }} />
+              <EditIcon sx={{ fontSize: 18,
+  padding: "4px", }} />
             </IconButton>
           ) : (
             console.log("Not rendering Edit button: User is not admin")

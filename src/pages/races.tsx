@@ -26,7 +26,7 @@ import { db, auth } from "../utils/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import ReactCountryFlag from "react-country-flag";
 import { Link } from "react-router-dom";
-import { countriesData } from "../data/countries"; // Импортируем список стран
+import { countriesData } from "../data/countries";
 
 const blinker = keyframes`
   50% { opacity: 0; }
@@ -298,7 +298,11 @@ const Races: React.FC = () => {
     return "black";
   };
 
-  const groupedRaces = races.reduce((acc, race) => {
+  // Группировка гонок: сначала отделяем Finished, затем группируем остальные по race_type
+  const finishedRaces = races.filter((race) => race.status.toLowerCase() === "finished");
+  const nonFinishedRaces = races.filter((race) => race.status.toLowerCase() !== "finished");
+
+  const groupedRaces = nonFinishedRaces.reduce((acc, race) => {
     const type = race.race_type || "Uncategorized";
     if (!acc[type]) {
       acc[type] = [];
@@ -307,15 +311,28 @@ const Races: React.FC = () => {
     return acc;
   }, {} as Record<string, Race[]>);
 
+  // Добавляем секцию Finished Events
+  if (finishedRaces.length > 0) {
+    groupedRaces["Finished"] = finishedRaces;
+  }
+
+  // Сортировка внутри групп
   Object.keys(groupedRaces).forEach((type) => {
-    groupedRaces[type].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    if (type === "Finished") {
+      // Для Finished Events сортировка по убыванию даты (от нового к старому)
+      groupedRaces[type].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    } else {
+      // Для остальных категорий — по возрастанию даты (от старого к новому)
+      groupedRaces[type].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }
   });
 
-  const categoryOrder = ["Race", "Camp", "Training"];
+  const categoryOrder = ["Race", "Camp", "Training", "Finished"];
   const displayNames: Record<string, string> = {
     Race: "Upcoming Races",
     Camp: "Upcoming Camp",
     Training: "Upcoming Training",
+    Finished: "Finished Events",
     Uncategorized: "Uncategorized",
   };
 
@@ -328,6 +345,7 @@ const Races: React.FC = () => {
   const renderRaceCard = (race: Race) => {
     const isoCode = countryMap[race.country] || "";
     const participantsCount = race.participantsCount || 0;
+    const isFinished = race.status.toLowerCase() === "finished";
 
     return (
       <Grid item xs={12} sm={6} md={4} lg={3} key={race.id}>
@@ -338,11 +356,11 @@ const Races: React.FC = () => {
               sx={{
                 position: "absolute",
                 top: 8,
-                right: 70, // Сдвигаем левее, чтобы не перекрывать чип
-                backgroundColor: "#d287fe", // Фиолетовый фон, как у race_id
-                color: "white", // Белая иконка
+                right: 60,
+                backgroundColor: "#d287fe",
+                color: "white",
                 zIndex: 10,
-                "&:hover": { backgroundColor: "#b576e2" }, // Чуть темнее при наведении
+                "&:hover": { backgroundColor: "#b576e2" },
               }}
             >
               <EditIcon sx={{ fontSize: 18 }} />
@@ -359,6 +377,7 @@ const Races: React.FC = () => {
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
+                filter: isFinished ? "grayscale(100%)" : "none", // Серый фильтр для Finished
               }}
             >
               <Chip

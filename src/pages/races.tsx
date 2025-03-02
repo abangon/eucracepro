@@ -1,3 +1,4 @@
+// Файл: src/pages/Races.tsx
 import React, { useState, useEffect, ChangeEvent } from "react";
 import {
   Box,
@@ -26,8 +27,17 @@ import { onAuthStateChanged } from "firebase/auth";
 import ReactCountryFlag from "react-country-flag";
 import { Link } from "react-router-dom";
 
-// Импортируем локальный JSON-файл
-import countriesData from "../countries.json"; // Убедитесь, что путь к файлу правильный
+// Встроенные данные стран
+const countriesData: { name: string; code: string }[] = [
+  { name: "United States", code: "US" },
+  { name: "Canada", code: "CA" },
+  { name: "United Kingdom", code: "GB" },
+  { name: "Germany", code: "DE" },
+  { name: "France", code: "FR" },
+  { name: "Australia", code: "AU" },
+  { name: "Japan", code: "JP" },
+  { name: "Brazil", code: "BR" },
+];
 
 const blinker = keyframes`
   50% { opacity: 0; }
@@ -50,7 +60,6 @@ const Races: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Состояние для создания новой гонки
   const [newRaceName, setNewRaceName] = useState("");
   const [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceTrackName, setNewRaceTrackName] = useState("");
@@ -60,7 +69,6 @@ const Races: React.FC = () => {
   const [newRaceImage, setNewRaceImage] = useState("");
   const [formMessage, setFormMessage] = useState("");
 
-  // Состояние для редактирования
   const [editingRace, setEditingRace] = useState<Race | null>(null);
   const [editRaceName, setEditRaceName] = useState("");
   const [editRaceDate, setEditRaceDate] = useState("");
@@ -78,7 +86,6 @@ const Races: React.FC = () => {
     return (Math.floor(Math.random() * 9000) + 1000).toString();
   };
 
-  // Загрузка гонок
   useEffect(() => {
     const fetchRaces = async () => {
       try {
@@ -108,7 +115,6 @@ const Races: React.FC = () => {
     fetchRaces();
   }, []);
 
-  // Загрузка списка стран из локального JSON
   useEffect(() => {
     try {
       const map: Record<string, string> = {};
@@ -126,11 +132,10 @@ const Races: React.FC = () => {
       names.sort();
       setCountryMap(map);
       setCountries(names);
-      console.log("Countries loaded successfully from local JSON:", names);
+      console.log("Countries loaded successfully:", names);
     } catch (err) {
-      console.error("Error loading countries from JSON:", err);
+      console.error("Error loading countries:", err);
       setFormMessage("Failed to load countries from local data.");
-      // Можно использовать минимальный запасной список на случай ошибки
       const fallbackCountries = ["USA", "Canada", "UK"];
       const fallbackMap = { USA: "US", Canada: "CA", UK: "GB" };
       setCountries(fallbackCountries);
@@ -138,7 +143,6 @@ const Races: React.FC = () => {
     }
   }, []);
 
-  // Проверка авторизации с отладочными логами
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && user.uid === "ztnWBUkh6dUcXLOH8D5nLBEYm2J2") {
@@ -421,7 +425,7 @@ const Races: React.FC = () => {
                     {race.country}
                   </Typography>
                 </Box>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                <Box sx={{ display: "flood", alignItems: "center", mb: 1 }}>
                   <CalendarTodayIcon sx={{ fontSize: 16, mr: 1 }} />
                   <Typography variant="body2" color="text.secondary">
                     {formatDate(race.date)}
@@ -709,3 +713,5 @@ const Races: React.FC = () => {
 };
 
 export default Races;
+
+// Убедитесь, что файл сохранен как `Races.tsx`

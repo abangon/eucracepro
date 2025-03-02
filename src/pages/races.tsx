@@ -13,12 +13,14 @@ import {
   FormControl,
   InputLabel,
   Chip,
+  IconButton,
 } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PeopleIcon from "@mui/icons-material/People";
+import EditIcon from "@mui/icons-material/Edit";
 import { keyframes } from "@mui/system";
-import { collection, getDocs, query, orderBy, setDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, setDoc, doc, updateDoc } from "firebase/firestore";
 import { db, auth } from "../utils/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import ReactCountryFlag from "react-country-flag";
@@ -45,6 +47,7 @@ const Races: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Состояние для создания новой гонки
   const [newRaceName, setNewRaceName] = useState("");
   const [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceTrackName, setNewRaceTrackName] = useState("");
@@ -53,6 +56,17 @@ const Races: React.FC = () => {
   const [newRaceType, setNewRaceType] = useState("Race");
   const [newRaceImage, setNewRaceImage] = useState("");
   const [formMessage, setFormMessage] = useState("");
+
+  // Состояние для редактирования
+  const [editingRace, setEditingRace] = useState<Race | null>(null);
+  const [editRaceName, setEditRaceName] = useState("");
+  const [editRaceDate, setEditRaceDate] = useState("");
+  const [editRaceTrackName, setEditRaceTrackName] = useState("");
+  const [editRaceCountry, setEditRaceCountry] = useState("");
+  const [editRaceStatus, setEditRaceStatus] = useState("");
+  const [editRaceType, setEditRaceType] = useState("");
+  const [editRaceImage, setEditRaceImage] = useState("");
+  const [editFormMessage, setEditFormMessage] = useState("");
 
   const [countryMap, setCountryMap] = useState<Record<string, string>>({});
   const [countries, setCountries] = useState<string[]>([]);
@@ -127,13 +141,17 @@ const Races: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>, isEdit = false) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
         if (typeof reader.result === "string") {
-          setNewRaceImage(reader.result);
+          if (isEdit) {
+            setEditRaceImage(reader.result);
+          } else {
+            setNewRaceImage(reader.result);
+          }
         }
       };
       reader.readAsDataURL(file);
@@ -181,6 +199,74 @@ const Races: React.FC = () => {
     }
   };
 
+  const handleEditRace = (race: Race) => {
+    setEditingRace(race);
+    setEditRaceName(race.name);
+    setEditRaceDate(race.date);
+    setEditRaceTrackName(race.track_name);
+    setEditRaceCountry(race.country);
+    setEditRaceStatus(race.status);
+    setEditRaceType(race.race_type);
+    setEditRaceImage(race.imageData || "");
+    setEditFormMessage("");
+  };
+
+  const handleUpdateRace = async () => {
+    if (!editingRace) return;
+
+    if (!editRaceName || !editRaceDate || !editRaceTrackName || !editRaceCountry) {
+      setEditFormMessage("Please fill all fields.");
+      return;
+    }
+
+    const updatedRaceData = {
+      name: editRaceName,
+      date: editRaceDate,
+      track_name: editRaceTrackName,
+      country: editRaceCountry,
+      status: editRaceStatus,
+      race_type: editRaceType,
+      participants: editingRace.participants,
+      ...(editRaceImage && { imageData: editRaceImage }),
+    };
+
+    try {
+      await updateDoc(doc(db, "races", editingRace.id), updatedRaceData);
+      setEditFormMessage("Race updated successfully!");
+      
+      // Обновляем список гонок
+      const updatedRaces = races.map((race) =>
+        race.id === editingRace.id ? { ...race, ...updatedRaceData } : race
+      );
+      setRaces(updatedRaces);
+      
+      // Сбрасываем форму редактирования
+      setEditingRace(null);
+      setEditRaceName("");
+      setEditRaceDate("");
+      setEditRaceTrackName("");
+      setEditRaceCountry("");
+      setEditRaceStatus("");
+      setEditRaceType("");
+      setEditRaceImage("");
+    } catch (error: any) {
+      console.error("Error updating race:", error);
+      setEditFormMessage("Error updating race: " + error.message);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRace(null);
+    setEditRaceName("");
+    setEditRaceDate("");
+    setEditRaceTrackName("");
+    setEditRaceCountry("");
+    setEditRaceStatus("");
+    setEditRaceType("");
+    setEditRaceImage("");
+    setEditFormMessage("");
+  };
+
   const formatDate = (dateStr: string) => {
     const dateObj = new Date(dateStr);
     return dateObj.toLocaleDateString("en-US", {
@@ -201,7 +287,6 @@ const Races: React.FC = () => {
     return "black";
   };
 
-  // Группировка гонок по race_type
   const groupedRaces = races.reduce((acc, race) => {
     const type = race.race_type || "Uncategorized";
     if (!acc[type]) {
@@ -211,25 +296,21 @@ const Races: React.FC = () => {
     return acc;
   }, {} as Record<string, Race[]>);
 
-  // Сортировка внутри групп по дате (от ближней к дальней)
   Object.keys(groupedRaces).forEach((type) => {
     groupedRaces[type].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   });
 
-  // Определяем порядок категорий
   const categoryOrder = ["Race", "Camp", "Training"];
   const displayNames: Record<string, string> = {
     Race: "Upcoming Races",
     Camp: "Upcoming Camp",
     Training: "Upcoming Training",
-    Uncategorized: "Uncategorized", // Если вдруг есть некатегоризированные записи
+    Uncategorized: "Uncategorized",
   };
 
-  // Получаем только те категории, которые существуют, и сортируем их согласно заданному порядку
   const raceTypes = Object.keys(groupedRaces).sort((a, b) => {
     const indexA = categoryOrder.indexOf(a);
     const indexB = categoryOrder.indexOf(b);
-    // Если категория не в заданном списке, она идет в конец
     return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
   });
 
@@ -239,122 +320,138 @@ const Races: React.FC = () => {
 
     return (
       <Grid item xs={12} sm={6} md={4} lg={3} key={race.id}>
-        <Link to={`/races/${race.id}`} style={{ textDecoration: "none" }}>
-          <Card
-            sx={{
-              position: "relative",
-              borderRadius: 2,
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-            }}
-          >
-            <Chip
-              label={race.id}
+        <Box sx={{ position: "relative" }}>
+          {isAdmin && (
+            <IconButton
+              onClick={() => handleEditRace(race)}
               sx={{
                 position: "absolute",
                 top: 8,
                 right: 8,
-                fontWeight: "bold",
-                backgroundColor: "#d287fe",
-                color: "white",
+                backgroundColor: "white",
+                "&:hover": { backgroundColor: "#f5f5f5" },
               }}
-            />
-            {race.imageData ? (
-              <CardMedia
-                component="img"
-                image={race.imageData}
-                alt={race.name}
+            >
+              <EditIcon />
+            </IconButton>
+          )}
+          <Link to={`/races/${race.id}`} style={{ textDecoration: "none" }}>
+            <Card
+              sx={{
+                position: "relative",
+                borderRadius: 2,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+              }}
+            >
+              <Chip
+                label={race.id}
                 sx={{
-                  height: 180,
-                  objectFit: "contain",
-                  backgroundColor: "#f5f5f5",
+                  position: "absolute",
+                  top: 8,
+                  right: isAdmin ? 48 : 8, // Смещаем, если есть кнопка редактирования
+                  fontWeight: "bold",
+                  backgroundColor: "#d287fe",
+                  color: "white",
                 }}
               />
-            ) : (
-              <Box
-                sx={{
-                  height: 180,
-                  backgroundColor: "#f5f5f5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  No Image
-                </Typography>
-              </Box>
-            )}
-            <CardContent sx={{ flexGrow: 1 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                {race.name}
-              </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                {isoCode && (
-                  <ReactCountryFlag
-                    countryCode={isoCode}
-                    svg
-                    style={{
-                      width: "1.2em",
-                      height: "1.2em",
-                      marginRight: 6,
-                    }}
-                    title={isoCode}
-                  />
-                )}
-                <Typography variant="body2" color="text.secondary">
-                  {race.country}
-                </Typography>
-              </Box>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <CalendarTodayIcon sx={{ fontSize: 16, mr: 1 }} />
-                <Typography variant="body2" color="text.secondary">
-                  {formatDate(race.date)}
-                </Typography>
-              </Box>
-              {race.track_name && (
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <LocationOnIcon sx={{ fontSize: 16, mr: 1 }} />
+              {race.imageData ? (
+                <CardMedia
+                  component="img"
+                  image={race.imageData}
+                  alt={race.name}
+                  sx={{
+                    height: 180,
+                    objectFit: "contain",
+                    backgroundColor: "#f5f5f5",
+                  }}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    height: 180,
+                    backgroundColor: "#f5f5f5",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <Typography variant="body2" color="text.secondary">
-                    {race.track_name}
+                    No Image
                   </Typography>
                 </Box>
               )}
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <PeopleIcon sx={{ fontSize: 16, mr: 1 }} />
-                <Typography variant="body2" color="text.secondary">
-                  Participants: {participantsCount}
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                  {race.name}
                 </Typography>
-              </Box>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: "bold",
-                    color: getStatusColor(race.status),
-                  }}
-                >
-                  Status: {capitalizeStatus(race.status)}
-                </Typography>
-                {(race.status.toLowerCase() === "registration" ||
-                  race.status.toLowerCase() === "active") && (
-                  <Box
-                    sx={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      backgroundColor: getStatusColor(race.status),
-                      ml: 1,
-                      animation: `${blinker} 1.5s linear infinite`,
-                    }}
-                  />
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  {isoCode && (
+                    <ReactCountryFlag
+                      countryCode={isoCode}
+                      svg
+                      style={{
+                        width: "1.2em",
+                        height: "1.2em",
+                        marginRight: 6,
+                      }}
+                      title={isoCode}
+                    />
+                  )}
+                  <Typography variant="body2" color="text.secondary">
+                    {race.country}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <CalendarTodayIcon sx={{ fontSize: 16, mr: 1 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    {formatDate(race.date)}
+                  </Typography>
+                </Box>
+                {race.track_name && (
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                    <LocationOnIcon sx={{ fontSize: 16, mr: 1 }} />
+                    <Typography variant="body2" color="text.secondary">
+                      {race.track_name}
+                    </Typography>
+                  </Box>
                 )}
-              </Box>
-            </CardContent>
-          </Card>
-        </Link>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                  <PeopleIcon sx={{ fontSize: 16, mr: 1 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Participants: {participantsCount}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: "bold",
+                      color: getStatusColor(race.status),
+                    }}
+                  >
+                    Status: {capitalizeStatus(race.status)}
+                  </Typography>
+                  {(race.status.toLowerCase() === "registration" ||
+                    race.status.toLowerCase() === "active") && (
+                    <Box
+                      sx={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: "50%",
+                        backgroundColor: getStatusColor(race.status),
+                        ml: 1,
+                        animation: `${blinker} 1.5s linear infinite`,
+                      }}
+                    />
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Link>
+        </Box>
       </Grid>
     );
   };
@@ -381,103 +478,216 @@ const Races: React.FC = () => {
       )}
 
       {isAdmin && (
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h5" gutterBottom>
-            Create New Race
-          </Typography>
-          <Box
-            component="form"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              maxWidth: 400,
-            }}
-            noValidate
-            autoComplete="off"
-          >
-            <TextField
-              label="Race Name"
-              variant="outlined"
-              value={newRaceName}
-              onChange={(e) => setNewRaceName(e.target.value)}
-              fullWidth
-            />
-            <TextField
-              label="Date"
-              type="date"
-              variant="outlined"
-              value={newRaceDate}
-              onChange={(e) => setNewRaceDate(e.target.value)}
-              fullWidth
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
-            <TextField
-              label="Track Name"
-              variant="outlined"
-              value={newRaceTrackName}
-              onChange={(e) => setNewRaceTrackName(e.target.value)}
-              fullWidth
-            />
-            <FormControl fullWidth variant="outlined">
-              <InputLabel id="country-select-label">Country</InputLabel>
-              <Select
-                labelId="country-select-label"
-                value={newRaceCountry}
-                label="Country"
-                onChange={(e) => setNewRaceCountry(e.target.value)}
-              >
-                {countries.map((countryName) => (
-                  <MenuItem key={countryName} value={countryName}>
-                    {countryName}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel id="status-select-label">Status</InputLabel>
-              <Select
-                labelId="status-select-label"
-                value={newRaceStatus}
-                label="Status"
-                onChange={(e) => setNewRaceStatus(e.target.value)}
-              >
-                <MenuItem value="Registration">Registration</MenuItem>
-                <MenuItem value="Active">Active</MenuItem>
-                <MenuItem value="Finished">Finished</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel id="race-type-select-label">Race Type</InputLabel>
-              <Select
-                labelId="race-type-select-label"
-                value={newRaceType}
-                label="Race Type"
-                onChange={(e) => setNewRaceType(e.target.value)}
-              >
-                <MenuItem value="Race">Race</MenuItem>
-                <MenuItem value="Camp">Camp</MenuItem>
-                <MenuItem value="Training">Training</MenuItem>
-              </Select>
-            </FormControl>
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                Upload Race Image:
+        <>
+          {/* Форма редактирования */}
+          {editingRace && (
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h5" gutterBottom>
+                Edit Race (ID: {editingRace.id})
               </Typography>
-              <input type="file" accept="image/*" onChange={handleFileChange} />
+              <Box
+                component="form"
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  maxWidth: 400,
+                }}
+                noValidate
+                autoComplete="off"
+              >
+                <TextField
+                  label="Race Name"
+                  variant="outlined"
+                  value={editRaceName}
+                  onChange={(e) => setEditRaceName(e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="Date"
+                  type="date"
+                  variant="outlined"
+                  value={editRaceDate}
+                  onChange={(e) => setEditRaceDate(e.target.value)}
+                  fullWidth
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+                <TextField
+                  label="Track Name"
+                  variant="outlined"
+                  value={editRaceTrackName}
+                  onChange={(e) => setEditRaceTrackName(e.target.value)}
+                  fullWidth
+                />
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel id="edit-country-select-label">Country</InputLabel>
+                  <Select
+                    labelId="edit-country-select-label"
+                    value={editRaceCountry}
+                    label="Country"
+                    onChange={(e) => setEditRaceCountry(e.target.value)}
+                  >
+                    {countries.map((countryName) => (
+                      <MenuItem key={countryName} value={countryName}>
+                        {countryName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel id="edit-status-select-label">Status</InputLabel>
+                  <Select
+                    labelId="edit-status-select-label"
+                    value={editRaceStatus}
+                    label="Status"
+                    onChange={(e) => setEditRaceStatus(e.target.value)}
+                  >
+                    <MenuItem value="Registration">Registration</MenuItem>
+                    <MenuItem value="Active">Active</MenuItem>
+                    <MenuItem value="Finished">Finished</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel id="edit-race-type-select-label">Race Type</InputLabel>
+                  <Select
+                    labelId="edit-race-type-select-label"
+                    value={editRaceType}
+                    label="Race Type"
+                    onChange={(e) => setEditRaceType(e.target.value)}
+                  >
+                    <MenuItem value="Race">Race</MenuItem>
+                    <MenuItem value="Camp">Camp</MenuItem>
+                    <MenuItem value="Training">Training</MenuItem>
+                  </Select>
+                </FormControl>
+                <Box>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    Upload New Race Image (optional):
+                  </Typography>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, true)}
+                  />
+                </Box>
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <Button variant="contained" onClick={handleUpdateRace}>
+                    Update Race
+                  </Button>
+                  <Button variant="outlined" onClick={handleCancelEdit}>
+                    Cancel
+                  </Button>
+                </Box>
+                {editFormMessage && (
+                  <Typography variant="body2" color="text.secondary">
+                    {editFormMessage}
+                  </Typography>
+                )}
+              </Box>
             </Box>
-            <Button variant="contained" onClick={handleCreateRace}>
-              Create Race
-            </Button>
-            {formMessage && (
-              <Typography variant="body2" color="text.secondary">
-                {formMessage}
-              </Typography>
-            )}
+          )}
+
+          {/* Форма создания */}
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h5" gutterBottom>
+              Create New Race
+            </Typography>
+            <Box
+              component="form"
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                maxWidth: 400,
+              }}
+              noValidate
+              autoComplete="off"
+            >
+              <TextField
+                label="Race Name"
+                variant="outlined"
+                value={newRaceName}
+                onChange={(e) => setNewRaceName(e.target.value)}
+                fullWidth
+              />
+              <TextField
+                label="Date"
+                type="date"
+                variant="outlined"
+                value={newRaceDate}
+                onChange={(e) => setNewRaceDate(e.target.value)}
+                fullWidth
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+              <TextField
+                label="Track Name"
+                variant="outlined"
+                value={newRaceTrackName}
+                onChange={(e) => setNewRaceTrackName(e.target.value)}
+                fullWidth
+              />
+              <FormControl fullWidth variant="outlined">
+                <InputLabel id="country-select-label">Country</InputLabel>
+                <Select
+                  labelId="country-select-label"
+                  value={newRaceCountry}
+                  label="Country"
+                  onChange={(e) => setNewRaceCountry(e.target.value)}
+                >
+                  {countries.map((countryName) => (
+                    <MenuItem key={countryName} value={countryName}>
+                      {countryName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel id="status-select-label">Status</InputLabel>
+                <Select
+                  labelId="status-select-label"
+                  value={newRaceStatus}
+                  label="Status"
+                  onChange={(e) => setNewRaceStatus(e.target.value)}
+                >
+                  <MenuItem value="Registration">Registration</MenuItem>
+                  <MenuItem value="Active">Active</MenuItem>
+                  <MenuItem value="Finished">Finished</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel id="race-type-select-label">Race Type</InputLabel>
+                <Select
+                  labelId="race-type-select-label"
+                  value={newRaceType}
+                  label="Race Type"
+                  onChange={(e) => setNewRaceType(e.target.value)}
+                >
+                  <MenuItem value="Race">Race</MenuItem>
+                  <MenuItem value="Camp">Camp</MenuItem>
+                  <MenuItem value="Training">Training</MenuItem>
+                </Select>
+              </FormControl>
+              <Box>
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  Upload Race Image:
+                </Typography>
+                <input type="file" accept="image/*" onChange={handleFileChange} />
+              </Box>
+              <Button variant="contained" onClick={handleCreateRace}>
+                Create Race
+              </Button>
+              {formMessage && (
+                <Typography variant="body2" color="text.secondary">
+                  {formMessage}
+                </Typography>
+              )}
+            </Box>
           </Box>
-        </Box>
+        </>
       )}
     </Box>
   );

@@ -175,7 +175,9 @@ const Leaderboard: React.FC = () => {
                   <TableCell sx={{ textAlign: "left" }}>{user.team || "–"}</TableCell>
                   <TableCell sx={{ textAlign: "center" }}>
                     {isoCode ? (
-                      <CountryFlag countryCode={isoCode} />
+                      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                        <CountryFlag countryCode={isoCode} />
+                      </Box>
                     ) : (
                       "–"
                     )}

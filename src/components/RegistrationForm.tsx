@@ -42,20 +42,37 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
   const [participants, setParticipants] = useState<any[]>([]);
   const [usersData, setUsersData] = useState<{ [key: string]: any }>({});
   const [isRegistered, setIsRegistered] = useState(false);
+  const [raceStatus, setRaceStatus] = useState<string>(""); // Статус гонки
 
   // Пагинация
   const [currentPage, setCurrentPage] = useState(1);
   const participantsPerPage = 10; // Количество участников на странице
 
   useEffect(() => {
+    const fetchRaceStatus = async () => {
+      try {
+        const raceDocRef = doc(db, "races", raceId);
+        const raceDoc = await getDoc(raceDocRef);
+        if (raceDoc.exists()) {
+          const raceData = raceDoc.data();
+          setRaceStatus(raceData.status || "");
+          console.log("Race status loaded:", raceData.status);
+        } else {
+          console.error("Race document not found for raceId:", raceId);
+        }
+      } catch (error) {
+        console.error("Error fetching race status:", error);
+      }
+    };
+
     const fetchParticipants = async () => {
       const participantsRef = collection(db, `races/${raceId}/participants`);
       const snapshot = await getDocs(participantsRef);
-      const usersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const usersList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setParticipants(usersList);
 
       if (user) {
-        setIsRegistered(usersList.some(p => p.id === user.uid));
+        setIsRegistered(usersList.some((p) => p.id === user.uid));
       }
 
       // Загрузка данных всех пользователей
@@ -69,6 +86,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
       setUsersData(usersMap);
     };
 
+    fetchRaceStatus();
     fetchParticipants();
   }, [user, raceId]);
 
@@ -91,7 +109,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     setIsRegistered(true);
 
     const updatedSnapshot = await getDocs(collection(db, `races/${raceId}/participants`));
-    setParticipants(updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    setParticipants(updatedSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
   };
 
   const handleCancelRegistration = async () => {
@@ -102,7 +120,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     setIsRegistered(false);
 
     const updatedSnapshot = await getDocs(collection(db, `races/${raceId}/participants`));
-    setParticipants(updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    setParticipants(updatedSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
   };
 
   // Логика пагинации
@@ -115,6 +133,9 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  // Проверяем, можно ли регистрироваться
+  const isRegistrationDisabled = raceStatus.toLowerCase() === "active" || raceStatus.toLowerCase() === "finished";
 
   return (
     <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 4, borderRadius: 2 }}>
@@ -141,18 +162,30 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ raceId }) => {
               Cancel Registration
             </Button>
           ) : (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleRegister}
-              sx={{
-                minWidth: "120px",
-                minHeight: "40px",
-                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              }}
+            <Tooltip
+              title={
+                isRegistrationDisabled
+                  ? "Registration is closed for Active or Finished races."
+                  : "Register to the race"
+              }
+              arrow
             >
-              Register to the race
-            </Button>
+              <span>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleRegister}
+                  disabled={isRegistrationDisabled}
+                  sx={{
+                    minWidth: "120px",
+                    minHeight: "40px",
+                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                  }}
+                >
+                  {isRegistrationDisabled ? "Registration Closed" : "Register to the race"}
+                </Button>
+              </span>
+            </Tooltip>
           )
         ) : (
           <Button

@@ -105,6 +105,7 @@ const Races: React.FC = () => {
         );
 
         setRaces(fetched);
+        console.log("Races loaded successfully:", fetched);
       } catch (error) {
         console.error("Error fetching races:", error);
         setFormMessage("Failed to load races. Please try again later.");
@@ -164,10 +165,10 @@ const Races: React.FC = () => {
         if (typeof reader.result === "string") {
           if (isEdit) {
             setEditRaceImage(reader.result);
-            console.log("Edit race image updated");
+            console.log("Edit race image updated:", reader.result.slice(0, 50));
           } else {
             setNewRaceImage(reader.result);
-            console.log("New race image uploaded");
+            console.log("New race image uploaded:", reader.result.slice(0, 50));
           }
         }
       };
@@ -425,7 +426,7 @@ const Races: React.FC = () => {
                     {race.country}
                   </Typography>
                 </Box>
-                <Box sx={{ display: "flood", alignItems: "center", mb: 1 }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                   <CalendarTodayIcon sx={{ fontSize: 16, mr: 1 }} />
                   <Typography variant="body2" color="text.secondary">
                     {formatDate(race.date)}
@@ -713,5 +714,3 @@ const Races: React.FC = () => {
 };
 
 export default Races;
-
-// Убедитесь, что файл сохранен как `Races.tsx`

@@ -71,10 +71,21 @@ const Races: React.FC = () => {
   const [countryMap, setCountryMap] = useState<Record<string, string>>({});
   const [countries, setCountries] = useState<string[]>([]);
 
+  // Запасной список стран
+  const fallbackCountries = ["USA", "Canada", "UK", "Germany", "France"];
+  const fallbackCountryMap: Record<string, string> = {
+    USA: "US",
+    Canada: "CA",
+    UK: "GB",
+    Germany: "DE",
+    France: "FR",
+  };
+
   const generateRaceId = () => {
     return (Math.floor(Math.random() * 9000) + 1000).toString();
   };
 
+  // Загрузка гонок
   useEffect(() => {
     const fetchRaces = async () => {
       try {
@@ -96,6 +107,7 @@ const Races: React.FC = () => {
         setRaces(fetched);
       } catch (error) {
         console.error("Error fetching races:", error);
+        setFormMessage("Failed to load races. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -103,10 +115,14 @@ const Races: React.FC = () => {
     fetchRaces();
   }, []);
 
+  // Загрузка списка стран с улучшенной обработкой ошибок
   useEffect(() => {
     const fetchCountries = async () => {
       try {
         const res = await fetch("https://restcountries.com/v3.1/all");
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
         const data = await res.json();
         const map: Record<string, string> = {};
         const names: string[] = [];
@@ -123,18 +139,25 @@ const Races: React.FC = () => {
         names.sort();
         setCountryMap(map);
         setCountries(names);
+        console.log("Countries loaded successfully:", names);
       } catch (err) {
         console.error("Error fetching countries:", err);
+        setFormMessage("Failed to load countries. Using default list.");
+        setCountries(fallbackCountries);
+        setCountryMap(fallbackCountryMap);
       }
     };
     fetchCountries();
   }, []);
 
+  // Проверка авторизации с отладочными логами
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && user.uid === "ztnWBUkh6dUcXLOH8D5nLBEYm2J2") {
+        console.log("Admin logged in:", user.uid);
         setIsAdmin(true);
       } else {
+        console.log("Non-admin or not logged in:", user?.uid);
         setIsAdmin(false);
       }
     });
@@ -149,8 +172,10 @@ const Races: React.FC = () => {
         if (typeof reader.result === "string") {
           if (isEdit) {
             setEditRaceImage(reader.result);
+            console.log("Edit race image updated");
           } else {
             setNewRaceImage(reader.result);
+            console.log("New race image uploaded");
           }
         }
       };
@@ -161,6 +186,7 @@ const Races: React.FC = () => {
   const handleCreateRace = async () => {
     if (!newRaceName || !newRaceDate || !newRaceTrackName || !newRaceCountry) {
       setFormMessage("Please fill all fields.");
+      console.log("Create race failed: Missing required fields");
       return;
     }
     const raceId = generateRaceId();
@@ -193,6 +219,7 @@ const Races: React.FC = () => {
         ...doc.data(),
       })) as Race[];
       setRaces(fetched);
+      console.log("Race created successfully:", raceId);
     } catch (error: any) {
       console.error("Error creating race:", error);
       setFormMessage("Error creating race: " + error.message);
@@ -209,6 +236,7 @@ const Races: React.FC = () => {
     setEditRaceType(race.race_type);
     setEditRaceImage(race.imageData || "");
     setEditFormMessage("");
+    console.log("Editing race:", race.id);
   };
 
   const handleUpdateRace = async () => {
@@ -216,6 +244,7 @@ const Races: React.FC = () => {
 
     if (!editRaceName || !editRaceDate || !editRaceTrackName || !editRaceCountry) {
       setEditFormMessage("Please fill all fields.");
+      console.log("Update race failed: Missing required fields");
       return;
     }
 
@@ -234,13 +263,11 @@ const Races: React.FC = () => {
       await updateDoc(doc(db, "races", editingRace.id), updatedRaceData);
       setEditFormMessage("Race updated successfully!");
       
-      // Обновляем список гонок
       const updatedRaces = races.map((race) =>
         race.id === editingRace.id ? { ...race, ...updatedRaceData } : race
       );
       setRaces(updatedRaces);
       
-      // Сбрасываем форму редактирования
       setEditingRace(null);
       setEditRaceName("");
       setEditRaceDate("");
@@ -249,6 +276,7 @@ const Races: React.FC = () => {
       setEditRaceStatus("");
       setEditRaceType("");
       setEditRaceImage("");
+      console.log("Race updated successfully:", editingRace.id);
     } catch (error: any) {
       console.error("Error updating race:", error);
       setEditFormMessage("Error updating race: " + error.message);
@@ -265,6 +293,7 @@ const Races: React.FC = () => {
     setEditRaceType("");
     setEditRaceImage("");
     setEditFormMessage("");
+    console.log("Race editing cancelled");
   };
 
   const formatDate = (dateStr: string) => {
@@ -351,7 +380,7 @@ const Races: React.FC = () => {
                 sx={{
                   position: "absolute",
                   top: 8,
-                  right: isAdmin ? 48 : 8, // Смещаем, если есть кнопка редактирования
+                  right: isAdmin ? 48 : 8,
                   fontWeight: "bold",
                   backgroundColor: "#d287fe",
                   color: "white",
@@ -479,7 +508,6 @@ const Races: React.FC = () => {
 
       {isAdmin && (
         <>
-          {/* Форма редактирования */}
           {editingRace && (
             <Box sx={{ mt: 4 }}>
               <Typography variant="h5" gutterBottom>
@@ -589,7 +617,6 @@ const Races: React.FC = () => {
             </Box>
           )}
 
-          {/* Форма создания */}
           <Box sx={{ mt: 4 }}>
             <Typography variant="h5" gutterBottom>
               Create New Race

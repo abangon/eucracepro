@@ -356,7 +356,7 @@ const Races: React.FC = () => {
               sx={{
                 position: "absolute",
                 top: 8,
-                right: 60,
+                right: 70,
                 backgroundColor: "#d287fe",
                 color: "white",
                 zIndex: 10,
